@@ -1,0 +1,27 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <id>ccom.joetr.modulemaker</id>
+    <name>Module Maker</name>
+    <vendor>http://joetr.com</vendor>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <description>Enables the creation of modules with sensible defaults.</description>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+        <applicationService
+                serviceImplementation="com.joetr.modulemaker.persistence.PreferenceService"
+        />
+    </extensions>
+
+    <actions>
+        <action
+                id="ModuleMaker.Open.ToolsMenu"
+                class="com.joetr.modulemaker.ModuleMakerAction"
+                text="Module Maker"
+                description="Open Module Maker">
+            <add-to-group group-id="ToolsMenu"/>
+        </action>
+    </actions>
+</idea-plugin>
