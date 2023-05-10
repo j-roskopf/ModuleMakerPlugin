@@ -1,7 +1,7 @@
 # Module Maker
 
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
 
 <!-- Plugin description -->
 This is a plugin that allows one to create modules without having to copy / paste / modify existing modules.
