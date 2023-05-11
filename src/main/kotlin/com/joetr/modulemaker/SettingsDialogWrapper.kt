@@ -62,7 +62,7 @@ class SettingsDialogWrapper(
         tabbedPane.add("Enhanced Template Defaults", templateEnhancedDefaultPanel)
         tabbedPane.add("General", generalPanel)
         dialogPanel.add(tabbedPane)
-        dialogPanel.setSize(WINDOW_WIDTH, WINDOW_HEIGHT)
+        dialogPanel.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         return dialogPanel
     }
