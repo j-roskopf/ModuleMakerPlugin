@@ -36,7 +36,8 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
             var apiTemplate: String = "",
             var glueTemplate: String = "",
             var implTemplate: String = "",
-            var packageName: String = DEFAULT_BASE_PACKAGE_NAME
+            var packageName: String = DEFAULT_BASE_PACKAGE_NAME,
+            var refreshOnModuleAdd: Boolean = true
         )
 
         @JvmStatic

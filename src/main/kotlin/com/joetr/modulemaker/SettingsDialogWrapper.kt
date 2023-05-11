@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JButton
+import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -26,6 +27,7 @@ private const val WINDOW_WIDTH = 600
 private const val WINDOW_HEIGHT = 900
 
 const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
+const val DEFAULT_REFRESH_ON_MODULE_ADD = true
 
 class SettingsDialogWrapper(
     private val onSave: () -> Unit
@@ -39,6 +41,8 @@ class SettingsDialogWrapper(
     private lateinit var implTemplateTextArea: JTextArea
 
     private lateinit var packageNameTextField: JTextField
+
+    private lateinit var refreshOnModuleAdd: JCheckBox
 
     private val preferenceService = PreferenceServiceImpl.instance
 
@@ -80,9 +84,13 @@ class SettingsDialogWrapper(
         val packageNameTextLabel = JLabel("Base Package Name: ")
         packageNameTextField = JTextField(preferenceService.preferenceState.packageName)
 
+        refreshOnModuleAdd = JCheckBox("Refresh after creating module")
+        refreshOnModuleAdd.isSelected = preferenceService.preferenceState.refreshOnModuleAdd
+
         panel.add(clearSettingsButton)
         panel.add(packageNameTextLabel)
         panel.add(packageNameTextField)
+        panel.add(refreshOnModuleAdd)
 
         layout.putConstraint(
             SpringLayout.NORTH,
@@ -119,6 +127,21 @@ class SettingsDialogWrapper(
             EXTRA_PADDING,
             SpringLayout.EAST,
             panel
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
+            refreshOnModuleAdd,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            refreshOnModuleAdd,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            packageNameTextField
         )
 
         layout.putConstraint(
@@ -126,7 +149,7 @@ class SettingsDialogWrapper(
             clearSettingsButton,
             EXTRA_PADDING,
             SpringLayout.SOUTH,
-            packageNameTextField
+            refreshOnModuleAdd
         )
         layout.putConstraint(
             SpringLayout.WEST,
@@ -488,7 +511,8 @@ class SettingsDialogWrapper(
             apiTemplate = apiTemplateTextArea.text,
             implTemplate = implTemplateTextArea.text,
             glueTemplate = glueTemplateTextArea.text,
-            packageName = packageNameTextField.text
+            packageName = packageNameTextField.text,
+            refreshOnModuleAdd = refreshOnModuleAdd.isSelected
         )
     }
 
@@ -499,6 +523,7 @@ class SettingsDialogWrapper(
         implTemplateTextArea.text = ""
         glueTemplateTextArea.text = ""
         packageNameTextField.text = DEFAULT_BASE_PACKAGE_NAME
+        refreshOnModuleAdd.isSelected = DEFAULT_REFRESH_ON_MODULE_ADD
     }
 
     private fun String.getRowsFromText(): Int {

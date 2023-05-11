@@ -536,7 +536,9 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
                         settingsGradleFile = settingsGradleFile,
                         currentlySelectedFile = currentlySelectedFile
                     )
-                    syncProject()
+                    if (preferenceService.preferenceState.refreshOnModuleAdd) {
+                        syncProject()
+                    }
                 },
                 workingDirectory = currentlySelectedFile,
                 enhancedModuleCreationStrategy = threeModuleCreationCheckbox.isSelected,
