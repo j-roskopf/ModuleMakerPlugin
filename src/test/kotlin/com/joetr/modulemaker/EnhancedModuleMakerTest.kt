@@ -3,7 +3,6 @@ package com.joetr.modulemaker
 import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
-import org.junit.Assert
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
@@ -92,17 +91,17 @@ class EnhancedModuleMakerTest {
         val buildGradleImplFileContents = readFromFile(buildGradleFileImpl)
         assert(
             buildGradleApiFileContents.contains(
-                "    namespace = \"${testPackageName}.api\""
+                "    namespace = \"$testPackageName.api\""
             )
         )
         assert(
             buildGradleGlueFileContents.contains(
-                "    namespace = \"${testPackageName}.glue\""
+                "    namespace = \"$testPackageName.glue\""
             )
         )
         assert(
             buildGradleImplFileContents.contains(
-                "    namespace = \"${testPackageName}.impl\""
+                "    namespace = \"$testPackageName.impl\""
             )
         )
 
@@ -146,7 +145,6 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName
         )
 
-
         // assert build.gradle is generated for all 3 modules
         val buildGradleFileApi = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
         val buildGradleFileGlue = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
@@ -161,7 +159,7 @@ class EnhancedModuleMakerTest {
         val buildGradleImplFileContents = readFromFile(buildGradleFileImpl)
         assert(
             buildGradleApiFileContents.contains(
-               template
+                template
             )
         )
         assert(

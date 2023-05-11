@@ -1,8 +1,12 @@
 package com.joetr.modulemaker
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.externalSystem.model.ProjectSystemId
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.util.io.exists
 import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
@@ -528,6 +532,11 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
                 },
                 showSuccessDialog = {
                     MessageDialogWrapper("Success").show()
+                    refreshFileSystem(
+                        settingsGradleFile = settingsGradleFile,
+                        currentlySelectedFile = currentlySelectedFile
+                    )
+                    syncProject()
                 },
                 workingDirectory = currentlySelectedFile,
                 enhancedModuleCreationStrategy = threeModuleCreationCheckbox.isSelected,
@@ -538,6 +547,29 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         } else {
             MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
         }
+    }
+
+    private fun syncProject() {
+        ExternalSystemUtil.refreshProject(
+            ProjectManager.getInstance().openProjects[0],
+            ProjectSystemId("GRADLE"),
+            rootDirectoryString(),
+            false,
+            ProgressExecutionMode.START_IN_FOREGROUND_ASYNC
+        )
+    }
+
+    /**
+     * Refresh the settings gradle file and the root file
+     */
+    private fun refreshFileSystem(settingsGradleFile: File, currentlySelectedFile: File) {
+        VfsUtil.markDirtyAndRefresh(
+            false,
+            true,
+            true,
+            settingsGradleFile,
+            currentlySelectedFile
+        )
     }
 
     private fun getCurrentlySelectedFile(): File {
