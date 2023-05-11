@@ -1,5 +1,6 @@
 package com.joetr.modulemaker
 
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.util.io.exists
@@ -10,6 +11,8 @@ import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.ActionEvent
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.io.File
 import java.nio.file.Path
 import javax.swing.AbstractAction
@@ -235,7 +238,35 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         val configurationLayout = SpringLayout()
         val moduleNameTextLabel = JLabel("Module Name: ")
         val packageNameTextLabel = JLabel("Package Name: ")
+        val threeModuleQuestionMarkIcon = AllIcons.Actions.Help
+        val threeModuleQuestionMarkButton = JLabel(threeModuleQuestionMarkIcon).apply {
+            preferredSize = Dimension(24, 24)
+        }
+        threeModuleQuestionMarkButton.addMouseListener(
+            object : MouseListener {
+                override fun mouseClicked(e: MouseEvent?) {
+                    MessageDialogWrapper(
+                        """
+                            The 3 module creation adds an api, glue, and impl module.
 
+                            More info can be found here https://www.droidcon.com/2019/11/15/android-at-scale-square/
+                        """.trimIndent()
+                    ).show()
+                }
+
+                override fun mousePressed(e: MouseEvent?) {
+                }
+
+                override fun mouseReleased(e: MouseEvent?) {
+                }
+
+                override fun mouseEntered(e: MouseEvent?) {
+                }
+
+                override fun mouseExited(e: MouseEvent?) {
+                }
+            }
+        )
         configurationJPanel.layout = configurationLayout
         threeModuleCreationCheckbox = JCheckBox("3 Module Creation")
         ktsCheckbox = JCheckBox("Use .kts file extension")
@@ -251,6 +282,7 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         configurationJPanel.add(moduleNameTextLabel)
         configurationJPanel.add(moduleNameTextField)
         configurationJPanel.add(packageNameTextLabel)
+        configurationJPanel.add(threeModuleQuestionMarkButton)
 
         kotlinTypeRadioButton = JRadioButton(KOTLIN)
         androidTypeRadioButton = JRadioButton(ANDROID).apply {
@@ -435,6 +467,28 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
             moduleNameTextLabel
         )
 
+        configurationLayout.putConstraint(
+            SpringLayout.WEST,
+            threeModuleQuestionMarkButton,
+            DEFAULT_PADDING,
+            SpringLayout.EAST,
+            threeModuleCreationCheckbox
+        )
+        configurationLayout.putConstraint(
+            SpringLayout.NORTH,
+            threeModuleQuestionMarkButton,
+            0,
+            SpringLayout.NORTH,
+            threeModuleCreationCheckbox
+        )
+        configurationLayout.putConstraint(
+            SpringLayout.SOUTH,
+            threeModuleQuestionMarkButton,
+            0,
+            SpringLayout.SOUTH,
+            threeModuleCreationCheckbox
+        )
+
         configurationJPanel.preferredSize = Dimension(WINDOW_WIDTH - FILE_TREE_WIDTH, WINDOW_HEIGHT)
         return configurationJPanel
     }
@@ -492,7 +546,8 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         // rootDirectoryString() gives us back something like /Users/user/path/to/project
         // the first path element in the tree node starts with 'project' (last folder above)
         // so we remove it and join the nodes of the tree by our file separator
-        return ProjectManager.getInstance().openProjects[0].basePath!!.split(File.separator).dropLast(1).joinToString(File.separator)
+        return ProjectManager.getInstance().openProjects[0].basePath!!.split(File.separator).dropLast(1)
+            .joinToString(File.separator)
     }
 
     private fun lastPathInRootDirectory(): String {
