@@ -5,7 +5,7 @@
     <name>Module Maker</name>
     <vendor>http://joetr.com</vendor>
 
-    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
 
     <description>Enables the creation of modules with sensible defaults.</description>
 

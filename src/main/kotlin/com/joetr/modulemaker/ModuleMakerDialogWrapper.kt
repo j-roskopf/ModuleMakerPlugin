@@ -500,12 +500,12 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
     }
 
     private fun getSettingsGradleFile(): File? {
-        val settingsGradleKtsPath = Path.of(rootDirectoryString(), "settings.gradle.kts")
-        val settingsGradlePath = Path.of(rootDirectoryString(), "settings.gradle")
+        val settingsGradleKtsPath = Path.of(rootDirectoryString(), "settings.gradle.kts").toFile()
+        val settingsGradlePath = Path.of(rootDirectoryString(), "settings.gradle").toFile()
         return if (settingsGradlePath.exists()) {
-            settingsGradlePath.toFile()
+            settingsGradlePath
         } else if (settingsGradleKtsPath.exists()) {
-            settingsGradleKtsPath.toFile()
+            settingsGradleKtsPath
         } else {
             MessageDialogWrapper("Can't find settings.gradle(.kts) file")
             null
