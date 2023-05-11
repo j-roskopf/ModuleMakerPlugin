@@ -1,5 +1,6 @@
 # Module Maker
 
+[![Build](https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/gradle.yml/badge.svg)](https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/gradle.yml)
 [![Version](https://img.shields.io/jetbrains/plugin/v/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
 
