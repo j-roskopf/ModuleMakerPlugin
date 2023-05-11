@@ -1,5 +1,6 @@
 package com.joetr.modulemaker.file
 
+import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.template.TemplateWriter
 import java.io.File
 import java.nio.file.Files
@@ -15,9 +16,13 @@ const val IMPL_KEY = "key"
 /**
  * This class is responsible for writing files into the project
  */
-class FileWriter {
+class FileWriter(
+    private val preferenceService: PreferenceService
+) {
 
-    private val templateWriter = TemplateWriter()
+    private val templateWriter = TemplateWriter(
+        preferenceService = preferenceService
+    )
 
     fun createModule(
         settingsGradleFile: File,

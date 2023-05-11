@@ -5,7 +5,7 @@ import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.util.io.exists
 import com.joetr.modulemaker.file.FileWriter
-import com.joetr.modulemaker.persistence.PreferenceService
+import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Component
@@ -46,9 +46,11 @@ private const val DEFAULT_SRC_VALUE = "EMPTY"
 
 class ModuleMakerDialogWrapper : DialogWrapper(true) {
 
-    private val fileWriter = FileWriter()
+    private val preferenceService = PreferenceServiceImpl.instance
 
-    private val preferenceService = PreferenceService.instance
+    private val fileWriter = FileWriter(
+        preferenceService = preferenceService
+    )
 
     private var selectedSrcValue = DEFAULT_SRC_VALUE
     private lateinit var selectedSrcJLabel: JLabel
@@ -135,7 +137,7 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
     }
 
     private fun onSettingsSaved() {
-        packageNameTextField.text = preferenceService.state.packageName
+        packageNameTextField.text = preferenceService.preferenceState.packageName
     }
 
     override fun createActions(): Array<Action> {
@@ -271,7 +273,7 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         threeModuleCreationCheckbox = JCheckBox("3 Module Creation")
         ktsCheckbox = JCheckBox("Use .kts file extension")
         gradleFileNamedAfterModule = JCheckBox("Gradle file named after module")
-        packageNameTextField = JTextField(preferenceService.state.packageName)
+        packageNameTextField = JTextField(preferenceService.preferenceState.packageName)
         moduleNameTextField = JTextField(DEFAULT_MODULE_NAME)
 
         configurationJPanel.add(selectedSrcJLabel)
