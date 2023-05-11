@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.2]
+- Added question mark next to 3 module checkbox
+
 ## [1.0.1]
 - Compatibility fixes
 
