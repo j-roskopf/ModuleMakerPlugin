@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.3]
+- Auto sync project after module creation
+
 ## [1.0.2]
 - Added question mark next to 3 module checkbox
 
