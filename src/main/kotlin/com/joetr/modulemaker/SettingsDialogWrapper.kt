@@ -4,7 +4,7 @@ package com.joetr.modulemaker
 
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBTabbedPane
-import com.joetr.modulemaker.persistence.PreferenceService
+import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JButton
+import javax.swing.JCheckBox
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
@@ -26,6 +27,7 @@ private const val WINDOW_WIDTH = 600
 private const val WINDOW_HEIGHT = 900
 
 const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
+const val DEFAULT_REFRESH_ON_MODULE_ADD = true
 
 class SettingsDialogWrapper(
     private val onSave: () -> Unit
@@ -40,7 +42,9 @@ class SettingsDialogWrapper(
 
     private lateinit var packageNameTextField: JTextField
 
-    private val preferenceService = PreferenceService.instance
+    private lateinit var refreshOnModuleAdd: JCheckBox
+
+    private val preferenceService = PreferenceServiceImpl.instance
 
     init {
         title = "Settings"
@@ -78,11 +82,15 @@ class SettingsDialogWrapper(
         panel.layout = layout
 
         val packageNameTextLabel = JLabel("Base Package Name: ")
-        packageNameTextField = JTextField(preferenceService.state.packageName)
+        packageNameTextField = JTextField(preferenceService.preferenceState.packageName)
+
+        refreshOnModuleAdd = JCheckBox("Refresh after creating module")
+        refreshOnModuleAdd.isSelected = preferenceService.preferenceState.refreshOnModuleAdd
 
         panel.add(clearSettingsButton)
         panel.add(packageNameTextLabel)
         panel.add(packageNameTextField)
+        panel.add(refreshOnModuleAdd)
 
         layout.putConstraint(
             SpringLayout.NORTH,
@@ -119,6 +127,21 @@ class SettingsDialogWrapper(
             EXTRA_PADDING,
             SpringLayout.EAST,
             panel
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
+            refreshOnModuleAdd,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            refreshOnModuleAdd,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            packageNameTextField
         )
 
         layout.putConstraint(
@@ -126,7 +149,7 @@ class SettingsDialogWrapper(
             clearSettingsButton,
             EXTRA_PADDING,
             SpringLayout.SOUTH,
-            packageNameTextField
+            refreshOnModuleAdd
         )
         layout.putConstraint(
             SpringLayout.WEST,
@@ -151,7 +174,7 @@ class SettingsDialogWrapper(
         )
 
         val kotlinTemplateLabel = JLabel("Kotlin Template")
-        val kotlinTemplateFromPref = preferenceService.state.kotlinTemplate
+        val kotlinTemplateFromPref = preferenceService.preferenceState.kotlinTemplate
         kotlinTemplateTextArea = JTextArea(
             kotlinTemplateFromPref,
             kotlinTemplateFromPref.getRowsFromText(),
@@ -168,7 +191,7 @@ class SettingsDialogWrapper(
         kotlinTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 3 - EXTRA_PADDING * 2)
 
         val androidTemplateLabel = JLabel("Android Template")
-        val androidTemplateFromPref = preferenceService.state.androidTemplate
+        val androidTemplateFromPref = preferenceService.preferenceState.androidTemplate
 
         androidTemplateTextArea = JTextArea(
             androidTemplateFromPref,
@@ -287,7 +310,7 @@ class SettingsDialogWrapper(
 
     private fun createEnhancedTemplateDefaultComponent(): JComponent {
         val apiTemplateLabel = JLabel("Api Template")
-        val apiTemplateFromPref = preferenceService.state.apiTemplate
+        val apiTemplateFromPref = preferenceService.preferenceState.apiTemplate
         apiTemplateTextArea = JTextArea(
             apiTemplateFromPref,
             apiTemplateFromPref.getRowsFromText(),
@@ -303,7 +326,7 @@ class SettingsDialogWrapper(
         apiTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
 
         val glueTemplateLabel = JLabel("Glue Template")
-        val glueTemplateFromPref = preferenceService.state.glueTemplate
+        val glueTemplateFromPref = preferenceService.preferenceState.glueTemplate
         glueTemplateTextArea = JTextArea(
             glueTemplateFromPref,
             glueTemplateFromPref.getRowsFromText(),
@@ -319,7 +342,7 @@ class SettingsDialogWrapper(
         glueTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
 
         val implTemplateLabel = JLabel("Impl Template")
-        val implTemplateFromPref = preferenceService.state.implTemplate
+        val implTemplateFromPref = preferenceService.preferenceState.implTemplate
         implTemplateTextArea = JTextArea(
             implTemplateFromPref,
             implTemplateFromPref.getRowsFromText(),
@@ -482,13 +505,14 @@ class SettingsDialogWrapper(
     }
 
     private fun saveDate() {
-        preferenceService.preferenceState = preferenceService.state.copy(
+        preferenceService.preferenceState = preferenceService.preferenceState.copy(
             androidTemplate = androidTemplateTextArea.text,
             kotlinTemplate = kotlinTemplateTextArea.text,
             apiTemplate = apiTemplateTextArea.text,
             implTemplate = implTemplateTextArea.text,
             glueTemplate = glueTemplateTextArea.text,
-            packageName = packageNameTextField.text
+            packageName = packageNameTextField.text,
+            refreshOnModuleAdd = refreshOnModuleAdd.isSelected
         )
     }
 
@@ -499,6 +523,7 @@ class SettingsDialogWrapper(
         implTemplateTextArea.text = ""
         glueTemplateTextArea.text = ""
         packageNameTextField.text = DEFAULT_BASE_PACKAGE_NAME
+        refreshOnModuleAdd.isSelected = DEFAULT_REFRESH_ON_MODULE_ADD
     }
 
     private fun String.getRowsFromText(): Int {

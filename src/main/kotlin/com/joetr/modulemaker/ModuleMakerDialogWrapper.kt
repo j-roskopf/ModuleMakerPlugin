@@ -1,11 +1,15 @@
 package com.joetr.modulemaker
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.externalSystem.model.ProjectSystemId
+import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.util.io.exists
 import com.joetr.modulemaker.file.FileWriter
-import com.joetr.modulemaker.persistence.PreferenceService
+import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Component
@@ -46,9 +50,11 @@ private const val DEFAULT_SRC_VALUE = "EMPTY"
 
 class ModuleMakerDialogWrapper : DialogWrapper(true) {
 
-    private val fileWriter = FileWriter()
+    private val preferenceService = PreferenceServiceImpl.instance
 
-    private val preferenceService = PreferenceService.instance
+    private val fileWriter = FileWriter(
+        preferenceService = preferenceService
+    )
 
     private var selectedSrcValue = DEFAULT_SRC_VALUE
     private lateinit var selectedSrcJLabel: JLabel
@@ -135,7 +141,7 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
     }
 
     private fun onSettingsSaved() {
-        packageNameTextField.text = preferenceService.state.packageName
+        packageNameTextField.text = preferenceService.preferenceState.packageName
     }
 
     override fun createActions(): Array<Action> {
@@ -271,7 +277,7 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         threeModuleCreationCheckbox = JCheckBox("3 Module Creation")
         ktsCheckbox = JCheckBox("Use .kts file extension")
         gradleFileNamedAfterModule = JCheckBox("Gradle file named after module")
-        packageNameTextField = JTextField(preferenceService.state.packageName)
+        packageNameTextField = JTextField(preferenceService.preferenceState.packageName)
         moduleNameTextField = JTextField(DEFAULT_MODULE_NAME)
 
         configurationJPanel.add(selectedSrcJLabel)
@@ -526,6 +532,13 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
                 },
                 showSuccessDialog = {
                     MessageDialogWrapper("Success").show()
+                    refreshFileSystem(
+                        settingsGradleFile = settingsGradleFile,
+                        currentlySelectedFile = currentlySelectedFile
+                    )
+                    if (preferenceService.preferenceState.refreshOnModuleAdd) {
+                        syncProject()
+                    }
                 },
                 workingDirectory = currentlySelectedFile,
                 enhancedModuleCreationStrategy = threeModuleCreationCheckbox.isSelected,
@@ -536,6 +549,29 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         } else {
             MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
         }
+    }
+
+    private fun syncProject() {
+        ExternalSystemUtil.refreshProject(
+            ProjectManager.getInstance().openProjects[0],
+            ProjectSystemId("GRADLE"),
+            rootDirectoryString(),
+            false,
+            ProgressExecutionMode.START_IN_FOREGROUND_ASYNC
+        )
+    }
+
+    /**
+     * Refresh the settings gradle file and the root file
+     */
+    private fun refreshFileSystem(settingsGradleFile: File, currentlySelectedFile: File) {
+        VfsUtil.markDirtyAndRefresh(
+            false,
+            true,
+            true,
+            settingsGradleFile,
+            currentlySelectedFile
+        )
     }
 
     private fun getCurrentlySelectedFile(): File {

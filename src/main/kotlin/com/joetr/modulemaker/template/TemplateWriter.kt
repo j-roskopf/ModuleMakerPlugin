@@ -18,13 +18,13 @@ import java.io.IOException
 import java.io.Writer
 import java.nio.file.Paths
 
-class TemplateWriter {
+class TemplateWriter(
+    private val preferenceService: PreferenceService
+) {
 
     private val cfg = Configuration(FREEMARKER_VERSION).apply {
         setClassLoaderForTemplateLoading(TemplateWriter::class.java.classLoader, "")
     }
-
-    private val preferenceService = PreferenceService.instance
 
     /**
      * Creates gradle file for the module from base gradle template file
@@ -128,11 +128,11 @@ class TemplateWriter {
 
     private fun getPreferenceFromKey(key: String?, fallback: String): String {
         return when (key ?: fallback) {
-            IMPL_KEY -> preferenceService.state.implTemplate
-            API_KEY -> preferenceService.state.apiTemplate
-            GLUE_KEY -> preferenceService.state.glueTemplate
-            ANDROID_KEY -> preferenceService.state.androidTemplate
-            KOTLIN_KEY -> preferenceService.state.kotlinTemplate
+            IMPL_KEY -> preferenceService.preferenceState.implTemplate
+            API_KEY -> preferenceService.preferenceState.apiTemplate
+            GLUE_KEY -> preferenceService.preferenceState.glueTemplate
+            ANDROID_KEY -> preferenceService.preferenceState.androidTemplate
+            KOTLIN_KEY -> preferenceService.preferenceState.kotlinTemplate
             else -> ""
         }
     }
