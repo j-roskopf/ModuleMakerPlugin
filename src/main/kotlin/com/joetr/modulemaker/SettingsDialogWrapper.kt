@@ -5,6 +5,10 @@ package com.joetr.modulemaker
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBTabbedPane
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
+import com.joetr.modulemaker.template.AndroidModuleKtsTemplate
+import com.joetr.modulemaker.template.AndroidModuleTemplate
+import com.joetr.modulemaker.template.KotlinModuleKtsTemplate
+import com.joetr.modulemaker.template.KotlinModuleTemplate
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -30,7 +34,9 @@ const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
 const val DEFAULT_REFRESH_ON_MODULE_ADD = true
 
 class SettingsDialogWrapper(
-    private val onSave: () -> Unit
+    private val onSave: () -> Unit,
+    private val isKtsCurrentlyChecked: Boolean,
+    private val isAndroidChecked: Boolean
 ) : DialogWrapper(true) {
 
     private lateinit var kotlinTemplateTextArea: JTextArea
@@ -174,7 +180,16 @@ class SettingsDialogWrapper(
         )
 
         val kotlinTemplateLabel = JLabel("Kotlin Template")
-        val kotlinTemplateFromPref = preferenceService.preferenceState.kotlinTemplate
+        var kotlinTemplateFromPref = preferenceService.preferenceState.kotlinTemplate
+
+        if (kotlinTemplateFromPref.isBlank()) {
+            kotlinTemplateFromPref = if (isKtsCurrentlyChecked) {
+                KotlinModuleTemplate.data
+            } else {
+                KotlinModuleKtsTemplate.data
+            }
+        }
+
         kotlinTemplateTextArea = JTextArea(
             kotlinTemplateFromPref,
             kotlinTemplateFromPref.getRowsFromText(),
@@ -191,7 +206,15 @@ class SettingsDialogWrapper(
         kotlinTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 3 - EXTRA_PADDING * 2)
 
         val androidTemplateLabel = JLabel("Android Template")
-        val androidTemplateFromPref = preferenceService.preferenceState.androidTemplate
+        var androidTemplateFromPref = preferenceService.preferenceState.androidTemplate
+
+        if (androidTemplateFromPref.isBlank()) {
+            androidTemplateFromPref = if (isKtsCurrentlyChecked) {
+                AndroidModuleKtsTemplate.data
+            } else {
+                AndroidModuleTemplate.data
+            }
+        }
 
         androidTemplateTextArea = JTextArea(
             androidTemplateFromPref,
@@ -310,7 +333,12 @@ class SettingsDialogWrapper(
 
     private fun createEnhancedTemplateDefaultComponent(): JComponent {
         val apiTemplateLabel = JLabel("Api Template")
-        val apiTemplateFromPref = preferenceService.preferenceState.apiTemplate
+        var apiTemplateFromPref = preferenceService.preferenceState.apiTemplate
+
+        if (apiTemplateFromPref.isBlank()) {
+            apiTemplateFromPref = getDefaultTemplate()
+        }
+
         apiTemplateTextArea = JTextArea(
             apiTemplateFromPref,
             apiTemplateFromPref.getRowsFromText(),
@@ -326,7 +354,12 @@ class SettingsDialogWrapper(
         apiTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
 
         val glueTemplateLabel = JLabel("Glue Template")
-        val glueTemplateFromPref = preferenceService.preferenceState.glueTemplate
+        var glueTemplateFromPref = preferenceService.preferenceState.glueTemplate
+
+        if (glueTemplateFromPref.isBlank()) {
+            glueTemplateFromPref = getDefaultTemplate()
+        }
+
         glueTemplateTextArea = JTextArea(
             glueTemplateFromPref,
             glueTemplateFromPref.getRowsFromText(),
@@ -342,7 +375,12 @@ class SettingsDialogWrapper(
         glueTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
 
         val implTemplateLabel = JLabel("Impl Template")
-        val implTemplateFromPref = preferenceService.preferenceState.implTemplate
+        var implTemplateFromPref = preferenceService.preferenceState.implTemplate
+
+        if (implTemplateFromPref.isBlank()) {
+            implTemplateFromPref = getDefaultTemplate()
+        }
+
         implTemplateTextArea = JTextArea(
             implTemplateFromPref,
             implTemplateFromPref.getRowsFromText(),
@@ -554,5 +592,21 @@ class SettingsDialogWrapper(
                 currentTextArea.columns = currentTextArea.text.getColumnFromText()
             }
         })
+    }
+
+    private fun getDefaultTemplate(): String {
+        return if (isAndroidChecked) {
+            if (isKtsCurrentlyChecked) {
+                AndroidModuleKtsTemplate.data
+            } else {
+                AndroidModuleTemplate.data
+            }
+        } else {
+            if (isKtsCurrentlyChecked) {
+                KotlinModuleKtsTemplate.data
+            } else {
+                KotlinModuleTemplate.data
+            }
+        }
     }
 }

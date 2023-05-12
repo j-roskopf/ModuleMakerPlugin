@@ -233,11 +233,15 @@ class FileWriter(
 
         // get the first and last line numbers for an include statement
         val firstLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfFirst {
-            it.contains("$projectIncludeKeyword(\"")
+            it.contains("$projectIncludeKeyword(\"") ||
+                it.contains("$projectIncludeKeyword \"") ||
+                it.contains("$projectIncludeKeyword '")
         }
 
         val lastLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfLast {
-            it.contains("$projectIncludeKeyword(\"")
+            it.contains("$projectIncludeKeyword(\"") ||
+                it.contains("$projectIncludeKeyword \"") ||
+                it.contains("$projectIncludeKeyword '")
         }
 
         if (firstLineNumberOfFirstIncludeProjectStatement <= 0) {
