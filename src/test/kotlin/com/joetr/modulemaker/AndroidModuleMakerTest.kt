@@ -220,4 +220,33 @@ class AndroidModuleMakerTest {
             buildGradleFile.exists()
         )
     }
+
+    @Test
+    fun `android module created successfully when include with no parenthesis`() {
+        settingsGradleFile = folder.populateSettingsGradleWithFakeData()
+        val modulePath = ":repository:database"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = true,
+            gradleFileFollowModule = false,
+            packageName = testPackageName
+        )
+
+        // assert it was added to settings.gradle
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        assert(
+            settingsGradleFileContents.contains("include(\":repository:database\")")
+        )
+    }
 }

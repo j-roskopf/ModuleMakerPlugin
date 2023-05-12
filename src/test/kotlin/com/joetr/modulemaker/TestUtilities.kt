@@ -14,6 +14,14 @@ fun TemporaryFolder.populateSettingsGradleKtsWithFakeData(): File {
     return settingsGradleKts
 }
 
+fun TemporaryFolder.populateSettingsGradleWithFakeData(): File {
+    val settingsGradle = this.newFile(settingsGradle)
+    val writer = FileWriter(settingsGradle)
+    writer.write(DefaultTemplateSettingsGradle.data)
+    writer.close()
+    return settingsGradle
+}
+
 fun readFromFile(file: File): List<String> {
     val fileReader = FileReader(file)
     val bufferedReader = BufferedReader(fileReader)

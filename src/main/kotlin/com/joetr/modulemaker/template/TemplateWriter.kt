@@ -47,34 +47,44 @@ class TemplateWriter(
                 KOTLIN -> {
                     val customPreferences = getPreferenceFromKey(defaultKey, KOTLIN_KEY)
                     if (customPreferences.isNotEmpty()) {
-                        Template.getPlainTextTemplate(
-                            if (useKtsBuildFile) "kotlinModuleKts.ftl" else "kotlinModule.ftl",
+                        Template(
+                            null,
                             customPreferences,
                             cfg
                         )
                     } else {
-                        if (useKtsBuildFile) {
-                            cfg.getTemplate("kotlinModuleKts.ftl")
+                        val template = if (useKtsBuildFile) {
+                            KotlinModuleKtsTemplate.data
                         } else {
-                            cfg.getTemplate("kotlinModule.ftl")
+                            KotlinModuleTemplate.data
                         }
+                        Template(
+                            null,
+                            template,
+                            cfg
+                        )
                     }
                 }
                 ANDROID -> {
                     val customPreferences = getPreferenceFromKey(defaultKey, ANDROID_KEY)
                     if (customPreferences.isNotEmpty()) {
-                        Template.getPlainTextTemplate(
-                            if (useKtsBuildFile) "androidModuleKts.ftl" else "androidModule.ftl",
+                        Template(
+                            null,
                             customPreferences,
                             cfg
                         )
                     } else {
                         data["packageName"] = packageName
-                        if (useKtsBuildFile) {
-                            cfg.getTemplate("androidModuleKts.ftl")
+                        val template = if (useKtsBuildFile) {
+                            AndroidModuleKtsTemplate.data
                         } else {
-                            cfg.getTemplate("androidModule.ftl")
+                            AndroidModuleTemplate.data
                         }
+                        Template(
+                            null,
+                            template,
+                            cfg
+                        )
                     }
                 }
                 else -> throw IllegalArgumentException("Unknown module type")
@@ -104,7 +114,11 @@ class TemplateWriter(
 
     fun createReadmeFile(moduleFile: File, moduleName: String) {
         try {
-            val manifestTemplate: Template = cfg.getTemplate("moduleReadme.ftl")
+            val manifestTemplate = Template(
+                null,
+                ModuleReadMeTemplate.data,
+                cfg
+            )
 
             val data: MutableMap<String, Any> = HashMap()
 

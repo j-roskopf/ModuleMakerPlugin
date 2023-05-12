@@ -130,10 +130,18 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
         return arrayOf(
             object : AbstractAction("Settings") {
                 override fun actionPerformed(e: ActionEvent?) {
+                    val isAndroidChecked = when {
+                        androidTypeRadioButton.isSelected -> true
+                        kotlinTypeRadioButton.isSelected -> false
+                        else -> throw RuntimeException()
+                    }
+
                     SettingsDialogWrapper(
                         onSave = {
                             onSettingsSaved()
-                        }
+                        },
+                        isKtsCurrentlyChecked = ktsCheckbox.isSelected,
+                        isAndroidChecked = isAndroidChecked
                     ).show()
                 }
             }
