@@ -136,6 +136,52 @@ class AndroidModuleMakerTest {
     }
 
     @Test
+    fun `when a template is set, the package name variable is replaced`() {
+        val modulePath = ":repository"
+        val modulePathAsFile = "repository"
+
+        val template = """
+            this is a custom template
+
+            android {
+                namespace = "${'$'}{packageName}"
+            }
+        """.trimIndent()
+
+        fakePreferenceService.preferenceState.androidTemplate = template
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName
+        )
+
+        // assert build.gradle file exists and contains the package name when using a custom template
+        val buildGradleFile = File(folder.root.path + File.separator + modulePathAsFile + File.separator + buildGradleFileName)
+
+        assert(buildGradleFile.exists())
+
+        val buildGradleFileContents = readFromFile(buildGradleFile)
+
+        assert(
+            buildGradleFileContents.contains(
+                "    namespace = \"$testPackageName\""
+            )
+        )
+    }
+
+    @Test
     fun `android module created successfully when using nested modules`() {
         val modulePath = ":repository:database"
         val modulePathAsFile = "repository/database"
