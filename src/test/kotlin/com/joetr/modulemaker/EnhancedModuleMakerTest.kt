@@ -118,6 +118,69 @@ class EnhancedModuleMakerTest {
     }
 
     @Test
+    fun `when a template is set, the package name variable is replaced for each module created`() {
+        val modulePath = ":repository"
+        val modulePathAsFile = "repository"
+
+        val template = """
+            this is a custom template
+
+            android {
+                namespace = "${'$'}{packageName}"
+            }
+        """.trimIndent()
+
+        fakePreferenceService.preferenceState.apiTemplate = template
+        fakePreferenceService.preferenceState.glueTemplate = template
+        fakePreferenceService.preferenceState.implTemplate = template
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName
+        )
+
+        // assert build.gradle is generated for all 3 modules
+        val buildGradleFileApi = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
+        val buildGradleFileGlue = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
+        val buildGradleFileImpl = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + buildGradleFileName)
+        assert(buildGradleFileApi.exists())
+        assert(buildGradleFileGlue.exists())
+        assert(buildGradleFileImpl.exists())
+
+        // assert package name is included in build.gradle
+        val buildGradleApiFileContents = readFromFile(buildGradleFileApi)
+        val buildGradleGlueFileContents = readFromFile(buildGradleFileGlue)
+        val buildGradleImplFileContents = readFromFile(buildGradleFileImpl)
+        assert(
+            buildGradleApiFileContents.contains(
+                "    namespace = \"$testPackageName.api\""
+            )
+        )
+        assert(
+            buildGradleGlueFileContents.contains(
+                "    namespace = \"$testPackageName.glue\""
+            )
+        )
+        assert(
+            buildGradleImplFileContents.contains(
+                "    namespace = \"$testPackageName.impl\""
+            )
+        )
+    }
+
+    @Test
     fun `when a template is set, that is used instead of default for creating build gradle`() {
         val modulePath = ":repository:database"
         val modulePathAsFile = "repository/database"
