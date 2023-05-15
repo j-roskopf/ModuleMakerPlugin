@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.4]
+- Add support for variables in custom templates
+
 ## [1.0.3]
 - Auto sync project after module creation
 
