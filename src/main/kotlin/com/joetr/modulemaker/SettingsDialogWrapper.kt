@@ -9,6 +9,7 @@ import com.joetr.modulemaker.template.AndroidModuleKtsTemplate
 import com.joetr.modulemaker.template.AndroidModuleTemplate
 import com.joetr.modulemaker.template.KotlinModuleKtsTemplate
 import com.joetr.modulemaker.template.KotlinModuleTemplate
+import com.joetr.modulemaker.template.TemplateVariable
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -27,7 +28,7 @@ import javax.swing.ScrollPaneConstants
 import javax.swing.SpringLayout
 import javax.swing.event.DocumentListener
 
-private const val WINDOW_WIDTH = 600
+private const val WINDOW_WIDTH = 800
 private const val WINDOW_HEIGHT = 900
 
 const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
@@ -179,6 +180,22 @@ class SettingsDialogWrapper(
             """.trimIndent()
         )
 
+        val supportedVariablesString = TemplateVariable.values().map {
+            it.templateVariable
+        }.joinToString("<br/>")
+
+        val supportedVariablesLabel = JLabel(
+            """
+            <html>
+            If you do have a custom template, there are some variable names that will be automatically replaced for you.
+            <br/><br/>
+            Supported variables are:
+            <br/><br/>
+            $supportedVariablesString
+            </html>
+            """.trimIndent()
+        )
+
         val kotlinTemplateLabel = JLabel("Kotlin Template")
         var kotlinTemplateFromPref = preferenceService.preferenceState.kotlinTemplate
 
@@ -238,6 +255,7 @@ class SettingsDialogWrapper(
         templateDefaultPanel.add(androidTemplateLabel)
         templateDefaultPanel.add(androidTemplateScrollPane)
         templateDefaultPanel.add(settingExplanationLabel)
+        templateDefaultPanel.add(supportedVariablesLabel)
 
         templateDefaultPanelLayout.putConstraint(
             SpringLayout.NORTH,
@@ -325,6 +343,21 @@ class SettingsDialogWrapper(
             androidTemplateScrollPane,
             EXTRA_PADDING,
             SpringLayout.EAST,
+            templateDefaultPanel
+        )
+
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.NORTH,
+            supportedVariablesLabel,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            androidTemplateScrollPane
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            supportedVariablesLabel,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
             templateDefaultPanel
         )
 

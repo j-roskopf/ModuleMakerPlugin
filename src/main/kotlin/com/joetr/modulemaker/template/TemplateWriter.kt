@@ -67,6 +67,7 @@ class TemplateWriter(
                 }
                 ANDROID -> {
                     val customPreferences = getPreferenceFromKey(defaultKey, ANDROID_KEY)
+                    data["packageName"] = packageName
                     if (customPreferences.isNotEmpty()) {
                         Template(
                             null,
@@ -74,7 +75,6 @@ class TemplateWriter(
                             cfg
                         )
                     } else {
-                        data["packageName"] = packageName
                         val template = if (useKtsBuildFile) {
                             AndroidModuleKtsTemplate.data
                         } else {

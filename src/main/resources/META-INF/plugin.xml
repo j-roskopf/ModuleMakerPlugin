@@ -3,7 +3,7 @@
     <!-- Whoops -->
     <id>ccom.joetr.modulemaker</id>
     <name>Module Maker</name>
-    <vendor>http://joetr.com</vendor>
+    <vendor email="joseph.thomas.roskopf@gmail.com.com" url="https://joetr.com/">https://joetr.com</vendor>
 
     <depends>com.intellij.modules.lang</depends>
 
