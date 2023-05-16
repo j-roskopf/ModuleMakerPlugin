@@ -12,6 +12,7 @@ Creating both single modules and enhanced modules (representing the 3 module sys
 Additional features include:
 
 1. Specifying gradle template for modules to align with your project specific defaults.
+   1. Allows for custom variables to be replaced with generated values
 2. Aligning the gradle files to follow the module name
 3. Generating both .gradle and .gradle.kts build files for a given module
 <!-- Plugin description end -->
