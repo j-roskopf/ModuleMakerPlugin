@@ -17,6 +17,10 @@ Additional features include:
 3. Generating both .gradle and .gradle.kts build files for a given module
 <!-- Plugin description end -->
 
+## Building
+
+Creating a release tag that follows `release/x.x.x` will create a Github release with the relevant artifacts.
+
 ## How To Use
 
 - From under the `Tools` menu
@@ -29,3 +33,8 @@ Additional features include:
 
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>Marketplace</kbd> > <kbd>Search for "Module Maker"</kbd> >
   <kbd>Install Plugin</kbd>
+
+- Manually:
+
+  Download the [latest release](https://github.com/j-roskopf/ModuleMakerPlugin/releases/latest) and install it manually using
+  <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
