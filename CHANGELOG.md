@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.6]
+- Add import / export in settings
+
 ## [1.0.5]
 - Internal improvements
 
