@@ -6,6 +6,7 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.util.xmlb.XmlSerializerUtil.copyBean
 import com.joetr.modulemaker.DEFAULT_BASE_PACKAGE_NAME
+import kotlinx.serialization.Serializable
 import org.jetbrains.annotations.Nullable
 
 @State(name = "PreferenceService", storages = [(Storage("module_maker_preferences.xml"))])
@@ -30,6 +31,7 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
 
     companion object {
 
+        @Serializable
         data class State(
             var androidTemplate: String = "",
             var kotlinTemplate: String = "",
