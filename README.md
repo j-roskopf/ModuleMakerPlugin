@@ -1,10 +1,10 @@
 # Module Maker
 
+Featured in issue 355 of [Kotlin Weekly](https://us12.campaign-archive.com/?u=f39692e245b94f7fb693b6d82&id=46a6fab551)
+
 [![Build](https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml/badge.svg)](https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml)
 [![Version](https://img.shields.io/jetbrains/plugin/v/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
-
-Featured in issue 355 of [Kotlin Weekly](https://us12.campaign-archive.com/?u=f39692e245b94f7fb693b6d82&id=46a6fab551)
 
 <!-- Plugin description -->
 This is a plugin that allows one to create modules without having to copy / paste / modify existing modules.
