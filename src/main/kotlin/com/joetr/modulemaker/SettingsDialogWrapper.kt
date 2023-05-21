@@ -2,6 +2,11 @@
 
 package com.joetr.modulemaker
 
+import com.intellij.openapi.fileChooser.FileChooser
+import com.intellij.openapi.fileChooser.FileChooserDescriptor
+import com.intellij.openapi.fileChooser.FileChooserFactory
+import com.intellij.openapi.fileChooser.FileSaverDescriptor
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBTabbedPane
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
@@ -10,10 +15,17 @@ import com.joetr.modulemaker.template.AndroidModuleTemplate
 import com.joetr.modulemaker.template.KotlinModuleKtsTemplate
 import com.joetr.modulemaker.template.KotlinModuleTemplate
 import com.joetr.modulemaker.template.TemplateVariable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ActionEvent
+import java.io.FileWriter
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JButton
@@ -35,6 +47,7 @@ const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
 const val DEFAULT_REFRESH_ON_MODULE_ADD = true
 
 class SettingsDialogWrapper(
+    private val project: Project,
     private val onSave: () -> Unit,
     private val isKtsCurrentlyChecked: Boolean,
     private val isAndroidChecked: Boolean
@@ -84,6 +97,17 @@ class SettingsDialogWrapper(
             clearData()
         }
 
+        val exportSettingsButton = JButton("Export Settings").apply {
+            addActionListener {
+                exportSettings()
+            }
+        }
+        val importSettingsButton = JButton("Import Settings").apply {
+            addActionListener {
+                importSettings()
+            }
+        }
+
         val panel = JPanel()
         val layout = SpringLayout()
         panel.layout = layout
@@ -98,6 +122,8 @@ class SettingsDialogWrapper(
         panel.add(packageNameTextLabel)
         panel.add(packageNameTextField)
         panel.add(refreshOnModuleAdd)
+        panel.add(importSettingsButton)
+        panel.add(exportSettingsButton)
 
         layout.putConstraint(
             SpringLayout.NORTH,
@@ -152,11 +178,41 @@ class SettingsDialogWrapper(
         )
 
         layout.putConstraint(
+            SpringLayout.WEST,
+            importSettingsButton,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            importSettingsButton,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            refreshOnModuleAdd
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
+            exportSettingsButton,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            exportSettingsButton,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            importSettingsButton
+        )
+
+        layout.putConstraint(
             SpringLayout.NORTH,
             clearSettingsButton,
             EXTRA_PADDING,
             SpringLayout.SOUTH,
-            refreshOnModuleAdd
+            exportSettingsButton
         )
         layout.putConstraint(
             SpringLayout.WEST,
@@ -167,6 +223,80 @@ class SettingsDialogWrapper(
         )
 
         return panel
+    }
+
+    private fun importSettings() {
+        FileChooser.chooseFile(
+            FileChooserDescriptor(
+                true,
+                false,
+                false,
+                false,
+                false,
+                false
+            ),
+            project,
+            null
+        ) {
+            val path: Path = Paths.get(it.path)
+
+            val data: String = Files.readAllLines(path)[0]
+
+            val state = Json.decodeFromString<PreferenceServiceImpl.Companion.State>(data)
+
+            androidTemplateTextArea.text = state.androidTemplate
+            kotlinTemplateTextArea.text = state.kotlinTemplate
+            apiTemplateTextArea.text = state.apiTemplate
+            implTemplateTextArea.text = state.implTemplate
+            glueTemplateTextArea.text = state.glueTemplate
+            packageNameTextField.text = state.packageName
+            refreshOnModuleAdd.isSelected = state.refreshOnModuleAdd
+        }
+    }
+
+    private fun exportSettings() {
+        val test = FileChooserFactory.getInstance().createSaveFileDialog(
+            FileSaverDescriptor(
+                "Select Location",
+                "",
+                ".json"
+            ),
+            project
+        )
+        val wrapper = test.save("module_maker_settings.json")
+        if (wrapper != null) {
+            try {
+                val writer = FileWriter(wrapper.file.absolutePath)
+                val json = getJsonFromSettings()
+                writer.write(json)
+                writer.close()
+            } catch (e: Exception) {
+                Notifications.showExportError()
+            }
+        }
+    }
+
+    private fun getJsonFromSettings(): String {
+        val androidTemplate: String = androidTemplateTextArea.text
+        val kotlinTemplate: String = kotlinTemplateTextArea.text
+        val apiTemplate: String = apiTemplateTextArea.text
+        val glueTemplate: String = glueTemplateTextArea.text
+        val implTemplate: String = implTemplateTextArea.text
+        val packageName: String = packageNameTextField.text
+        val shouldRefresh = refreshOnModuleAdd.isSelected
+
+        // if more parameters get added, add support to import / export
+        val newState = PreferenceServiceImpl.Companion.State(
+            androidTemplate = androidTemplate,
+            kotlinTemplate = kotlinTemplate,
+            apiTemplate = apiTemplate,
+            glueTemplate = glueTemplate,
+            implTemplate = implTemplate,
+            packageName = packageName,
+            refreshOnModuleAdd = shouldRefresh
+        )
+
+        return Json.encodeToString(newState)
     }
 
     private fun createTemplateDefaultComponent(): JComponent {

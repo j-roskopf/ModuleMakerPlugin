@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
+    kotlin("plugin.serialization") version "1.8.21"
 }
 
 group = properties("pluginGroup").get()
@@ -35,9 +36,9 @@ apply(
     from = "gradle/spotless.gradle"
 )
 
-// Dependencies are managed with Gradle version catalog - read more: https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
-    implementation("org.freemarker:freemarker:2.3.30")
+    implementation(libs.freemarker)
+    implementation(libs.serialization)
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.

@@ -4,6 +4,7 @@ import com.intellij.icons.AllIcons
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
@@ -48,7 +49,9 @@ const val KOTLIN = "Kotlin"
 private const val DEFAULT_MODULE_NAME = ":repository:database (as an example)"
 private const val DEFAULT_SRC_VALUE = "EMPTY"
 
-class ModuleMakerDialogWrapper : DialogWrapper(true) {
+class ModuleMakerDialogWrapper(
+    private val project: Project
+) : DialogWrapper(true) {
 
     private val preferenceService = PreferenceServiceImpl.instance
 
@@ -137,6 +140,7 @@ class ModuleMakerDialogWrapper : DialogWrapper(true) {
                     }
 
                     SettingsDialogWrapper(
+                        project = project,
                         onSave = {
                             onSettingsSaved()
                         },

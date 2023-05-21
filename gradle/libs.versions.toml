@@ -1,18 +1,18 @@
 [versions]
 # libraries
-annotations = "24.0.1"
+freemarker = "2.3.30"
+serialization = "1.5.1"
 
 # plugins
-dokka = "1.8.10"
 kotlin = "1.8.20"
 changelog = "2.0.0"
 gradleIntelliJPlugin = "1.13.3"
 
 [libraries]
-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+freemarker = { group = "org.freemarker", name = "freemarker", version.ref = "freemarker" }
+serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
-dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 gradleIntelliJPlugin = { id = "org.jetbrains.intellij", version.ref = "gradleIntelliJPlugin" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
