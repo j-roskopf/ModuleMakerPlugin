@@ -1,5 +1,11 @@
 # Module Maker Changelog
 
+## [1.0.7]
+- Add option to add README.md when generating a module
+- Add option to add .gitignore to module creation
+- Added new section in settings to specify custom .gitignore template
+- Added settings under 'General' tab to set defaults for most module configurations
+
 ## [1.0.6]
 - Add import / export in settings
 

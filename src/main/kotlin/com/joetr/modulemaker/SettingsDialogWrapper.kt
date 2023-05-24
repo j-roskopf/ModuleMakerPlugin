@@ -12,6 +12,7 @@ import com.intellij.ui.components.JBTabbedPane
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import com.joetr.modulemaker.template.AndroidModuleKtsTemplate
 import com.joetr.modulemaker.template.AndroidModuleTemplate
+import com.joetr.modulemaker.template.GitIgnoreTemplate
 import com.joetr.modulemaker.template.KotlinModuleKtsTemplate
 import com.joetr.modulemaker.template.KotlinModuleTemplate
 import com.joetr.modulemaker.template.TemplateVariable
@@ -20,6 +21,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.ActionEvent
 import java.io.FileWriter
@@ -45,6 +47,11 @@ private const val WINDOW_HEIGHT = 900
 
 const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
 const val DEFAULT_REFRESH_ON_MODULE_ADD = true
+const val DEFAULT_THREE_MODULE_CREATION = false
+const val DEFAULT_USE_KTS_FILE_EXTENSION = true
+const val DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE = false
+const val DEFAULT_ADD_README = true
+const val DEFAULT_ADD_GIT_IGNORE = false
 
 class SettingsDialogWrapper(
     private val project: Project,
@@ -56,6 +63,8 @@ class SettingsDialogWrapper(
     private lateinit var kotlinTemplateTextArea: JTextArea
     private lateinit var androidTemplateTextArea: JTextArea
 
+    private lateinit var gitignoreTemplateTextArea: JTextArea
+
     private lateinit var apiTemplateTextArea: JTextArea
     private lateinit var glueTemplateTextArea: JTextArea
     private lateinit var implTemplateTextArea: JTextArea
@@ -63,6 +72,11 @@ class SettingsDialogWrapper(
     private lateinit var packageNameTextField: JTextField
 
     private lateinit var refreshOnModuleAdd: JCheckBox
+    private lateinit var threeModuleCreation: JCheckBox
+    private lateinit var ktsFileExtension: JCheckBox
+    private lateinit var gradleFileNamedAfterModule: JCheckBox
+    private lateinit var addReadme: JCheckBox
+    private lateinit var addGitignore: JCheckBox
 
     private val preferenceService = PreferenceServiceImpl.instance
 
@@ -79,16 +93,113 @@ class SettingsDialogWrapper(
         val templateDefaultPanel = createTemplateDefaultComponent()
         val templateEnhancedDefaultPanel = createEnhancedTemplateDefaultComponent()
         val generalPanel = createGeneralPanel()
+        val gitignoreTemplateDefaultPanel = createGitIgnoreTemplateDefaultPanel()
 
         val tabbedPane = JBTabbedPane()
         tabbedPane.setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
-        tabbedPane.add("Template Defaults", templateDefaultPanel)
+        tabbedPane.add("Module Template Defaults", templateDefaultPanel)
         tabbedPane.add("Enhanced Template Defaults", templateEnhancedDefaultPanel)
+        tabbedPane.add(".gitignore Template Defaults", gitignoreTemplateDefaultPanel)
         tabbedPane.add("General", generalPanel)
         dialogPanel.add(tabbedPane)
         dialogPanel.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         return dialogPanel
+    }
+
+    private fun createGitIgnoreTemplateDefaultPanel(): Component? {
+        val settingExplanationLabel = JLabel(
+            """
+            <html>
+            You can override the .gitignore templates created with your own project specific default.
+            <br/><br/>
+            If nothing is specified here, a sensible default will be generated for you.
+            </html>
+            """.trimIndent()
+        )
+
+        val gitignoreTemplateLabel = JLabel(".gitignore Template")
+        var gitIgnoreTemplateFromPref = preferenceService.preferenceState.gitignoreTemplate
+
+        if (gitIgnoreTemplateFromPref.isBlank()) {
+            gitIgnoreTemplateFromPref = GitIgnoreTemplate.data
+        }
+
+        gitignoreTemplateTextArea = JTextArea(
+            gitIgnoreTemplateFromPref,
+            gitIgnoreTemplateFromPref.getRowsFromText(),
+            gitIgnoreTemplateFromPref.getColumnFromText()
+        )
+        gitignoreTemplateTextArea.addDocumentListener()
+
+        gitignoreTemplateTextArea.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 2)
+        val gitignoreTemplateScrollPane = JScrollPane(
+            gitignoreTemplateTextArea,
+            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
+        )
+        gitignoreTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 2 - EXTRA_PADDING * 2)
+
+        val templateDefaultPanel = JPanel()
+        val templateDefaultPanelLayout = SpringLayout()
+        templateDefaultPanel.layout = templateDefaultPanelLayout
+        templateDefaultPanel.add(gitignoreTemplateLabel)
+        templateDefaultPanel.add(gitignoreTemplateScrollPane)
+        templateDefaultPanel.add(settingExplanationLabel)
+
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.NORTH,
+            settingExplanationLabel,
+            EXTRA_PADDING,
+            SpringLayout.NORTH,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            settingExplanationLabel,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            templateDefaultPanel
+        )
+
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.NORTH,
+            gitignoreTemplateLabel,
+            EXTRA_PADDING * 2,
+            SpringLayout.SOUTH,
+            settingExplanationLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            gitignoreTemplateLabel,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            templateDefaultPanel
+        )
+
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            gitignoreTemplateScrollPane,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.NORTH,
+            gitignoreTemplateScrollPane,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            gitignoreTemplateLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.EAST,
+            gitignoreTemplateScrollPane,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            templateDefaultPanel
+        )
+
+        return templateDefaultPanel
     }
 
     private fun createGeneralPanel(): JComponent {
@@ -118,10 +229,30 @@ class SettingsDialogWrapper(
         refreshOnModuleAdd = JCheckBox("Refresh after creating module")
         refreshOnModuleAdd.isSelected = preferenceService.preferenceState.refreshOnModuleAdd
 
+        threeModuleCreation = JCheckBox("3 module creation checked by default")
+        threeModuleCreation.isSelected = preferenceService.preferenceState.threeModuleCreationDefault
+
+        ktsFileExtension = JCheckBox("Use .kts file extension checked by default")
+        ktsFileExtension.isSelected = preferenceService.preferenceState.useKtsFileExtension
+
+        gradleFileNamedAfterModule = JCheckBox("Gradle file named after module by default")
+        gradleFileNamedAfterModule.isSelected = preferenceService.preferenceState.gradleFileNamedAfterModule
+
+        addReadme = JCheckBox("Add README.md by default")
+        addReadme.isSelected = preferenceService.preferenceState.addReadme
+
+        addGitignore = JCheckBox("Add .gitignore by default")
+        addGitignore.isSelected = preferenceService.preferenceState.addGitIgnore
+
         panel.add(clearSettingsButton)
         panel.add(packageNameTextLabel)
         panel.add(packageNameTextField)
         panel.add(refreshOnModuleAdd)
+        panel.add(threeModuleCreation)
+        panel.add(ktsFileExtension)
+        panel.add(gradleFileNamedAfterModule)
+        panel.add(addReadme)
+        panel.add(addGitignore)
         panel.add(importSettingsButton)
         panel.add(exportSettingsButton)
 
@@ -179,6 +310,81 @@ class SettingsDialogWrapper(
 
         layout.putConstraint(
             SpringLayout.WEST,
+            threeModuleCreation,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            threeModuleCreation,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            refreshOnModuleAdd
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
+            ktsFileExtension,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            ktsFileExtension,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            threeModuleCreation
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
+            gradleFileNamedAfterModule,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            gradleFileNamedAfterModule,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            ktsFileExtension
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
+            addReadme,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            addReadme,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            gradleFileNamedAfterModule
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
+            addGitignore,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            addGitignore,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            addReadme
+        )
+
+        layout.putConstraint(
+            SpringLayout.WEST,
             importSettingsButton,
             EXTRA_PADDING,
             SpringLayout.WEST,
@@ -189,7 +395,7 @@ class SettingsDialogWrapper(
             importSettingsButton,
             EXTRA_PADDING,
             SpringLayout.SOUTH,
-            refreshOnModuleAdd
+            addGitignore
         )
 
         layout.putConstraint(
@@ -251,6 +457,12 @@ class SettingsDialogWrapper(
             glueTemplateTextArea.text = state.glueTemplate
             packageNameTextField.text = state.packageName
             refreshOnModuleAdd.isSelected = state.refreshOnModuleAdd
+            threeModuleCreation.isSelected = state.threeModuleCreationDefault
+            ktsFileExtension.isSelected = state.useKtsFileExtension
+            gradleFileNamedAfterModule.isSelected = state.gradleFileNamedAfterModule
+            addReadme.isSelected = state.addReadme
+            addGitignore.isSelected = state.addGitIgnore
+            gitignoreTemplateTextArea.text = state.gitignoreTemplate
         }
     }
 
@@ -284,6 +496,12 @@ class SettingsDialogWrapper(
         val implTemplate: String = implTemplateTextArea.text
         val packageName: String = packageNameTextField.text
         val shouldRefresh = refreshOnModuleAdd.isSelected
+        val threeModuleCreationDefault = threeModuleCreation.isSelected
+        val useKtsFileExtension = ktsFileExtension.isSelected
+        val gradleFileNamedAfterModule = gradleFileNamedAfterModule.isSelected
+        val addReadme = addReadme.isSelected
+        val addGitignore = addGitignore.isSelected
+        val gitignoreTemplate = gitignoreTemplateTextArea.text
 
         // if more parameters get added, add support to import / export
         val newState = PreferenceServiceImpl.Companion.State(
@@ -293,7 +511,13 @@ class SettingsDialogWrapper(
             glueTemplate = glueTemplate,
             implTemplate = implTemplate,
             packageName = packageName,
-            refreshOnModuleAdd = shouldRefresh
+            refreshOnModuleAdd = shouldRefresh,
+            threeModuleCreationDefault = threeModuleCreationDefault,
+            useKtsFileExtension = useKtsFileExtension,
+            gradleFileNamedAfterModule = gradleFileNamedAfterModule,
+            addReadme = addReadme,
+            addGitIgnore = addGitignore,
+            gitignoreTemplate = gitignoreTemplate
         )
 
         return Json.encodeToString(newState)
@@ -713,7 +937,13 @@ class SettingsDialogWrapper(
             implTemplate = implTemplateTextArea.text,
             glueTemplate = glueTemplateTextArea.text,
             packageName = packageNameTextField.text,
-            refreshOnModuleAdd = refreshOnModuleAdd.isSelected
+            refreshOnModuleAdd = refreshOnModuleAdd.isSelected,
+            threeModuleCreationDefault = threeModuleCreation.isSelected,
+            useKtsFileExtension = ktsFileExtension.isSelected,
+            gradleFileNamedAfterModule = gradleFileNamedAfterModule.isSelected,
+            addReadme = addReadme.isSelected,
+            addGitIgnore = addGitignore.isSelected,
+            gitignoreTemplate = gitignoreTemplateTextArea.text
         )
     }
 
@@ -723,8 +953,14 @@ class SettingsDialogWrapper(
         apiTemplateTextArea.text = ""
         implTemplateTextArea.text = ""
         glueTemplateTextArea.text = ""
+        gitignoreTemplateTextArea.text = ""
         packageNameTextField.text = DEFAULT_BASE_PACKAGE_NAME
         refreshOnModuleAdd.isSelected = DEFAULT_REFRESH_ON_MODULE_ADD
+        threeModuleCreation.isSelected = DEFAULT_THREE_MODULE_CREATION
+        ktsFileExtension.isSelected = DEFAULT_USE_KTS_FILE_EXTENSION
+        gradleFileNamedAfterModule.isSelected = DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE
+        addReadme.isSelected = DEFAULT_ADD_README
+        addGitignore.isSelected = DEFAULT_ADD_GIT_IGNORE
     }
 
     private fun String.getRowsFromText(): Int {

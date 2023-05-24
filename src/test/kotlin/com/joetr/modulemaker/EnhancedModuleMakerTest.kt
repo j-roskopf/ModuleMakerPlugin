@@ -3,6 +3,8 @@ package com.joetr.modulemaker
 import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
+import com.joetr.modulemaker.template.GitIgnoreTemplate
+import org.junit.Assert
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
@@ -56,7 +58,9 @@ class EnhancedModuleMakerTest {
             enhancedModuleCreationStrategy = true,
             useKtsBuildFile = false,
             gradleFileFollowModule = false,
-            packageName = testPackageName
+            packageName = testPackageName,
+            addReadme = true,
+            addGitIgnore = false
         )
 
         // assert it was added to settings.gradle
@@ -78,9 +82,12 @@ class EnhancedModuleMakerTest {
         )
 
         // assert build.gradle is generated for all 3 modules
-        val buildGradleFileApi = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
-        val buildGradleFileGlue = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
-        val buildGradleFileImpl = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + buildGradleFileName)
+        val buildGradleFileApi =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
+        val buildGradleFileGlue =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
+        val buildGradleFileImpl =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + buildGradleFileName)
         assert(buildGradleFileApi.exists())
         assert(buildGradleFileGlue.exists())
         assert(buildGradleFileImpl.exists())
@@ -148,13 +155,18 @@ class EnhancedModuleMakerTest {
             enhancedModuleCreationStrategy = true,
             useKtsBuildFile = false,
             gradleFileFollowModule = false,
-            packageName = testPackageName
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = false
         )
 
         // assert build.gradle is generated for all 3 modules
-        val buildGradleFileApi = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
-        val buildGradleFileGlue = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
-        val buildGradleFileImpl = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + buildGradleFileName)
+        val buildGradleFileApi =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
+        val buildGradleFileGlue =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
+        val buildGradleFileImpl =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + buildGradleFileName)
         assert(buildGradleFileApi.exists())
         assert(buildGradleFileGlue.exists())
         assert(buildGradleFileImpl.exists())
@@ -205,13 +217,18 @@ class EnhancedModuleMakerTest {
             enhancedModuleCreationStrategy = true,
             useKtsBuildFile = false,
             gradleFileFollowModule = false,
-            packageName = testPackageName
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = false
         )
 
         // assert build.gradle is generated for all 3 modules
-        val buildGradleFileApi = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
-        val buildGradleFileGlue = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
-        val buildGradleFileImpl = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + buildGradleFileName)
+        val buildGradleFileApi =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + buildGradleFileName)
+        val buildGradleFileGlue =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + buildGradleFileName)
+        val buildGradleFileImpl =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + buildGradleFileName)
         assert(buildGradleFileApi.exists())
         assert(buildGradleFileGlue.exists())
         assert(buildGradleFileImpl.exists())
@@ -234,6 +251,176 @@ class EnhancedModuleMakerTest {
             buildGradleImplFileContents.contains(
                 template
             )
+        )
+    }
+
+    @Test
+    fun `readme is not generated in enhanced module when setting is disabled`() {
+        val modulePath = ":repository"
+        val modulePathAsFile = "repository"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = false
+        )
+
+        // assert readme was not generated in the api module
+        assert(
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + readmeFile).exists()
+                .not()
+        )
+    }
+
+    @Test
+    fun `gitignore is not generated in enhanced module when setting is disabled`() {
+        val modulePath = ":repository"
+        val modulePathAsFile = "repository"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = false
+        )
+
+        // assert gitignore was not generated in any of the modules module
+        assert(
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + ".gitignore").exists()
+                .not()
+        )
+        assert(
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + ".gitignore").exists()
+                .not()
+        )
+        assert(
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + ".gitignore").exists()
+                .not()
+        )
+    }
+
+    @Test
+    fun `gitignore is generated in enhanced module with default settings when setting is enabled`() {
+        val modulePath = ":repository"
+        val modulePathAsFile = "repository"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true
+        )
+
+        val apiGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + ".gitignore")
+        val apiGitignoreFileContents = readFromFile(file = apiGitIgnore)
+        val glueGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + ".gitignore")
+        val glueGitignoreFileContents = readFromFile(file = glueGitIgnore)
+        val implGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + ".gitignore")
+        val implGitignoreFileContents = readFromFile(file = implGitIgnore)
+
+        Assert.assertEquals(
+            GitIgnoreTemplate.data,
+            apiGitignoreFileContents.joinToString("\n")
+        )
+
+        Assert.assertEquals(
+            GitIgnoreTemplate.data,
+            glueGitignoreFileContents.joinToString("\n")
+        )
+
+        Assert.assertEquals(
+            GitIgnoreTemplate.data,
+            implGitignoreFileContents.joinToString("\n")
+        )
+    }
+
+    @Test
+    fun `gitignore is generated in android module with custom settings when setting is enabled`() {
+        val modulePath = ":repository"
+        val modulePathAsFile = "repository"
+
+        val template = """
+            this is a custom template
+        """.trimIndent()
+
+        fakePreferenceService.preferenceState.gitignoreTemplate = template
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true
+        )
+
+        val apiGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + ".gitignore")
+        val apiGitignoreFileContents = readFromFile(file = apiGitIgnore)
+        val glueGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "glue" + File.separator + ".gitignore")
+        val glueGitignoreFileContents = readFromFile(file = glueGitIgnore)
+        val implGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "impl" + File.separator + ".gitignore")
+        val implGitignoreFileContents = readFromFile(file = implGitIgnore)
+
+        Assert.assertEquals(
+            template,
+            apiGitignoreFileContents.joinToString("\n")
+        )
+
+        Assert.assertEquals(
+            template,
+            glueGitignoreFileContents.joinToString("\n")
+        )
+
+        Assert.assertEquals(
+            template,
+            implGitignoreFileContents.joinToString("\n")
         )
     }
 }

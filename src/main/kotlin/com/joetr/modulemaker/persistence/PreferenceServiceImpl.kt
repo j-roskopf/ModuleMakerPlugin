@@ -5,7 +5,13 @@ import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.util.xmlb.XmlSerializerUtil.copyBean
+import com.joetr.modulemaker.DEFAULT_ADD_GIT_IGNORE
+import com.joetr.modulemaker.DEFAULT_ADD_README
 import com.joetr.modulemaker.DEFAULT_BASE_PACKAGE_NAME
+import com.joetr.modulemaker.DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE
+import com.joetr.modulemaker.DEFAULT_REFRESH_ON_MODULE_ADD
+import com.joetr.modulemaker.DEFAULT_THREE_MODULE_CREATION
+import com.joetr.modulemaker.DEFAULT_USE_KTS_FILE_EXTENSION
 import kotlinx.serialization.Serializable
 import org.jetbrains.annotations.Nullable
 
@@ -38,8 +44,14 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
             var apiTemplate: String = "",
             var glueTemplate: String = "",
             var implTemplate: String = "",
+            var gitignoreTemplate: String = "",
             var packageName: String = DEFAULT_BASE_PACKAGE_NAME,
-            var refreshOnModuleAdd: Boolean = true
+            var refreshOnModuleAdd: Boolean = DEFAULT_REFRESH_ON_MODULE_ADD,
+            var threeModuleCreationDefault: Boolean = DEFAULT_THREE_MODULE_CREATION,
+            var useKtsFileExtension: Boolean = DEFAULT_USE_KTS_FILE_EXTENSION,
+            var gradleFileNamedAfterModule: Boolean = DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE,
+            var addReadme: Boolean = DEFAULT_ADD_README,
+            var addGitIgnore: Boolean = DEFAULT_ADD_GIT_IGNORE
         )
 
         @JvmStatic
