@@ -1,8 +1,10 @@
 package com.joetr.modulemaker.file
 
 import com.joetr.modulemaker.persistence.PreferenceService
+import com.joetr.modulemaker.template.GitIgnoreTemplate
 import com.joetr.modulemaker.template.TemplateWriter
 import java.io.File
+import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.absolutePathString
@@ -34,7 +36,9 @@ class FileWriter(
         enhancedModuleCreationStrategy: Boolean,
         useKtsBuildFile: Boolean,
         gradleFileFollowModule: Boolean,
-        packageName: String
+        packageName: String,
+        addReadme: Boolean,
+        addGitIgnore: Boolean
     ) {
         val fileReady = modulePathAsString.replace(":", "/")
 
@@ -68,7 +72,9 @@ class FileWriter(
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName
+                packageName = packageName,
+                addReadme = addReadme,
+                addGitIgnore = addGitIgnore
             )
         } else {
             createDefaultModuleStructure(
@@ -77,7 +83,9 @@ class FileWriter(
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName
+                packageName = packageName,
+                addReadme = addReadme,
+                addGitIgnore = addGitIgnore
             )
         }
 
@@ -89,7 +97,9 @@ class FileWriter(
         moduleType: String,
         useKtsBuildFile: Boolean,
         gradleFileFollowModule: Boolean,
-        packageName: String
+        packageName: String,
+        addReadme: Boolean,
+        addGitIgnore: Boolean
     ) {
         // make the 3 module
         moduleFile.toPath().resolve("glue").toFile().apply {
@@ -110,7 +120,14 @@ class FileWriter(
                 moduleFile = this,
                 packageName = packageName.plus(".glue")
             )
+
+            if (addGitIgnore) {
+                createGitIgnore(
+                    moduleFile = this
+                )
+            }
         }
+
         moduleFile.toPath().resolve("impl").toFile().apply {
             mkdirs()
             templateWriter.createGradleFile(
@@ -128,7 +145,14 @@ class FileWriter(
                 moduleFile = this,
                 packageName = packageName.plus(".impl")
             )
+
+            if (addGitIgnore) {
+                createGitIgnore(
+                    moduleFile = this
+                )
+            }
         }
+
         moduleFile.toPath().resolve("api").toFile().apply {
             mkdirs()
             templateWriter.createGradleFile(
@@ -141,17 +165,25 @@ class FileWriter(
                 packageName = packageName.plus(".api")
             )
 
-            // create readme file for the api module
-            templateWriter.createReadmeFile(
-                moduleFile = this,
-                moduleName = "api"
-            )
+            if (addReadme) {
+                // create readme file for the api module
+                templateWriter.createReadmeFile(
+                    moduleFile = this,
+                    moduleName = "api"
+                )
+            }
 
             // create default packages
             createDefaultPackages(
                 moduleFile = this,
                 packageName = packageName.plus(".api")
             )
+
+            if (addGitIgnore) {
+                createGitIgnore(
+                    moduleFile = this
+                )
+            }
         }
     }
 
@@ -161,7 +193,9 @@ class FileWriter(
         moduleType: String,
         useKtsBuildFile: Boolean,
         gradleFileFollowModule: Boolean,
-        packageName: String
+        packageName: String,
+        addReadme: Boolean,
+        addGitIgnore: Boolean
     ) {
         // create gradle files
         templateWriter.createGradleFile(
@@ -174,17 +208,39 @@ class FileWriter(
             packageName = packageName
         )
 
-        // create readme file
-        templateWriter.createReadmeFile(
-            moduleFile = moduleFile,
-            moduleName = moduleName
-        )
+        if (addReadme) {
+            // create readme file
+            templateWriter.createReadmeFile(
+                moduleFile = moduleFile,
+                moduleName = moduleName
+            )
+        }
 
         // create default packages
         createDefaultPackages(
             moduleFile = moduleFile,
             packageName = packageName
         )
+
+        if (addGitIgnore) {
+            createGitIgnore(
+                moduleFile = moduleFile
+            )
+        }
+    }
+
+    private fun createGitIgnore(moduleFile: File) {
+        val gitignoreFile = Paths.get(moduleFile.absolutePath).toFile()
+
+        val writer: Writer = java.io.FileWriter(Paths.get(gitignoreFile.absolutePath, ".gitignore").toFile())
+
+        val customPreferences = preferenceService.preferenceState.gitignoreTemplate
+        val dataToWrite = customPreferences.ifEmpty {
+            GitIgnoreTemplate.data
+        }
+        writer.write(dataToWrite)
+        writer.flush()
+        writer.close()
     }
 
     /**

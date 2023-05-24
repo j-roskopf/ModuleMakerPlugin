@@ -8,7 +8,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
-import com.intellij.util.io.exists
 import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import org.jetbrains.annotations.Nullable
@@ -69,6 +68,8 @@ class ModuleMakerDialogWrapper(
     private lateinit var threeModuleCreationCheckbox: JCheckBox
     private lateinit var ktsCheckbox: JCheckBox
     private lateinit var gradleFileNamedAfterModule: JCheckBox
+    private lateinit var addReadme: JCheckBox
+    private lateinit var addGitIgnore: JCheckBox
 
     init {
         title = "Module Maker"
@@ -154,6 +155,11 @@ class ModuleMakerDialogWrapper(
 
     private fun onSettingsSaved() {
         packageNameTextField.text = preferenceService.preferenceState.packageName
+        threeModuleCreationCheckbox.isSelected = preferenceService.preferenceState.threeModuleCreationDefault
+        ktsCheckbox.isSelected = preferenceService.preferenceState.useKtsFileExtension
+        gradleFileNamedAfterModule.isSelected = preferenceService.preferenceState.gradleFileNamedAfterModule
+        addReadme.isSelected = preferenceService.preferenceState.addReadme
+        addGitIgnore.isSelected = preferenceService.preferenceState.addGitIgnore
     }
 
     override fun createActions(): Array<Action> {
@@ -286,9 +292,21 @@ class ModuleMakerDialogWrapper(
             }
         )
         configurationJPanel.layout = configurationLayout
-        threeModuleCreationCheckbox = JCheckBox("3 Module Creation")
-        ktsCheckbox = JCheckBox("Use .kts file extension")
-        gradleFileNamedAfterModule = JCheckBox("Gradle file named after module")
+        threeModuleCreationCheckbox = JCheckBox("3 Module Creation").apply {
+            isSelected = preferenceService.preferenceState.threeModuleCreationDefault
+        }
+        ktsCheckbox = JCheckBox("Use .kts file extension").apply {
+            isSelected = preferenceService.preferenceState.useKtsFileExtension
+        }
+        gradleFileNamedAfterModule = JCheckBox("Gradle file named after module").apply {
+            isSelected = preferenceService.preferenceState.gradleFileNamedAfterModule
+        }
+        addReadme = JCheckBox("Add README.md").apply {
+            isSelected = preferenceService.preferenceState.addReadme
+        }
+        addGitIgnore = JCheckBox("Add .gitignore").apply {
+            isSelected = preferenceService.preferenceState.addGitIgnore
+        }
         packageNameTextField = JTextField(preferenceService.preferenceState.packageName)
         moduleNameTextField = JTextField(DEFAULT_MODULE_NAME)
 
@@ -301,6 +319,8 @@ class ModuleMakerDialogWrapper(
         configurationJPanel.add(moduleNameTextField)
         configurationJPanel.add(packageNameTextLabel)
         configurationJPanel.add(threeModuleQuestionMarkButton)
+        configurationJPanel.add(addReadme)
+        configurationJPanel.add(addGitIgnore)
 
         kotlinTypeRadioButton = JRadioButton(KOTLIN)
         androidTypeRadioButton = JRadioButton(ANDROID).apply {
@@ -377,6 +397,38 @@ class ModuleMakerDialogWrapper(
             ktsCheckbox
         )
 
+        // readme
+        configurationLayout.putConstraint(
+            SpringLayout.WEST,
+            addReadme,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            configurationJPanel
+        )
+        configurationLayout.putConstraint(
+            SpringLayout.NORTH,
+            addReadme,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            gradleFileNamedAfterModule
+        )
+
+        // gitignore
+        configurationLayout.putConstraint(
+            SpringLayout.WEST,
+            addGitIgnore,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            configurationJPanel
+        )
+        configurationLayout.putConstraint(
+            SpringLayout.NORTH,
+            addGitIgnore,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            addReadme
+        )
+
         // type radio group
         configurationLayout.putConstraint(
             SpringLayout.WEST,
@@ -390,7 +442,7 @@ class ModuleMakerDialogWrapper(
             androidTypeRadioButton,
             EXTRA_PADDING,
             SpringLayout.SOUTH,
-            gradleFileNamedAfterModule
+            addGitIgnore
         )
         configurationLayout.putConstraint(
             SpringLayout.NORTH,
@@ -556,7 +608,9 @@ class ModuleMakerDialogWrapper(
                 enhancedModuleCreationStrategy = threeModuleCreationCheckbox.isSelected,
                 useKtsBuildFile = ktsCheckbox.isSelected,
                 gradleFileFollowModule = gradleFileNamedAfterModule.isSelected,
-                packageName = packageNameTextField.text
+                packageName = packageNameTextField.text,
+                addReadme = addReadme.isSelected,
+                addGitIgnore = addGitIgnore.isSelected
             )
         } else {
             MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
