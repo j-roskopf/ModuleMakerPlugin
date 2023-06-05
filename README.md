@@ -19,6 +19,10 @@ Additional features include:
 3. Generating both .gradle and .gradle.kts build files for a given module
 <!-- Plugin description end -->
 
+# Demo
+
+https://www.youtube.com/watch?v=ZtXCxBuiQNk
+
 ## Building
 
 Creating a release tag that follows `release/x.x.x` will create a Github release with the relevant artifacts.
