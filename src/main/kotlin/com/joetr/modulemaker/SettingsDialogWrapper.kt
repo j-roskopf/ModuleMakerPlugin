@@ -483,7 +483,7 @@ class SettingsDialogWrapper(
                 writer.write(json)
                 writer.close()
             } catch (e: Exception) {
-                Notifications.showExportError()
+                Notifications.showExportError(project)
             }
         }
     }
