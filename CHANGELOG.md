@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.8]
+- Fixed issue when multiple projects were open
+
 ## [1.0.7]
 - Add option to add README.md when generating a module
 - Add option to add .gitignore to module creation
