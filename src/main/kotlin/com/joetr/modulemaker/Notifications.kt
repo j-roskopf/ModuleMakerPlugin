@@ -2,10 +2,10 @@ package com.joetr.modulemaker
 
 import com.intellij.notification.Notification
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.project.Project
 
 object Notifications {
-    fun showExportError() {
+    fun showExportError(project: Project) {
         val notification = Notification(
             "ModuleMaker",
             "Error",
@@ -13,6 +13,6 @@ object Notifications {
             NotificationType.ERROR
         )
 
-        notification.notify(ProjectManager.getInstance().openProjects[0])
+        notification.notify(project)
     }
 }

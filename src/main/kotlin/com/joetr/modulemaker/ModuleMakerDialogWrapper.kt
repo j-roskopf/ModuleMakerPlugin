@@ -5,7 +5,6 @@ import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
 import com.joetr.modulemaker.file.FileWriter
@@ -619,7 +618,7 @@ class ModuleMakerDialogWrapper(
 
     private fun syncProject() {
         ExternalSystemUtil.refreshProject(
-            ProjectManager.getInstance().openProjects[0],
+            project,
             ProjectSystemId("GRADLE"),
             rootDirectoryString(),
             false,
@@ -648,7 +647,7 @@ class ModuleMakerDialogWrapper(
         // rootDirectoryString() gives us back something like /Users/user/path/to/project
         // the first path element in the tree node starts with 'project' (last folder above)
         // so we remove it and join the nodes of the tree by our file separator
-        return ProjectManager.getInstance().openProjects[0].basePath!!.split(File.separator).dropLast(1)
+        return project.basePath!!.split(File.separator).dropLast(1)
             .joinToString(File.separator)
     }
 
@@ -656,11 +655,11 @@ class ModuleMakerDialogWrapper(
         // rootDirectoryString() gives us back something like /Users/user/path/to/project
         // the first path element in the tree node starts with 'project' (last folder above)
         // so we remove it and join the nodes of the tree by our file separator
-        return ProjectManager.getInstance().openProjects[0].basePath!!.split(File.separator).takeLast(1).first()
+        return project.basePath!!.split(File.separator).takeLast(1).first()
     }
 
     private fun rootDirectoryString(): String {
-        return ProjectManager.getInstance().openProjects[0].basePath!!
+        return project.basePath!!
     }
 }
 
