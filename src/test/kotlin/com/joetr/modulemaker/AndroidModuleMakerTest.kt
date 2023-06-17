@@ -61,7 +61,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = true,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert it was added to settings.gradle
@@ -122,7 +123,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert build.gradle is generated
@@ -172,7 +174,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
 
         )
 
@@ -211,7 +214,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = true,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert it was added to settings.gradle
@@ -269,7 +273,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert build.gradle.kts is generated
@@ -301,7 +306,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert it was added to settings.gradle
@@ -333,7 +339,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = true,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert readme exists
@@ -365,7 +372,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert readme does not exists
@@ -396,7 +404,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert gitignore was not generated
@@ -427,7 +436,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = true
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
         )
 
         // assert gitignore was generated and has the expected contents
@@ -466,7 +476,8 @@ class AndroidModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = true
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
         )
 
         // assert gitignore was generated and has the expected contents

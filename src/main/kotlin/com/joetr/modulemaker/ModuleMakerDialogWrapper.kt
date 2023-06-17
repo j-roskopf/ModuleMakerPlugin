@@ -587,6 +587,7 @@ class ModuleMakerDialogWrapper(
         val currentlySelectedFile = getCurrentlySelectedFile()
         if (settingsGradleFile != null) {
             fileWriter.createModule(
+                rootPathString = selectedSrcValue.split(File.separator).drop(1).joinToString(File.separator),
                 settingsGradleFile = settingsGradleFile,
                 modulePathAsString = moduleNameTextField.text,
                 moduleType = moduleType,
