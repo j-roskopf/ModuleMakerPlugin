@@ -14,6 +14,14 @@ fun TemporaryFolder.populateSettingsGradleKtsWithFakeData(): File {
     return settingsGradleKts
 }
 
+fun TemporaryFolder.populateSettingsGradleKtsWithFakeFilePathData(): File {
+    val settingsGradleKts = this.newFile(settingsGradleKts)
+    val writer = FileWriter(settingsGradleKts)
+    writer.write(NowInAndroidSettingsGradleKts.filePathData)
+    writer.close()
+    return settingsGradleKts
+}
+
 fun TemporaryFolder.populateSettingsGradleWithFakeData(): File {
     val settingsGradle = this.newFile(settingsGradle)
     val writer = FileWriter(settingsGradle)

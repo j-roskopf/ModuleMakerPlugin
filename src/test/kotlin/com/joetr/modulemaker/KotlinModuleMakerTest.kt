@@ -5,6 +5,7 @@ import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import com.joetr.modulemaker.template.GitIgnoreTemplate
 import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -369,5 +370,37 @@ class KotlinModuleMakerTest {
             template,
             gitignoreFileContents.joinToString("\n")
         )
+    }
+
+    @Test
+    fun `create module works with 2 parameters`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleKtsWithFakeFilePathData()
+        val modulePath = ":repository:network"
+        val modulePathAsFile = "repository/network"
+        val rootPathString = folder.root.toString()
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath\",\"$rootPathString/$modulePathAsFile\")" })
     }
 }

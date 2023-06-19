@@ -430,4 +430,38 @@ class EnhancedModuleMakerTest {
             implGitignoreFileContents.joinToString("\n")
         )
     }
+
+    @Test
+    fun `create module works with 2 parameters`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleKtsWithFakeFilePathData()
+        val modulePath = ":repository:network"
+        val modulePathAsFile = "repository/network"
+        val rootPathString = folder.root.toString()
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        Assert.assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath:api\",\"$rootPathString/$modulePathAsFile/api\")" })
+        Assert.assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath:impl\",\"$rootPathString/$modulePathAsFile/impl\")" })
+        Assert.assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath:glue\",\"$rootPathString/$modulePathAsFile/glue\")" })
+    }
 }

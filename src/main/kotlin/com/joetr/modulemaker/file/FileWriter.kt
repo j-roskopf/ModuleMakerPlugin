@@ -299,14 +299,14 @@ class FileWriter(
         // get the first and last line numbers for an include statement
         val firstLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfFirst {
             it.contains("$projectIncludeKeyword(\"") ||
-                    it.contains("$projectIncludeKeyword \"") ||
-                    it.contains("$projectIncludeKeyword '")
+                it.contains("$projectIncludeKeyword \"") ||
+                it.contains("$projectIncludeKeyword '")
         }
 
         val lastLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfLast {
             it.contains("$projectIncludeKeyword(\"") ||
-                    it.contains("$projectIncludeKeyword \"") ||
-                    it.contains("$projectIncludeKeyword '")
+                it.contains("$projectIncludeKeyword \"") ||
+                it.contains("$projectIncludeKeyword '")
         }
 
         if (firstLineNumberOfFirstIncludeProjectStatement <= 0) {
@@ -351,43 +351,49 @@ class FileWriter(
         modulePathAsString: String,
         rootPathAsString: String
     ): String {
-        val apiPath = "$modulePathAsString:api"
-        val implPath = "$modulePathAsString:impl"
-        val gluePath = "$modulePathAsString:glue"
+        return if (enhancedModuleCreationStrategy) {
+            val apiPath = "$modulePathAsString:api"
+            val implPath = "$modulePathAsString:impl"
+            val gluePath = "$modulePathAsString:glue"
 
-        val apiText = if (usesTwoParameters) "$projectIncludeKeyword(\"$apiPath\",\"${
+            val apiText = if (usesTwoParameters) "$projectIncludeKeyword(\"$apiPath\",\"${
             rootPathAsString + apiPath.replace(
                 ":",
                 File.separator
             )
-        }\")\n"
-        else "$projectIncludeKeyword(\"$apiPath\")\n"
+            }\")\n"
+            else "$projectIncludeKeyword(\"$apiPath\")\n"
 
-        val implText = if (usesTwoParameters) "$projectIncludeKeyword(\"$implPath\",\"${
+            val implText = if (usesTwoParameters) "$projectIncludeKeyword(\"$implPath\",\"${
             rootPathAsString + implPath.replace(
                 ":",
                 File.separator
             )
-        }\")\n"
-        else "$projectIncludeKeyword(\"$implPath\")\n"
+            }\")\n"
+            else "$projectIncludeKeyword(\"$implPath\")\n"
 
-        val glueText = if (usesTwoParameters) "$projectIncludeKeyword(\"$gluePath\",\"${
+            val glueText = if (usesTwoParameters) "$projectIncludeKeyword(\"$gluePath\",\"${
             rootPathAsString + gluePath.replace(
                 ":",
                 File.separator
             )
-        }\")"
-        else "$projectIncludeKeyword(\"$gluePath\")"
+            }\")"
+            else "$projectIncludeKeyword(\"$gluePath\")"
 
-        val defaultText = if (usesTwoParameters) "$projectIncludeKeyword(\"$modulePathAsString\",\"${
-            rootPathAsString + modulePathAsString.replace(
-                ":",
-                File.separator
-            )
-        }\")"
-        else "$projectIncludeKeyword(\"$modulePathAsString\")"
+            "$apiText$implText$glueText"
+        } else {
+            val defaultText = if (usesTwoParameters) {
+                "$projectIncludeKeyword(\"$modulePathAsString\",\"${
+                rootPathAsString + modulePathAsString.replace(
+                    ":",
+                    File.separator
+                )
+                }\")"
+            } else {
+                "$projectIncludeKeyword(\"$modulePathAsString\")"
+            }
 
-        return if (enhancedModuleCreationStrategy) "$apiText$implText$glueText" else defaultText
+            defaultText
+        }
     }
-
 }
