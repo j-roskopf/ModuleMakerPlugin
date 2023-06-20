@@ -38,7 +38,8 @@ class FileWriter(
         gradleFileFollowModule: Boolean,
         packageName: String,
         addReadme: Boolean,
-        addGitIgnore: Boolean
+        addGitIgnore: Boolean,
+        rootPathString: String
     ) {
         val fileReady = modulePathAsString.replace(":", "/")
 
@@ -60,6 +61,7 @@ class FileWriter(
 
         // add to settings.gradle.kts
         addToSettingsAtCorrectLocation(
+            rootPathAsString = rootPathString,
             modulePathAsString = modulePathAsString,
             settingsGradleFile = settingsGradleFile,
             enhancedModuleCreationStrategy = enhancedModuleCreationStrategy,
@@ -272,19 +274,24 @@ class FileWriter(
         settingsGradleFile: File,
         modulePathAsString: String,
         enhancedModuleCreationStrategy: Boolean,
-        showErrorDialog: () -> Unit
-
+        showErrorDialog: () -> Unit,
+        rootPathAsString: String
     ) {
         val settingsFile = Files.readAllLines(Paths.get(settingsGradleFile.toURI()))
 
         val includeProject = "includeProject"
         val include = "include"
+        val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
 
         // TODO - add ability to specify keyword
         val projectIncludeKeyword = if (settingsFile.any { it.contains("includeProject") }) {
             includeProject
         } else {
             include
+        }
+
+        val usesTwoParameters = settingsFile.any { line ->
+            twoParametersPattern.containsMatchIn(line)
         }
 
         // get the first and last line numbers for an include statement
@@ -311,13 +318,13 @@ class FileWriter(
             lastLineNumberOfFirstIncludeProjectStatement + 1
         ).toMutableList()
 
-        val textToWrite = if (enhancedModuleCreationStrategy) {
-            "$projectIncludeKeyword(\"".plus(modulePathAsString.plus(":api")).plus("\")").plus("\n")
-                .plus("$projectIncludeKeyword(\"".plus(modulePathAsString.plus(":impl")).plus("\")")).plus("\n")
-                .plus("$projectIncludeKeyword(\"".plus(modulePathAsString.plus(":glue")).plus("\")"))
-        } else {
-            "$projectIncludeKeyword(\"".plus(modulePathAsString).plus("\")")
-        }
+        val textToWrite = constructTextToWrite(
+            enhancedModuleCreationStrategy = enhancedModuleCreationStrategy,
+            usesTwoParameters = usesTwoParameters,
+            projectIncludeKeyword = projectIncludeKeyword,
+            modulePathAsString = modulePathAsString,
+            rootPathAsString = rootPathAsString
+        )
 
         // the spot we want to insert it is the first line we find that is after it alphabetically
         val insertionIndex = includeProjectStatements.indexOfFirst {
@@ -333,5 +340,34 @@ class FileWriter(
         }
 
         Files.write(Paths.get(settingsGradleFile.toURI()), settingsFile)
+    }
+
+    private fun constructTextToWrite(
+        enhancedModuleCreationStrategy: Boolean,
+        usesTwoParameters: Boolean,
+        projectIncludeKeyword: String,
+        modulePathAsString: String,
+        rootPathAsString: String
+    ): String {
+        fun buildText(path: String): String {
+            val parametersString = if (usesTwoParameters) {
+                val filePath = "$rootPathAsString${path.replace(":", File.separator)}".removePrefix("/")
+                "\"$path\", \"$filePath\""
+            } else {
+                "\"$path\""
+            }
+            return "$projectIncludeKeyword($parametersString)"
+        }
+
+        return if (enhancedModuleCreationStrategy) {
+            val paths = arrayOf(
+                "$modulePathAsString:api",
+                "$modulePathAsString:impl",
+                "$modulePathAsString:glue"
+            )
+            paths.joinToString("\n") { buildText(it) }
+        } else {
+            buildText(modulePathAsString)
+        }
     }
 }

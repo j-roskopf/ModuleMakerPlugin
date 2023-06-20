@@ -60,7 +60,8 @@ class EnhancedModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = true,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert it was added to settings.gradle
@@ -157,7 +158,8 @@ class EnhancedModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert build.gradle is generated for all 3 modules
@@ -219,7 +221,8 @@ class EnhancedModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert build.gradle is generated for all 3 modules
@@ -275,7 +278,8 @@ class EnhancedModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert readme was not generated in the api module
@@ -306,7 +310,8 @@ class EnhancedModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = false
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
         )
 
         // assert gitignore was not generated in any of the modules module
@@ -345,7 +350,8 @@ class EnhancedModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = true
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
         )
 
         val apiGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + ".gitignore")
@@ -398,7 +404,8 @@ class EnhancedModuleMakerTest {
             gradleFileFollowModule = false,
             packageName = testPackageName,
             addReadme = false,
-            addGitIgnore = true
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
         )
 
         val apiGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + ".gitignore")
@@ -421,6 +428,49 @@ class EnhancedModuleMakerTest {
         Assert.assertEquals(
             template,
             implGitignoreFileContents.joinToString("\n")
+        )
+    }
+
+    @Test
+    fun `create module works with 2 parameters`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleKtsWithFakeFilePathData()
+        val modulePath = ":repository:network"
+        val modulePathAsFile = "repository/network"
+        val rootPathString = folder.root.toString().removePrefix("/")
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        Assert.assertEquals(
+            "include(\"$modulePath:api\", \"$rootPathString/$modulePathAsFile/api\")",
+            settingsGradleFileContents.get(57)
+        )
+        Assert.assertEquals(
+            "include(\"$modulePath:impl\", \"$rootPathString/$modulePathAsFile/impl\")",
+            settingsGradleFileContents.get(58)
+        )
+        Assert.assertEquals(
+            "include(\"$modulePath:glue\", \"$rootPathString/$modulePathAsFile/glue\")",
+            settingsGradleFileContents.get(59)
         )
     }
 }

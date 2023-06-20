@@ -587,6 +587,9 @@ class ModuleMakerDialogWrapper(
         val currentlySelectedFile = getCurrentlySelectedFile()
         if (settingsGradleFile != null) {
             fileWriter.createModule(
+                // at this point, selectedSrcValue has a value of something like /root/module/module2/
+                // - we want to remove the root of the project to use as the file path in settings.gradle
+                rootPathString = removeRootFromPath(selectedSrcValue),
                 settingsGradleFile = settingsGradleFile,
                 modulePathAsString = moduleNameTextField.text,
                 moduleType = moduleType,
@@ -660,6 +663,10 @@ class ModuleMakerDialogWrapper(
 
     private fun rootDirectoryString(): String {
         return project.basePath!!
+    }
+
+    private fun removeRootFromPath(path: String): String {
+        return path.split(File.separator).drop(1).joinToString(File.separator)
     }
 }
 
