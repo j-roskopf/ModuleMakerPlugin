@@ -1,6 +1,5 @@
 package com.joetr.modulemaker.file
 
-import com.google.common.annotations.VisibleForTesting
 import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.template.GitIgnoreTemplate
 import com.joetr.modulemaker.template.TemplateWriter
@@ -271,8 +270,7 @@ class FileWriter(
      *
      * This assumes the file was in alphabetical order to begin with
      */
-    @VisibleForTesting
-    fun addToSettingsAtCorrectLocation(
+    private fun addToSettingsAtCorrectLocation(
         settingsGradleFile: File,
         modulePathAsString: String,
         enhancedModuleCreationStrategy: Boolean,
@@ -351,49 +349,25 @@ class FileWriter(
         modulePathAsString: String,
         rootPathAsString: String
     ): String {
-        return if (enhancedModuleCreationStrategy) {
-            val apiPath = "$modulePathAsString:api"
-            val implPath = "$modulePathAsString:impl"
-            val gluePath = "$modulePathAsString:glue"
-
-            val apiText = if (usesTwoParameters) "$projectIncludeKeyword(\"$apiPath\",\"${
-            rootPathAsString + apiPath.replace(
-                ":",
-                File.separator
-            )
-            }\")\n"
-            else "$projectIncludeKeyword(\"$apiPath\")\n"
-
-            val implText = if (usesTwoParameters) "$projectIncludeKeyword(\"$implPath\",\"${
-            rootPathAsString + implPath.replace(
-                ":",
-                File.separator
-            )
-            }\")\n"
-            else "$projectIncludeKeyword(\"$implPath\")\n"
-
-            val glueText = if (usesTwoParameters) "$projectIncludeKeyword(\"$gluePath\",\"${
-            rootPathAsString + gluePath.replace(
-                ":",
-                File.separator
-            )
-            }\")"
-            else "$projectIncludeKeyword(\"$gluePath\")"
-
-            "$apiText$implText$glueText"
-        } else {
-            val defaultText = if (usesTwoParameters) {
-                "$projectIncludeKeyword(\"$modulePathAsString\",\"${
-                rootPathAsString + modulePathAsString.replace(
-                    ":",
-                    File.separator
-                )
-                }\")"
+        fun buildText(path: String): String {
+            val parametersString = if (usesTwoParameters) {
+                val filePath = "$rootPathAsString${path.replace(":", File.separator)}".removePrefix("/")
+                "\"$path\", \"$filePath\""
             } else {
-                "$projectIncludeKeyword(\"$modulePathAsString\")"
+                "\"$path\""
             }
+            return "$projectIncludeKeyword($parametersString)"
+        }
 
-            defaultText
+        return if (enhancedModuleCreationStrategy) {
+            val paths = arrayOf(
+                "$modulePathAsString:api",
+                "$modulePathAsString:impl",
+                "$modulePathAsString:glue"
+            )
+            paths.joinToString("\n") { buildText(it) }
+        } else {
+            buildText(modulePathAsString)
         }
     }
 }

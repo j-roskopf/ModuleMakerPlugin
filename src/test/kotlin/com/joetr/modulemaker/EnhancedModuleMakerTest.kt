@@ -437,7 +437,7 @@ class EnhancedModuleMakerTest {
         settingsGradleFile = folder.populateSettingsGradleKtsWithFakeFilePathData()
         val modulePath = ":repository:network"
         val modulePathAsFile = "repository/network"
-        val rootPathString = folder.root.toString()
+        val rootPathString = folder.root.toString().removePrefix("/")
 
         fileWriter.createModule(
             settingsGradleFile = settingsGradleFile,
@@ -460,8 +460,17 @@ class EnhancedModuleMakerTest {
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
-        Assert.assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath:api\",\"$rootPathString/$modulePathAsFile/api\")" })
-        Assert.assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath:impl\",\"$rootPathString/$modulePathAsFile/impl\")" })
-        Assert.assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath:glue\",\"$rootPathString/$modulePathAsFile/glue\")" })
+        Assert.assertEquals(
+            "include(\"$modulePath:api\", \"$rootPathString/$modulePathAsFile/api\")",
+            settingsGradleFileContents.get(57)
+        )
+        Assert.assertEquals(
+            "include(\"$modulePath:impl\", \"$rootPathString/$modulePathAsFile/impl\")",
+            settingsGradleFileContents.get(58)
+        )
+        Assert.assertEquals(
+            "include(\"$modulePath:glue\", \"$rootPathString/$modulePathAsFile/glue\")",
+            settingsGradleFileContents.get(59)
+        )
     }
 }

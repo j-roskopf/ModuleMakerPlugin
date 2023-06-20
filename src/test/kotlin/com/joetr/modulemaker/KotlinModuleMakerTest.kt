@@ -4,8 +4,8 @@ import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import com.joetr.modulemaker.template.GitIgnoreTemplate
+import junit.framework.Assert.assertEquals
 import org.junit.Assert
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -378,7 +378,7 @@ class KotlinModuleMakerTest {
         settingsGradleFile = folder.populateSettingsGradleKtsWithFakeFilePathData()
         val modulePath = ":repository:network"
         val modulePathAsFile = "repository/network"
-        val rootPathString = folder.root.toString()
+        val rootPathString = folder.root.toString().removePrefix("/")
 
         fileWriter.createModule(
             settingsGradleFile = settingsGradleFile,
@@ -401,6 +401,9 @@ class KotlinModuleMakerTest {
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
-        assertTrue(settingsGradleFileContents.any { it == "include(\"$modulePath\",\"$rootPathString/$modulePathAsFile\")" })
+        Assert.assertEquals(
+            "include(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
+            settingsGradleFileContents.get(57)
+        )
     }
 }
