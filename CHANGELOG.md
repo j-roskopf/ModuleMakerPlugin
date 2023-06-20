@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.9]
+- Added support for file paths in settings.gradle.kts file
+
 ## [1.0.8]
 - Fixed issue when multiple projects were open
 
