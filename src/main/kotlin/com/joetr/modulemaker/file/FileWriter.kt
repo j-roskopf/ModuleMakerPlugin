@@ -278,7 +278,7 @@ class FileWriter(
         rootPathAsString: String
     ) {
         val settingsFile = Files.readAllLines(Paths.get(settingsGradleFile.toURI()))
-        println(rootPathAsString)
+
         val includeProject = "includeProject"
         val include = "include"
         val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
