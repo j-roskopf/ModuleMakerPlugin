@@ -4,7 +4,6 @@ import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import com.joetr.modulemaker.template.GitIgnoreTemplate
-import junit.framework.Assert.assertEquals
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -403,7 +402,7 @@ class KotlinModuleMakerTest {
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         Assert.assertEquals(
             "include(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
-            settingsGradleFileContents.get(57)
+            settingsGradleFileContents[57]
         )
     }
 }

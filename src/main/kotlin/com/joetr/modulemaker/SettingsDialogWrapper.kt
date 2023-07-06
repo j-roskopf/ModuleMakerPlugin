@@ -52,6 +52,9 @@ const val DEFAULT_USE_KTS_FILE_EXTENSION = true
 const val DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE = false
 const val DEFAULT_ADD_README = true
 const val DEFAULT_ADD_GIT_IGNORE = false
+const val DEFAULT_API_MODULE_NAME = "api"
+const val DEFAULT_GLUE_MODULE_NAME = "glue"
+const val DEFAULT_IMPL_MODULE_NAME = "impl"
 
 class SettingsDialogWrapper(
     private val project: Project,
@@ -77,6 +80,10 @@ class SettingsDialogWrapper(
     private lateinit var gradleFileNamedAfterModule: JCheckBox
     private lateinit var addReadme: JCheckBox
     private lateinit var addGitignore: JCheckBox
+
+    private lateinit var apiModuleNameTextArea: JTextField
+    private lateinit var glueModuleNameTextArea: JTextField
+    private lateinit var implModuleNameTextArea: JTextField
 
     private val preferenceService = PreferenceServiceImpl.instance
 
@@ -782,6 +789,15 @@ class SettingsDialogWrapper(
         )
         implTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
 
+        val apiModuleNameLabel = JLabel("api module name")
+        apiModuleNameTextArea = JTextField(preferenceService.preferenceState.apiModuleName)
+
+        val glueModuleNameLabel = JLabel("glue module name")
+        glueModuleNameTextArea = JTextField(preferenceService.preferenceState.glueModuleName)
+
+        val implModuleNameLabel = JLabel("impl module name")
+        implModuleNameTextArea = JTextField(preferenceService.preferenceState.implModuleName)
+
         val templateDefaultPanel = JPanel()
         val templateDefaultPanelLayout = SpringLayout()
         templateDefaultPanel.layout = templateDefaultPanelLayout
@@ -792,6 +808,14 @@ class SettingsDialogWrapper(
         templateDefaultPanel.add(glueTemplateScrollPane)
         templateDefaultPanel.add(implTemplateLabel)
         templateDefaultPanel.add(implTemplateScrollPane)
+
+        templateDefaultPanel.add(apiModuleNameTextArea)
+        templateDefaultPanel.add(implModuleNameTextArea)
+        templateDefaultPanel.add(glueModuleNameTextArea)
+
+        templateDefaultPanel.add(apiModuleNameLabel)
+        templateDefaultPanel.add(glueModuleNameLabel)
+        templateDefaultPanel.add(implModuleNameLabel)
 
         // api label
         templateDefaultPanelLayout.putConstraint(
@@ -910,6 +934,117 @@ class SettingsDialogWrapper(
             templateDefaultPanel
         )
 
+        // api module name label + text area
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            apiModuleNameTextArea,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            apiModuleNameLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.EAST,
+            apiModuleNameTextArea,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.BASELINE,
+            apiModuleNameTextArea,
+            0,
+            SpringLayout.BASELINE,
+            apiModuleNameLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            apiModuleNameLabel,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.NORTH,
+            apiModuleNameLabel,
+            EXTRA_PADDING * 2,
+            SpringLayout.SOUTH,
+            implTemplateScrollPane
+        )
+
+        // glue module name label + text area
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            glueModuleNameTextArea,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            glueModuleNameLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.EAST,
+            glueModuleNameTextArea,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.BASELINE,
+            glueModuleNameTextArea,
+            0,
+            SpringLayout.BASELINE,
+            glueModuleNameLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            glueModuleNameLabel,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.NORTH,
+            glueModuleNameLabel,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            apiModuleNameTextArea
+        )
+
+        // impl module name label + text area
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            implModuleNameTextArea,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            implModuleNameLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.EAST,
+            implModuleNameTextArea,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.BASELINE,
+            implModuleNameTextArea,
+            0,
+            SpringLayout.BASELINE,
+            implModuleNameLabel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.WEST,
+            implModuleNameLabel,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            templateDefaultPanel
+        )
+        templateDefaultPanelLayout.putConstraint(
+            SpringLayout.NORTH,
+            implModuleNameLabel,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            glueModuleNameTextArea
+        )
+
         return templateDefaultPanel
     }
 
@@ -943,7 +1078,10 @@ class SettingsDialogWrapper(
             gradleFileNamedAfterModule = gradleFileNamedAfterModule.isSelected,
             addReadme = addReadme.isSelected,
             addGitIgnore = addGitignore.isSelected,
-            gitignoreTemplate = gitignoreTemplateTextArea.text
+            gitignoreTemplate = gitignoreTemplateTextArea.text,
+            apiModuleName = apiModuleNameTextArea.text,
+            glueModuleName = glueModuleNameTextArea.text,
+            implModuleName = implModuleNameTextArea.text
         )
     }
 
@@ -961,6 +1099,10 @@ class SettingsDialogWrapper(
         gradleFileNamedAfterModule.isSelected = DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE
         addReadme.isSelected = DEFAULT_ADD_README
         addGitignore.isSelected = DEFAULT_ADD_GIT_IGNORE
+
+        implModuleNameTextArea.text = DEFAULT_IMPL_MODULE_NAME
+        glueModuleNameTextArea.text = DEFAULT_GLUE_MODULE_NAME
+        apiModuleNameTextArea.text = DEFAULT_API_MODULE_NAME
     }
 
     private fun String.getRowsFromText(): Int {

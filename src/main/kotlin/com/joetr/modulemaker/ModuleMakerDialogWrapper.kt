@@ -594,7 +594,7 @@ class ModuleMakerDialogWrapper(
                 modulePathAsString = moduleNameTextField.text,
                 moduleType = moduleType,
                 showErrorDialog = {
-                    MessageDialogWrapper("Error").show()
+                    MessageDialogWrapper(it).show()
                 },
                 showSuccessDialog = {
                     MessageDialogWrapper("Success").show()
