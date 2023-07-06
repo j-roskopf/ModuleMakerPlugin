@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.10]
+- Added support for custom module names for api / glue / impl modules
+
 ## [1.0.9]
 - Added support for file paths in settings.gradle.kts file
 
