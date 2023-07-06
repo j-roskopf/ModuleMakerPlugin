@@ -31,7 +31,7 @@ class FileWriter(
         workingDirectory: File,
         modulePathAsString: String,
         moduleType: String,
-        showErrorDialog: () -> Unit,
+        showErrorDialog: (String) -> Unit,
         showSuccessDialog: () -> Unit,
         enhancedModuleCreationStrategy: Boolean,
         useKtsBuildFile: Boolean,
@@ -52,7 +52,7 @@ class FileWriter(
 
         if (moduleName.isEmpty()) {
             // display alert
-            showErrorDialog()
+            showErrorDialog("Module name empty / not as expected (is it formatted as :module?)")
             return
         }
 
@@ -104,23 +104,23 @@ class FileWriter(
         addGitIgnore: Boolean
     ) {
         // make the 3 module
-        moduleFile.toPath().resolve("glue").toFile().apply {
+        moduleFile.toPath().resolve(preferenceService.preferenceState.glueModuleName).toFile().apply {
             mkdirs()
             // create the gradle file
             templateWriter.createGradleFile(
                 moduleFile = this,
-                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus("glue"),
+                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus(preferenceService.preferenceState.glueModuleName),
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = GLUE_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName.plus(".glue")
+                packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}")
             )
 
             // create default packages
             createDefaultPackages(
                 moduleFile = this,
-                packageName = packageName.plus(".glue")
+                packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}")
             )
 
             if (addGitIgnore) {
@@ -130,22 +130,22 @@ class FileWriter(
             }
         }
 
-        moduleFile.toPath().resolve("impl").toFile().apply {
+        moduleFile.toPath().resolve(preferenceService.preferenceState.implModuleName).toFile().apply {
             mkdirs()
             templateWriter.createGradleFile(
                 moduleFile = this,
-                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus("impl"),
+                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus(preferenceService.preferenceState.implModuleName),
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = IMPL_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName.plus(".impl")
+                packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}")
             )
 
             // create default packages
             createDefaultPackages(
                 moduleFile = this,
-                packageName = packageName.plus(".impl")
+                packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}")
             )
 
             if (addGitIgnore) {
@@ -155,30 +155,30 @@ class FileWriter(
             }
         }
 
-        moduleFile.toPath().resolve("api").toFile().apply {
+        moduleFile.toPath().resolve(preferenceService.preferenceState.apiModuleName).toFile().apply {
             mkdirs()
             templateWriter.createGradleFile(
                 moduleFile = this,
-                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus("api"),
+                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus(preferenceService.preferenceState.apiModuleName),
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = API_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName.plus(".api")
+                packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}")
             )
 
             if (addReadme) {
                 // create readme file for the api module
                 templateWriter.createReadmeFile(
                     moduleFile = this,
-                    moduleName = "api"
+                    moduleName = preferenceService.preferenceState.apiModuleName
                 )
             }
 
             // create default packages
             createDefaultPackages(
                 moduleFile = this,
-                packageName = packageName.plus(".api")
+                packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}")
             )
 
             if (addGitIgnore) {
@@ -274,7 +274,7 @@ class FileWriter(
         settingsGradleFile: File,
         modulePathAsString: String,
         enhancedModuleCreationStrategy: Boolean,
-        showErrorDialog: () -> Unit,
+        showErrorDialog: (String) -> Unit,
         rootPathAsString: String
     ) {
         val settingsFile = Files.readAllLines(Paths.get(settingsGradleFile.toURI()))
@@ -308,7 +308,7 @@ class FileWriter(
         }
 
         if (firstLineNumberOfFirstIncludeProjectStatement <= 0) {
-            showErrorDialog()
+            showErrorDialog("Could not find any include statements in settings.gradle(.kts) file")
             return
         }
 
@@ -361,9 +361,9 @@ class FileWriter(
 
         return if (enhancedModuleCreationStrategy) {
             val paths = arrayOf(
-                "$modulePathAsString:api",
-                "$modulePathAsString:impl",
-                "$modulePathAsString:glue"
+                "$modulePathAsString:${preferenceService.preferenceState.apiModuleName}",
+                "$modulePathAsString:${preferenceService.preferenceState.implModuleName}",
+                "$modulePathAsString:${preferenceService.preferenceState.glueModuleName}"
             )
             paths.joinToString("\n") { buildText(it) }
         } else {

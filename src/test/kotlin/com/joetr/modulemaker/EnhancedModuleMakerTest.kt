@@ -473,4 +473,94 @@ class EnhancedModuleMakerTest {
             settingsGradleFileContents.get(59)
         )
     }
+
+    @Test
+    fun `custom module names used when set`() {
+        fakePreferenceService.preferenceState.glueModuleName = "customglue"
+        fakePreferenceService.preferenceState.apiModuleName = "customapi"
+        fakePreferenceService.preferenceState.implModuleName = "customimpl"
+
+        val modulePath = ":repository"
+        val modulePathAsFile = "repository"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = ANDROID,
+            showErrorDialog = {
+                fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = true,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = true,
+            addGitIgnore = false,
+            rootPathString = folder.root.toString()
+        )
+
+        // assert it was added to settings.gradle
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        assert(
+            settingsGradleFileContents.contains("include(\":repository:customapi\")")
+        )
+        assert(
+            settingsGradleFileContents.contains("include(\":repository:customglue\")")
+        )
+        assert(
+            settingsGradleFileContents.contains("include(\":repository:customimpl\")")
+        )
+
+        // assert readme was generated in the api module
+        assert(
+            // root/repository/api/README.md
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "customapi" + File.separator + readmeFile).exists()
+        )
+
+        // assert build.gradle is generated for all 3 modules
+        val buildGradleFileApi =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "customapi" + File.separator + buildGradleFileName)
+        val buildGradleFileGlue =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "customglue" + File.separator + buildGradleFileName)
+        val buildGradleFileImpl =
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "customimpl" + File.separator + buildGradleFileName)
+        assert(buildGradleFileApi.exists())
+        assert(buildGradleFileGlue.exists())
+        assert(buildGradleFileImpl.exists())
+
+        // assert package name is included in build.gradle
+        val buildGradleApiFileContents = readFromFile(buildGradleFileApi)
+        val buildGradleGlueFileContents = readFromFile(buildGradleFileGlue)
+        val buildGradleImplFileContents = readFromFile(buildGradleFileImpl)
+        assert(
+            buildGradleApiFileContents.contains(
+                "    namespace = \"$testPackageName.customapi\""
+            )
+        )
+        assert(
+            buildGradleGlueFileContents.contains(
+                "    namespace = \"$testPackageName.customglue\""
+            )
+        )
+        assert(
+            buildGradleImplFileContents.contains(
+                "    namespace = \"$testPackageName.customimpl\""
+            )
+        )
+
+        // assert the correct package structure is generated
+        assert(
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "customapi/src/main/kotlin/com/joetr/test/customapi").exists()
+        )
+        assert(
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "customglue/src/main/kotlin/com/joetr/test/customglue").exists()
+        )
+        assert(
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "customimpl/src/main/kotlin/com/joetr/test/customimpl").exists()
+        )
+    }
 }

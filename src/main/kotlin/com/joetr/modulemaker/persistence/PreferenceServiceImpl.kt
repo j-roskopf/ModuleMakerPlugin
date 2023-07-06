@@ -7,8 +7,11 @@ import com.intellij.openapi.components.Storage
 import com.intellij.util.xmlb.XmlSerializerUtil.copyBean
 import com.joetr.modulemaker.DEFAULT_ADD_GIT_IGNORE
 import com.joetr.modulemaker.DEFAULT_ADD_README
+import com.joetr.modulemaker.DEFAULT_API_MODULE_NAME
 import com.joetr.modulemaker.DEFAULT_BASE_PACKAGE_NAME
+import com.joetr.modulemaker.DEFAULT_GLUE_MODULE_NAME
 import com.joetr.modulemaker.DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE
+import com.joetr.modulemaker.DEFAULT_IMPL_MODULE_NAME
 import com.joetr.modulemaker.DEFAULT_REFRESH_ON_MODULE_ADD
 import com.joetr.modulemaker.DEFAULT_THREE_MODULE_CREATION
 import com.joetr.modulemaker.DEFAULT_USE_KTS_FILE_EXTENSION
@@ -42,8 +45,11 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
             var androidTemplate: String = "",
             var kotlinTemplate: String = "",
             var apiTemplate: String = "",
+            var apiModuleName: String = DEFAULT_API_MODULE_NAME,
             var glueTemplate: String = "",
+            var glueModuleName: String = DEFAULT_GLUE_MODULE_NAME,
             var implTemplate: String = "",
+            var implModuleName: String = DEFAULT_IMPL_MODULE_NAME,
             var gitignoreTemplate: String = "",
             var packageName: String = DEFAULT_BASE_PACKAGE_NAME,
             var refreshOnModuleAdd: Boolean = DEFAULT_REFRESH_ON_MODULE_ADD,
