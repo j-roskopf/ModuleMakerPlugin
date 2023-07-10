@@ -405,4 +405,39 @@ class KotlinModuleMakerTest {
             settingsGradleFileContents[57]
         )
     }
+
+    @Test
+    fun `create module works with 2 parameters and custom include for modules`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleKtsWithFakeFilePathDataAndCustomInclude()
+        val modulePath = ":repository:network"
+        val modulePathAsFile = "repository/network"
+        val rootPathString = folder.root.toString().removePrefix("/")
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        Assert.assertEquals(
+            "includeBuild(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
+            settingsGradleFileContents[57]
+        )
+    }
 }
