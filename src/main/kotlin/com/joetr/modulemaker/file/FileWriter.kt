@@ -109,7 +109,8 @@ class FileWriter(
             // create the gradle file
             templateWriter.createGradleFile(
                 moduleFile = this,
-                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus(preferenceService.preferenceState.glueModuleName),
+                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-")
+                    .plus(preferenceService.preferenceState.glueModuleName),
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = GLUE_KEY,
@@ -134,7 +135,8 @@ class FileWriter(
             mkdirs()
             templateWriter.createGradleFile(
                 moduleFile = this,
-                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus(preferenceService.preferenceState.implModuleName),
+                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-")
+                    .plus(preferenceService.preferenceState.implModuleName),
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = IMPL_KEY,
@@ -159,7 +161,8 @@ class FileWriter(
             mkdirs()
             templateWriter.createGradleFile(
                 moduleFile = this,
-                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-").plus(preferenceService.preferenceState.apiModuleName),
+                moduleName = moduleFile.path.split(File.separator).toList().last().plus("-")
+                    .plus(preferenceService.preferenceState.apiModuleName),
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = API_KEY,
@@ -279,33 +282,48 @@ class FileWriter(
     ) {
         val settingsFile = Files.readAllLines(Paths.get(settingsGradleFile.toURI()))
 
-        val includeProject = "includeProject"
-        val include = "include"
+        val includeKeywords = listOf(
+            "includeProject",
+            "includeBuild",
+            "include"
+        )
         val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
 
         // TODO - add ability to specify keyword
-        val projectIncludeKeyword = if (settingsFile.any { it.contains("includeProject") }) {
-            includeProject
-        } else {
-            include
+        val lastNonEmptyLineInSettingsGradleFile = settingsFile.last {
+            it.isNotEmpty()
+        }
+        val projectIncludeKeyword = includeKeywords.firstOrNull { includeKeyword ->
+            lastNonEmptyLineInSettingsGradleFile.contains(includeKeyword)
+        }
+
+        if (projectIncludeKeyword == null) {
+            showErrorDialog("Could not find any include statements in settings.gradle(.kts) file")
+            return
         }
 
         val usesTwoParameters = settingsFile.any { line ->
             twoParametersPattern.containsMatchIn(line)
         }
 
-        // get the first and last line numbers for an include statement
-        val firstLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfFirst {
-            it.contains("$projectIncludeKeyword(\"") ||
-                it.contains("$projectIncludeKeyword \"") ||
-                it.contains("$projectIncludeKeyword '")
+        // get the last line numbers for an include statement
+        val lastLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfLast {
+            settingsFileContainsSpecialIncludeKeyword(it, projectIncludeKeyword)
         }
 
-        val lastLineNumberOfFirstIncludeProjectStatement = settingsFile.indexOfLast {
-            it.contains("$projectIncludeKeyword(\"") ||
-                it.contains("$projectIncludeKeyword \"") ||
-                it.contains("$projectIncludeKeyword '")
+        // traverse backwards from there to find the first instance
+        var tempIndexForSettingsFile = lastLineNumberOfFirstIncludeProjectStatement
+        while (tempIndexForSettingsFile >= 0) {
+            val currentLine = settingsFile[tempIndexForSettingsFile]
+            if (currentLine.trim().isEmpty() || settingsFileContainsSpecialIncludeKeyword(currentLine, projectIncludeKeyword)) {
+                tempIndexForSettingsFile--
+            } else {
+                break
+            }
         }
+
+        // assume tempIndexForSettingsFile is the first line
+        val firstLineNumberOfFirstIncludeProjectStatement = tempIndexForSettingsFile + 1
 
         if (firstLineNumberOfFirstIncludeProjectStatement <= 0) {
             showErrorDialog("Could not find any include statements in settings.gradle(.kts) file")
@@ -340,6 +358,16 @@ class FileWriter(
         }
 
         Files.write(Paths.get(settingsGradleFile.toURI()), settingsFile)
+    }
+
+    private fun settingsFileContainsSpecialIncludeKeyword(
+        stringToCheck: String,
+        projectIncludeKeyword: String
+    ): Boolean {
+        return stringToCheck.contains("$projectIncludeKeyword(\"") ||
+            stringToCheck.contains("$projectIncludeKeyword('") ||
+            stringToCheck.contains("$projectIncludeKeyword \"") ||
+            stringToCheck.contains("$projectIncludeKeyword '")
     }
 
     private fun constructTextToWrite(

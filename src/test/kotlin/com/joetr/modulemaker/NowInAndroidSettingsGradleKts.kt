@@ -126,4 +126,67 @@ object NowInAndroidSettingsGradleKts {
         include(":sync:sync-test", "path/to")
         include(":ui-test-hilt-manifest", "path/to")
     """.trimIndent()
+
+    val filePathDataWithCustomIncludeBuildData = """
+        /*
+         * Copyright 2021 The Android Open Source Project
+         *
+         * Licensed under the Apache License, Version 2.0 (the "License");
+         * you may not use this file except in compliance with the License.
+         * You may obtain a copy of the License at
+         *
+         *     https://www.apache.org/licenses/LICENSE-2.0
+         *
+         * Unless required by applicable law or agreed to in writing, software
+         * distributed under the License is distributed on an "AS IS" BASIS,
+         * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+         * See the License for the specific language governing permissions and
+         * limitations under the License.
+         */
+
+        pluginManagement {
+            includeBuild("build-logic")
+            repositories {
+                google()
+                mavenCentral()
+                gradlePluginPortal()
+            }
+        }
+
+        dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+        rootProject.name = "nowinandroid"
+        includeBuild(":app", "path/to")
+        includeBuild(":app-nia-catalog", "path/to")
+        includeBuild(":benchmarks", "path/to")
+        includeBuild(":core:common", "path/to")
+        includeBuild(":core:data", "path/to")
+        includeBuild(":core:data-test", "path/to")
+        includeBuild(":core:database", "path/to")
+        includeBuild(":core:datastore", "path/to")
+        includeBuild(":core:datastore-test", "path/to")
+        includeBuild(":core:designsystem", "path/to")
+        includeBuild(":core:domain", "path/to")
+        includeBuild(":core:model", "path/to")
+        includeBuild(":core:network", "path/to")
+        includeBuild(":core:ui", "path/to")
+        includeBuild(":core:testing", "path/to")
+        includeBuild(":core:analytics", "path/to")
+        includeBuild(":core:notifications", "path/to)"
+
+        includeBuild(":feature:foryou", "path/to")
+        includeBuild(":feature:interests", "path/to")
+        includeBuild(":feature:bookmarks", "path/to")
+        includeBuild(":feature:topic", "path/to")
+        includeBuild(":feature:settings", "path/to")
+        includeBuild(":lint", "path/to")
+        includeBuild(":sync:work", "path/to")
+        includeBuild(":sync:sync-test", "path/to")
+        includeBuild(":ui-test-hilt-manifest", "path/to")
+    """.trimIndent()
 }
