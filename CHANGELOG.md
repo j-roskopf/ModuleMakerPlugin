@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.11]
+- Added better support around multiple include keywords in settings.gradle.kts file
+
 ## [1.0.10]
 - Added support for custom module names for api / glue / impl modules
 
