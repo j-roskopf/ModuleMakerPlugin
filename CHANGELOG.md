@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.12]
+- Performance improvement for large projects
+
 ## [1.0.11]
 - Added better support around multiple include keywords in settings.gradle.kts file
 
