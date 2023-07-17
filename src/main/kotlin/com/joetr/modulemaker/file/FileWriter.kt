@@ -290,8 +290,10 @@ class FileWriter(
         val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
 
         // TODO - add ability to specify keyword
-        val lastNonEmptyLineInSettingsGradleFile = settingsFile.last {
-            it.isNotEmpty()
+        val lastNonEmptyLineInSettingsGradleFile = settingsFile.last { settingsFileLine ->
+            settingsFileLine.isNotEmpty() && includeKeywords.any {
+                settingsFileLine.contains(it)
+            }
         }
         val projectIncludeKeyword = includeKeywords.firstOrNull { includeKeyword ->
             lastNonEmptyLineInSettingsGradleFile.contains(includeKeyword)
@@ -351,7 +353,7 @@ class FileWriter(
 
         if (insertionIndex < 0) {
             // insert it at the end as nothing is past it
-            settingsFile.add(lastLineNumberOfFirstIncludeProjectStatement + 1, textToWrite)
+            settingsFile.add(lastLineNumberOfFirstIncludeProjectStatement, textToWrite)
         } else {
             // insert it in our original list adding the original offset of the first line
             settingsFile.add(insertionIndex + firstLineNumberOfFirstIncludeProjectStatement, textToWrite)
@@ -366,6 +368,7 @@ class FileWriter(
     ): Boolean {
         return stringToCheck.contains("$projectIncludeKeyword(\"") ||
             stringToCheck.contains("$projectIncludeKeyword('") ||
+            stringToCheck.contains("$projectIncludeKeyword(") ||
             stringToCheck.contains("$projectIncludeKeyword \"") ||
             stringToCheck.contains("$projectIncludeKeyword '")
     }

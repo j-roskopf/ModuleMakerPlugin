@@ -440,4 +440,40 @@ class KotlinModuleMakerTest {
             settingsGradleFileContents[57]
         )
     }
+
+    @Test
+    fun `module added correctly settings gradle with one big include`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleKtsWithTiviSettingsGradleKts()
+        val modulePath = ":repository:network"
+        val modulePathAsFile = "repository/network"
+        val rootPathString = folder.root.toString().removePrefix("/")
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        println(settingsGradleFileContents)
+        Assert.assertEquals(
+            "include(\"$modulePath\")",
+            settingsGradleFileContents[45]
+        )
+    }
 }

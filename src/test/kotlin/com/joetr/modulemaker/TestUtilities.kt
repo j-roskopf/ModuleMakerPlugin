@@ -1,5 +1,8 @@
 package com.joetr.modulemaker
 
+import com.joetr.modulemaker.settings.DefaultTemplateSettingsGradle
+import com.joetr.modulemaker.settings.NowInAndroidSettingsGradleKts
+import com.joetr.modulemaker.settings.TiviSettingsGradleKts
 import org.junit.rules.TemporaryFolder
 import java.io.BufferedReader
 import java.io.File
@@ -26,6 +29,14 @@ fun TemporaryFolder.populateSettingsGradleKtsWithFakeFilePathDataAndCustomInclud
     val settingsGradleKts = this.newFile(settingsGradleKts)
     val writer = FileWriter(settingsGradleKts)
     writer.write(NowInAndroidSettingsGradleKts.filePathDataWithCustomIncludeBuildData)
+    writer.close()
+    return settingsGradleKts
+}
+
+fun TemporaryFolder.populateSettingsGradleKtsWithTiviSettingsGradleKts(): File {
+    val settingsGradleKts = this.newFile(settingsGradleKts)
+    val writer = FileWriter(settingsGradleKts)
+    writer.write(TiviSettingsGradleKts.data)
     writer.close()
     return settingsGradleKts
 }
