@@ -7,8 +7,12 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
+import com.joetr.modulemaker.data.FileTreeNode
 import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
+import com.joetr.modulemaker.ui.ModuleMakerFileTree
+import com.joetr.modulemaker.ui.ModuleMakerTreeCellRenderer
+import com.joetr.modulemaker.ui.ModuleMakerTreeNode
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Component
@@ -18,6 +22,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.File
 import java.nio.file.Path
+import java.util.*
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.BorderFactory
@@ -29,13 +34,15 @@ import javax.swing.JPanel
 import javax.swing.JRadioButton
 import javax.swing.JScrollPane
 import javax.swing.JTextField
-import javax.swing.JTree
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
 import javax.swing.SpringLayout
+import javax.swing.event.TreeExpansionEvent
+import javax.swing.event.TreeExpansionListener
 import javax.swing.tree.DefaultMutableTreeNode
-import javax.swing.tree.MutableTreeNode
+import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
+import kotlin.IllegalArgumentException
 
 private const val WINDOW_WIDTH = 840
 private const val WINDOW_HEIGHT = 600
@@ -194,9 +201,55 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun createFileTreeJPanel(): Component {
-        val tree = FileTree(
+        val tree = ModuleMakerFileTree(
+            createDefaultTreeModel(rootDirectoryString())
+        )
+
+        // get all the nodes for the root project
+        val rootNodes = tree.getNodesAtFilePath(
             rootDirectoryString()
         )
+
+        // add nodes to the root
+        for (node in rootNodes) {
+            (tree.customTreeModel.root as DefaultMutableTreeNode).add(node)
+        }
+
+        // reload
+        tree.customTreeModel.reload((tree.customTreeModel.root as DefaultMutableTreeNode))
+
+        // set custom cell renderer so we can get our names / icons
+        tree.cellRenderer = ModuleMakerTreeCellRenderer()
+
+        tree.addTreeExpansionListener(object : TreeExpansionListener {
+            override fun treeExpanded(event: TreeExpansionEvent) {
+                // grab the expanded node
+                val expandedNode = event.path.lastPathComponent as DefaultMutableTreeNode
+
+                // grab the absolute file path from that node
+                val path = (expandedNode.userObject as FileTreeNode).file.absolutePath
+
+                // delete any previously added children
+                expandedNode.removeAllChildren()
+
+                // gran the new nodes at the path
+                val newNodes = tree.getNodesAtFilePath(
+                    path
+                )
+
+                // Add the child nodes to the expanded node
+                for (node in newNodes) {
+                    expandedNode.add(node)
+                }
+
+                // reload
+                tree.customTreeModel.reload(expandedNode)
+            }
+
+            override fun treeCollapsed(event: TreeExpansionEvent?) {
+                // no-op
+            }
+        })
 
         val fileTreeJPanel = JPanel()
         tree.showsRootHandles = true
@@ -208,20 +261,45 @@ class ModuleMakerDialogWrapper(
             VERTICAL_SCROLLBAR_ALWAYS,
             HORIZONTAL_SCROLLBAR_ALWAYS
         )
+
         scrollPane.autoscrolls = true
-        tree.addTreeSelectionListener {
-            val treePath = it.paths.first().path.toList().joinToString(File.separator)
-            val treeFile = File(
-                rootDirectoryStringDropLast() + File.separator + treePath
-            )
-            if (treeFile.isDirectory) {
-                selectedSrcValue = treePath
-                selectedSrcJLabel.text = "Selected root: $selectedSrcValue"
+        tree.addTreeSelectionListener { treeSelectedEvent ->
+            /**
+             * When a tree selected event occurs, we expect the only type to be our custom [ModuleMakerTreeNode]
+             */
+            when (val lastPathComponent = treeSelectedEvent.paths.first().lastPathComponent) {
+                is ModuleMakerTreeNode -> {
+                    // grab the node data
+                    val fileTreeNode = (lastPathComponent.userObject as FileTreeNode)
+
+                    // gran the absolute file path for the given node
+                    val absolutePathAtNode = fileTreeNode.file.absolutePath
+
+                    /**
+                     * grab just the path relative to the root to display
+                     *
+                     * so if we have /Users/Joe/Code/ModuleMaker as a root of the project,
+                     * and the file path that was selected was /Users/Joe/Code/ModuleMaker/app/test
+                     *
+                     * we ultimately just want to display 'app/test'
+                     */
+                    val relativePath =
+                        absolutePathAtNode.removePrefix(rootDirectoryStringDropLast()).removePrefix(File.separator)
+
+                    if (fileTreeNode.file.isDirectory) {
+                        selectedSrcValue = relativePath
+                        selectedSrcJLabel.text = "Selected root: $selectedSrcValue"
+                    }
+                }
+
+                else -> {
+                    throw IllegalArgumentException("Unknown component type")
+                }
             }
         }
 
         // select the root item by default
-        val treePath = TreePath(lastPathInRootDirectory())
+        val treePath = TreePath(ModuleMakerTreeNode(true, createRootFileTreeNode(rootDirectoryString())))
         tree.selectionPath = treePath
 
         scrollPane.border = BorderFactory.createEmptyBorder()
@@ -668,14 +746,26 @@ class ModuleMakerDialogWrapper(
     private fun removeRootFromPath(path: String): String {
         return path.split(File.separator).drop(1).joinToString(File.separator)
     }
-}
 
-class FileTree(path: String) : JTree(scan(File(path))) {
-    companion object {
-        private fun scan(node: File): MutableTreeNode {
-            val ret = DefaultMutableTreeNode(node.name)
-            if (node.isDirectory) for (child in node.listFiles()!!) ret.add(scan(child))
-            return ret
-        }
+    private fun createRootFileTreeNode(rootFilePath: String): FileTreeNode {
+        val rootFile = File(rootFilePath)
+        return FileTreeNode(
+            displayName = rootFile.name,
+            file = rootFile,
+            isFolder = rootFile.isDirectory
+        )
+    }
+
+    /**
+     * Creates a [DefaultTreeModel] with one node - the root of the project
+     */
+    private fun createDefaultTreeModel(filePath: String): DefaultTreeModel {
+        val node = File(filePath)
+        val rootFileTreeNode = createRootFileTreeNode(filePath)
+        val treeNode = ModuleMakerTreeNode(node.isDirectory, rootFileTreeNode)
+
+        return DefaultTreeModel(
+            treeNode
+        )
     }
 }
