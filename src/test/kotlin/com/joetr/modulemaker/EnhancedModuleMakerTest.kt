@@ -462,15 +462,15 @@ class EnhancedModuleMakerTest {
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         Assert.assertEquals(
             "include(\"$modulePath:api\", \"$rootPathString/$modulePathAsFile/api\")",
-            settingsGradleFileContents.get(57)
+            settingsGradleFileContents[56]
         )
         Assert.assertEquals(
             "include(\"$modulePath:impl\", \"$rootPathString/$modulePathAsFile/impl\")",
-            settingsGradleFileContents.get(58)
+            settingsGradleFileContents[57]
         )
         Assert.assertEquals(
             "include(\"$modulePath:glue\", \"$rootPathString/$modulePathAsFile/glue\")",
-            settingsGradleFileContents.get(59)
+            settingsGradleFileContents[58]
         )
     }
 

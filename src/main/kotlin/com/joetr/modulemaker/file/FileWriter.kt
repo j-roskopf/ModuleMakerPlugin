@@ -290,8 +290,10 @@ class FileWriter(
         val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
 
         // TODO - add ability to specify keyword
-        val lastNonEmptyLineInSettingsGradleFile = settingsFile.last {
-            it.isNotEmpty()
+        val lastNonEmptyLineInSettingsGradleFile = settingsFile.last { settingsFileLine ->
+            settingsFileLine.isNotEmpty() && includeKeywords.any {
+                settingsFileLine.contains(it)
+            }
         }
         val projectIncludeKeyword = includeKeywords.firstOrNull { includeKeyword ->
             lastNonEmptyLineInSettingsGradleFile.contains(includeKeyword)
@@ -334,7 +336,11 @@ class FileWriter(
         val includeProjectStatements = settingsFile.subList(
             firstLineNumberOfFirstIncludeProjectStatement,
             lastLineNumberOfFirstIncludeProjectStatement + 1
-        ).toMutableList()
+        )
+            .filter {
+                it.isNotEmpty()
+            }
+            .toMutableList()
 
         val textToWrite = constructTextToWrite(
             enhancedModuleCreationStrategy = enhancedModuleCreationStrategy,
@@ -350,8 +356,26 @@ class FileWriter(
         }
 
         if (insertionIndex < 0) {
+            /**
+             * IN a scenario where there is just a single include statement, we want to differentiate between the two scenarios:
+             *
+             * include(":app") for example and
+             * include(
+             * ":app",
+             * ":module1",
+             * ) etc
+             *
+             * in the former case, we want to add a 1 offset to insert the new module after the single module
+             * in the latter case, we don't really support that, but we also don't want to add it after the include statement to break
+             * the current include, so we insert it just before
+             */
+            val offsetAmount = if (includeProjectStatements.size == 1 && includeProjectStatements.first().doesNotContainModule(projectIncludeKeyword)) {
+                0
+            } else {
+                1
+            }
             // insert it at the end as nothing is past it
-            settingsFile.add(lastLineNumberOfFirstIncludeProjectStatement + 1, textToWrite)
+            settingsFile.add(lastLineNumberOfFirstIncludeProjectStatement + offsetAmount, textToWrite)
         } else {
             // insert it in our original list adding the original offset of the first line
             settingsFile.add(insertionIndex + firstLineNumberOfFirstIncludeProjectStatement, textToWrite)
@@ -366,6 +390,7 @@ class FileWriter(
     ): Boolean {
         return stringToCheck.contains("$projectIncludeKeyword(\"") ||
             stringToCheck.contains("$projectIncludeKeyword('") ||
+            stringToCheck.contains("$projectIncludeKeyword(") ||
             stringToCheck.contains("$projectIncludeKeyword \"") ||
             stringToCheck.contains("$projectIncludeKeyword '")
     }
@@ -398,4 +423,8 @@ class FileWriter(
             buildText(modulePathAsString)
         }
     }
+}
+
+private fun String.doesNotContainModule(includeKeyword: String): Boolean {
+    return this.replace(" ", "").replace("(", "") == includeKeyword
 }

@@ -1,4 +1,4 @@
-package com.joetr.modulemaker
+package com.joetr.modulemaker.settings
 
 object NowInAndroidSettingsGradleKts {
     val data = """

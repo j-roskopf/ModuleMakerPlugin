@@ -402,7 +402,7 @@ class KotlinModuleMakerTest {
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         Assert.assertEquals(
             "include(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
-            settingsGradleFileContents[57]
+            settingsGradleFileContents[56]
         )
     }
 
@@ -437,7 +437,73 @@ class KotlinModuleMakerTest {
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         Assert.assertEquals(
             "includeBuild(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
-            settingsGradleFileContents[57]
+            settingsGradleFileContents[56]
+        )
+    }
+
+    @Test
+    fun `module added correctly settings gradle with one big include`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleKtsWithTiviSettingsGradleKts()
+        val modulePath = ":repository:network"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        Assert.assertEquals(
+            "include(\"$modulePath\")",
+            settingsGradleFileContents[45]
+        )
+    }
+
+    @Test
+    fun `module added correctly settings gradle with one include statement`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleWithFakeData()
+        val modulePath = ":repository:network"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        Assert.assertEquals(
+            "include(\"$modulePath\")",
+            settingsGradleFileContents[16]
         )
     }
 }
