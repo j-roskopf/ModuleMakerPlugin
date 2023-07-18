@@ -475,6 +475,41 @@ class KotlinModuleMakerTest {
     }
 
     @Test
+    fun `custom include keyword is used when specified`() {
+        settingsGradleFile.delete()
+        settingsGradleFile = folder.populateSettingsGradleKtsWithTiviWithCustomIncludeSettingsGradleKts()
+        val modulePath = ":repository:network"
+
+        fakePreferenceService.preferenceState.includeProjectKeyword = "testIncludeProject"
+
+        fileWriter.createModule(
+            settingsGradleFile = settingsGradleFile,
+            workingDirectory = folder.root,
+            modulePathAsString = modulePath,
+            moduleType = KOTLIN,
+            showErrorDialog = {
+                Assert.fail("No errors should be thrown")
+            },
+            showSuccessDialog = {
+                assert(true)
+            },
+            enhancedModuleCreationStrategy = false,
+            useKtsBuildFile = false,
+            gradleFileFollowModule = false,
+            packageName = testPackageName,
+            addReadme = false,
+            addGitIgnore = true,
+            rootPathString = folder.root.toString()
+        )
+
+        val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
+        Assert.assertEquals(
+            "testIncludeProject(\"$modulePath\")",
+            settingsGradleFileContents[45]
+        )
+    }
+
+    @Test
     fun `module added correctly settings gradle with one include statement`() {
         settingsGradleFile.delete()
         settingsGradleFile = folder.populateSettingsGradleWithFakeData()

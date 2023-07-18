@@ -12,6 +12,7 @@ import com.joetr.modulemaker.DEFAULT_BASE_PACKAGE_NAME
 import com.joetr.modulemaker.DEFAULT_GLUE_MODULE_NAME
 import com.joetr.modulemaker.DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE
 import com.joetr.modulemaker.DEFAULT_IMPL_MODULE_NAME
+import com.joetr.modulemaker.DEFAULT_INCLUDE_KEYWORD
 import com.joetr.modulemaker.DEFAULT_REFRESH_ON_MODULE_ADD
 import com.joetr.modulemaker.DEFAULT_THREE_MODULE_CREATION
 import com.joetr.modulemaker.DEFAULT_USE_KTS_FILE_EXTENSION
@@ -52,6 +53,7 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
             var implModuleName: String = DEFAULT_IMPL_MODULE_NAME,
             var gitignoreTemplate: String = "",
             var packageName: String = DEFAULT_BASE_PACKAGE_NAME,
+            var includeProjectKeyword: String = DEFAULT_INCLUDE_KEYWORD,
             var refreshOnModuleAdd: Boolean = DEFAULT_REFRESH_ON_MODULE_ADD,
             var threeModuleCreationDefault: Boolean = DEFAULT_THREE_MODULE_CREATION,
             var useKtsFileExtension: Boolean = DEFAULT_USE_KTS_FILE_EXTENSION,

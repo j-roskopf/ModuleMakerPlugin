@@ -46,6 +46,7 @@ private const val WINDOW_WIDTH = 800
 private const val WINDOW_HEIGHT = 900
 
 const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
+const val DEFAULT_INCLUDE_KEYWORD = "include"
 const val DEFAULT_REFRESH_ON_MODULE_ADD = true
 const val DEFAULT_THREE_MODULE_CREATION = false
 const val DEFAULT_USE_KTS_FILE_EXTENSION = true
@@ -73,6 +74,7 @@ class SettingsDialogWrapper(
     private lateinit var implTemplateTextArea: JTextArea
 
     private lateinit var packageNameTextField: JTextField
+    private lateinit var includeProjectKeywordTextField: JTextField
 
     private lateinit var refreshOnModuleAdd: JCheckBox
     private lateinit var threeModuleCreation: JCheckBox
@@ -233,6 +235,9 @@ class SettingsDialogWrapper(
         val packageNameTextLabel = JLabel("Base Package Name: ")
         packageNameTextField = JTextField(preferenceService.preferenceState.packageName)
 
+        val includeProjectKeywordLabel = JLabel("Include keyword for settings.gradle(.kts): ")
+        includeProjectKeywordTextField = JTextField(preferenceService.preferenceState.includeProjectKeyword)
+
         refreshOnModuleAdd = JCheckBox("Refresh after creating module")
         refreshOnModuleAdd.isSelected = preferenceService.preferenceState.refreshOnModuleAdd
 
@@ -253,6 +258,8 @@ class SettingsDialogWrapper(
 
         panel.add(clearSettingsButton)
         panel.add(packageNameTextLabel)
+        panel.add(includeProjectKeywordLabel)
+        panel.add(includeProjectKeywordTextField)
         panel.add(packageNameTextField)
         panel.add(refreshOnModuleAdd)
         panel.add(threeModuleCreation)
@@ -263,6 +270,7 @@ class SettingsDialogWrapper(
         panel.add(importSettingsButton)
         panel.add(exportSettingsButton)
 
+        // package name label and text field
         layout.putConstraint(
             SpringLayout.NORTH,
             packageNameTextLabel,
@@ -277,7 +285,6 @@ class SettingsDialogWrapper(
             SpringLayout.WEST,
             panel
         )
-
         layout.putConstraint(
             SpringLayout.BASELINE,
             packageNameTextField,
@@ -300,6 +307,44 @@ class SettingsDialogWrapper(
             panel
         )
 
+        // include project keyword
+        layout.putConstraint(
+            SpringLayout.NORTH,
+            includeProjectKeywordLabel,
+            EXTRA_PADDING,
+            SpringLayout.SOUTH,
+            packageNameTextField
+        )
+        layout.putConstraint(
+            SpringLayout.WEST,
+            includeProjectKeywordLabel,
+            EXTRA_PADDING,
+            SpringLayout.WEST,
+            panel
+        )
+        layout.putConstraint(
+            SpringLayout.BASELINE,
+            includeProjectKeywordTextField,
+            0,
+            SpringLayout.BASELINE,
+            includeProjectKeywordLabel
+        )
+        layout.putConstraint(
+            SpringLayout.WEST,
+            includeProjectKeywordTextField,
+            0,
+            SpringLayout.EAST,
+            includeProjectKeywordLabel
+        )
+        layout.putConstraint(
+            SpringLayout.EAST,
+            includeProjectKeywordTextField,
+            EXTRA_PADDING,
+            SpringLayout.EAST,
+            panel
+        )
+
+        // refresh on module add check
         layout.putConstraint(
             SpringLayout.WEST,
             refreshOnModuleAdd,
@@ -312,7 +357,7 @@ class SettingsDialogWrapper(
             refreshOnModuleAdd,
             EXTRA_PADDING,
             SpringLayout.SOUTH,
-            packageNameTextField
+            includeProjectKeywordTextField
         )
 
         layout.putConstraint(
@@ -463,6 +508,7 @@ class SettingsDialogWrapper(
             implTemplateTextArea.text = state.implTemplate
             glueTemplateTextArea.text = state.glueTemplate
             packageNameTextField.text = state.packageName
+            includeProjectKeywordTextField.text = state.includeProjectKeyword
             refreshOnModuleAdd.isSelected = state.refreshOnModuleAdd
             threeModuleCreation.isSelected = state.threeModuleCreationDefault
             ktsFileExtension.isSelected = state.useKtsFileExtension
@@ -1072,6 +1118,7 @@ class SettingsDialogWrapper(
             implTemplate = implTemplateTextArea.text,
             glueTemplate = glueTemplateTextArea.text,
             packageName = packageNameTextField.text,
+            includeProjectKeyword = includeProjectKeywordTextField.text,
             refreshOnModuleAdd = refreshOnModuleAdd.isSelected,
             threeModuleCreationDefault = threeModuleCreation.isSelected,
             useKtsFileExtension = ktsFileExtension.isSelected,
@@ -1093,6 +1140,7 @@ class SettingsDialogWrapper(
         glueTemplateTextArea.text = ""
         gitignoreTemplateTextArea.text = ""
         packageNameTextField.text = DEFAULT_BASE_PACKAGE_NAME
+        includeProjectKeywordTextField.text = DEFAULT_INCLUDE_KEYWORD
         refreshOnModuleAdd.isSelected = DEFAULT_REFRESH_ON_MODULE_ADD
         threeModuleCreation.isSelected = DEFAULT_THREE_MODULE_CREATION
         ktsFileExtension.isSelected = DEFAULT_USE_KTS_FILE_EXTENSION

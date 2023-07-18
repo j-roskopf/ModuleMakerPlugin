@@ -285,11 +285,11 @@ class FileWriter(
         val includeKeywords = listOf(
             "includeProject",
             "includeBuild",
-            "include"
+            "include",
+            preferenceService.preferenceState.includeProjectKeyword
         )
         val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
 
-        // TODO - add ability to specify keyword
         val lastNonEmptyLineInSettingsGradleFile = settingsFile.last { settingsFileLine ->
             settingsFileLine.isNotEmpty() && includeKeywords.any {
                 settingsFileLine.contains(it)
@@ -317,7 +317,11 @@ class FileWriter(
         var tempIndexForSettingsFile = lastLineNumberOfFirstIncludeProjectStatement
         while (tempIndexForSettingsFile >= 0) {
             val currentLine = settingsFile[tempIndexForSettingsFile]
-            if (currentLine.trim().isEmpty() || settingsFileContainsSpecialIncludeKeyword(currentLine, projectIncludeKeyword)) {
+            if (currentLine.trim().isEmpty() || settingsFileContainsSpecialIncludeKeyword(
+                    currentLine,
+                    projectIncludeKeyword
+                )
+            ) {
                 tempIndexForSettingsFile--
             } else {
                 break
@@ -369,7 +373,9 @@ class FileWriter(
              * in the latter case, we don't really support that, but we also don't want to add it after the include statement to break
              * the current include, so we insert it just before
              */
-            val offsetAmount = if (includeProjectStatements.size == 1 && includeProjectStatements.first().doesNotContainModule(projectIncludeKeyword)) {
+            val offsetAmount = if (includeProjectStatements.size == 1 && includeProjectStatements.first()
+                .doesNotContainModule(projectIncludeKeyword)
+            ) {
                 0
             } else {
                 1
