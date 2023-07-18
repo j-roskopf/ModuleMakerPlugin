@@ -41,6 +41,14 @@ fun TemporaryFolder.populateSettingsGradleKtsWithTiviSettingsGradleKts(): File {
     return settingsGradleKts
 }
 
+fun TemporaryFolder.populateSettingsGradleKtsWithTiviWithCustomIncludeSettingsGradleKts(): File {
+    val settingsGradleKts = this.newFile(settingsGradleKts)
+    val writer = FileWriter(settingsGradleKts)
+    writer.write(TiviSettingsGradleKts.dataWithCustomIncludeProject)
+    writer.close()
+    return settingsGradleKts
+}
+
 fun TemporaryFolder.populateSettingsGradleWithFakeData(): File {
     val settingsGradle = this.newFile(settingsGradle)
     val writer = FileWriter(settingsGradle)
