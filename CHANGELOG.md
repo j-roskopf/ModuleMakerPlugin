@@ -1,5 +1,9 @@
 # Module Maker Changelog
 
+## [1.0.13]
+- Support for multi-app projects with multiple settings.gradle(.kts) files
+- Support a custom "include" keyword to be used to include modules in settings.gradle(.kts) files
+
 ## [1.0.12]
 - Performance improvement for large projects
 
