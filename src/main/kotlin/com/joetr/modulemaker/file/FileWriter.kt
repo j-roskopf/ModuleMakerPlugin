@@ -282,12 +282,17 @@ class FileWriter(
     ) {
         val settingsFile = Files.readAllLines(Paths.get(settingsGradleFile.toURI()))
 
-        val includeKeywords = listOf(
-            "includeProject",
-            "includeBuild",
-            "include",
-            preferenceService.preferenceState.includeProjectKeyword
-        )
+        // if the user has non-empty include keyword set, only check for that.
+        val includeKeywords = if (preferenceService.preferenceState.includeProjectKeyword.isNotEmpty()) {
+            listOf(preferenceService.preferenceState.includeProjectKeyword)
+        } else {
+            listOf(
+                "includeProject",
+                "includeBuild",
+                "include"
+            )
+        }
+
         val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
 
         val lastNonEmptyLineInSettingsGradleFile = settingsFile.last { settingsFileLine ->

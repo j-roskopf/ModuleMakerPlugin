@@ -640,14 +640,25 @@ class ModuleMakerDialogWrapper(
         return configurationJPanel
     }
 
+    /**
+     * When grabbing the settings.gradle(.kts) file, we first want to look in the selected root
+     *
+     * This is helpful in case of multi-application projects.
+     */
     private fun getSettingsGradleFile(): File? {
+        val settingsGradleKtsCurrentlySelectedRoot = Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle.kts").toFile()
+        val settingsGradleCurrentlySelectedRoot = Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle").toFile()
         val settingsGradleKtsPath = Path.of(rootDirectoryString(), "settings.gradle.kts").toFile()
         val settingsGradlePath = Path.of(rootDirectoryString(), "settings.gradle").toFile()
-        return if (settingsGradlePath.exists()) {
+
+        return listOf(
+            settingsGradleKtsCurrentlySelectedRoot,
+            settingsGradleCurrentlySelectedRoot,
+            settingsGradleKtsPath,
             settingsGradlePath
-        } else if (settingsGradleKtsPath.exists()) {
-            settingsGradleKtsPath
-        } else {
+        ).firstOrNull {
+            it.exists()
+        } ?: run {
             MessageDialogWrapper("Can't find settings.gradle(.kts) file")
             null
         }
