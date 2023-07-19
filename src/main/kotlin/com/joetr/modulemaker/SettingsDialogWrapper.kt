@@ -46,7 +46,7 @@ private const val WINDOW_WIDTH = 800
 private const val WINDOW_HEIGHT = 900
 
 const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
-const val DEFAULT_INCLUDE_KEYWORD = "include"
+const val DEFAULT_INCLUDE_KEYWORD = ""
 const val DEFAULT_REFRESH_ON_MODULE_ADD = true
 const val DEFAULT_THREE_MODULE_CREATION = false
 const val DEFAULT_USE_KTS_FILE_EXTENSION = true
