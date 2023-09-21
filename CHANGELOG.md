@@ -3,6 +3,7 @@
 ## [1.0.14]
 - Support new intellij platform versions
 - Update to Kotlin 1.9
+- Better support for smaller screens
 
 ## [1.0.13]
 - Support for multi-app projects with multiple settings.gradle(.kts) files

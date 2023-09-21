@@ -5,6 +5,7 @@ import freemarker.template.Version
 
 const val DEFAULT_PADDING = 4
 const val EXTRA_PADDING = 8
+const val SCROLLBAR_WIDTH = 40
 
 const val DEFAULT_EXIT_CODE = 2
 

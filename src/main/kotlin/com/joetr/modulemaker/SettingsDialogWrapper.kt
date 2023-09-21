@@ -655,6 +655,7 @@ class SettingsDialogWrapper(
         androidTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 3 - EXTRA_PADDING * 2)
 
         val templateDefaultPanel = JPanel()
+
         val templateDefaultPanelLayout = SpringLayout()
         templateDefaultPanel.layout = templateDefaultPanelLayout
         templateDefaultPanel.add(kotlinTemplateLabel)
@@ -768,7 +769,13 @@ class SettingsDialogWrapper(
             templateDefaultPanel
         )
 
-        return templateDefaultPanel
+        templateDefaultPanel.preferredSize = templateDefaultPanel.getPreferredDimensionForComponent()
+
+        return JScrollPane(
+            templateDefaultPanel,
+            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
+        )
     }
 
     private fun createEnhancedTemplateDefaultComponent(): JComponent {
@@ -1091,7 +1098,13 @@ class SettingsDialogWrapper(
             glueModuleNameTextArea
         )
 
-        return templateDefaultPanel
+        templateDefaultPanel.preferredSize = templateDefaultPanel.getPreferredDimensionForComponent()
+
+        return JScrollPane(
+            templateDefaultPanel,
+            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
+        )
     }
 
     override fun createActions(): Array<Action> {
@@ -1197,5 +1210,15 @@ class SettingsDialogWrapper(
                 KotlinModuleTemplate.data
             }
         }
+    }
+
+    private fun JComponent.getPreferredDimensionForComponent(): Dimension {
+        var totalHeight = 0
+        for (component in this.components) {
+            val preferredSize = component.preferredSize
+            totalHeight += preferredSize.height
+        }
+
+        return Dimension(WINDOW_WIDTH - SCROLLBAR_WIDTH, totalHeight + SCROLLBAR_WIDTH * 2)
     }
 }
