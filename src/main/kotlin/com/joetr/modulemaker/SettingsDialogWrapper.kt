@@ -2,25 +2,19 @@
 
 package com.joetr.modulemaker
 
-import androidx.compose.foundation.HorizontalScrollbar
-import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
@@ -65,13 +59,7 @@ import java.nio.file.Paths
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JComponent
-import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.JScrollPane
-import javax.swing.JTextArea
-import javax.swing.ScrollPaneConstants
-import javax.swing.SpringLayout
-import javax.swing.event.DocumentListener
 
 private const val WINDOW_WIDTH = 800
 private const val WINDOW_HEIGHT = 900
@@ -94,9 +82,6 @@ class SettingsDialogWrapper(
     private val isKtsCurrentlyChecked: Boolean,
     private val isAndroidChecked: Boolean
 ) : DialogWrapper(true) {
-
-    private lateinit var kotlinTemplateTextArea: JTextArea
-    private lateinit var androidTemplateTextArea: JTextArea
 
     private val preferenceService = PreferenceServiceImpl.instance
 
@@ -124,6 +109,11 @@ class SettingsDialogWrapper(
     private val implModuleNameTextArea =
         mutableStateOf(TextFieldValue(preferenceService.preferenceState.implModuleName))
 
+    private val androidTemplateTextArea =
+        mutableStateOf(TextFieldValue(preferenceService.preferenceState.androidTemplate))
+    private val kotlinTemplateTextArea =
+        mutableStateOf(TextFieldValue(preferenceService.preferenceState.kotlinTemplate))
+
     init {
         title = "Settings"
         init()
@@ -134,7 +124,7 @@ class SettingsDialogWrapper(
         val dialogPanel = JPanel(BorderLayout())
         dialogPanel.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
 
-        val templateDefaultPanel = createTemplateDefaultComponent()
+        val templateDefaultPanel = createTemplateDefaultComponentCompose()
         val templateEnhancedDefaultPanel = createEnhancedTemplateDefaultComponentCompose()
         val generalPanel = createGeneralPanelCompose()
         val gitignoreTemplateDefaultPanel = createGitIgnoreTemplateDefaultPanelCompose()
@@ -155,21 +145,23 @@ class SettingsDialogWrapper(
         return ComposePanel().apply {
             setContent {
                 WidgetTheme {
-                    Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = "You can override the .gitignore templates created with your own project specific default.\n\nIf nothing is specified here, a sensible default will be generated for you."
-                        )
+                    Surface {
+                        Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+                            Text(
+                                modifier = Modifier.padding(8.dp),
+                                text = "You can override the .gitignore templates created with your own project specific default.\n\nIf nothing is specified here, a sensible default will be generated for you."
+                            )
 
-                        val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
+                            val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
 
-                        OutlinedTextField(
-                            modifier = Modifier.fillMaxSize().padding(8.dp),
-                            value = gitIgnoreTemplateState.value,
-                            onValueChange = {
-                                gitIgnoreTemplateState.value = it
-                            }
-                        )
+                            OutlinedTextField(
+                                modifier = Modifier.fillMaxSize().padding(8.dp),
+                                value = gitIgnoreTemplateState.value,
+                                onValueChange = {
+                                    gitIgnoreTemplateState.value = it
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -178,151 +170,116 @@ class SettingsDialogWrapper(
 
     private fun createGeneralPanelCompose(): JComponent {
         return ComposePanel().apply {
-            setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
             setContent {
-                ScrollablePane {
-                    var basePackageName by remember { packageNameTextField }
+                WidgetTheme {
+                    Surface {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
+                        ) {
+                            var basePackageName by remember { packageNameTextField }
 
-                    TextField(
-                        value = basePackageName,
-                        onValueChange = { newValue ->
-                            basePackageName = newValue
-                        },
-                        modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                        textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
-                        label = { Text("Base Package Name:") }
-                    )
+                            TextField(
+                                value = basePackageName,
+                                onValueChange = { newValue ->
+                                    basePackageName = newValue
+                                },
+                                modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
+                                label = { Text("Base Package Name:") }
+                            )
 
-                    var includeKeyword by remember { includeProjectKeywordTextField }
+                            var includeKeyword by remember { includeProjectKeywordTextField }
 
-                    TextField(
-                        value = includeKeyword,
-                        onValueChange = { newValue ->
-                            includeKeyword = newValue
-                        },
-                        modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                        textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
-                        label = { Text("Include keyword for settings.gradle(.kts):") }
-                    )
+                            TextField(
+                                value = includeKeyword,
+                                onValueChange = { newValue ->
+                                    includeKeyword = newValue
+                                },
+                                modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
+                                label = { Text("Include keyword for settings.gradle(.kts):") }
+                            )
 
-                    val refreshAfterModuleCreationState = remember { refreshOnModuleAdd }
-                    LabelledCheckbox(
-                        label = "Refresh after creating modules",
-                        checked = refreshAfterModuleCreationState.value,
-                        onCheckedChange = {
-                            refreshAfterModuleCreationState.value = it
+                            val refreshAfterModuleCreationState = remember { refreshOnModuleAdd }
+                            LabelledCheckbox(
+                                label = "Refresh after creating modules",
+                                checked = refreshAfterModuleCreationState.value,
+                                onCheckedChange = {
+                                    refreshAfterModuleCreationState.value = it
+                                }
+                            )
+
+                            val threeModuleState = remember { threeModuleCreation }
+                            LabelledCheckbox(
+                                label = "3 module creation checked by default",
+                                checked = threeModuleState.value,
+                                onCheckedChange = {
+                                    threeModuleState.value = it
+                                }
+                            )
+
+                            val useKtsState = remember { ktsFileExtension }
+                            LabelledCheckbox(
+                                label = "Use .kts file extension checked by default",
+                                checked = useKtsState.value,
+                                onCheckedChange = {
+                                    useKtsState.value = it
+                                }
+                            )
+
+                            val gradleFileNameState = remember { gradleFileNamedAfterModule }
+                            LabelledCheckbox(
+                                label = "Gradle file named after module by default",
+                                checked = gradleFileNameState.value,
+                                onCheckedChange = {
+                                    gradleFileNameState.value = it
+                                }
+                            )
+
+                            val readmeState = remember { addReadme }
+                            LabelledCheckbox(
+                                label = "Add README.md by default",
+                                checked = readmeState.value,
+                                onCheckedChange = {
+                                    readmeState.value = it
+                                }
+                            )
+
+                            val gitIgnoreState = remember { addGitignore }
+                            LabelledCheckbox(
+                                label = "Add .gitignore by default",
+                                checked = addGitignore.value,
+                                onCheckedChange = {
+                                    gitIgnoreState.value = it
+                                }
+                            )
+
+                            Button(
+                                onClick = {
+                                    importSettings()
+                                }
+                            ) {
+                                Text("Import Settings")
+                            }
+
+                            Button(
+                                onClick = {
+                                    exportSettings()
+                                }
+                            ) {
+                                Text("Export Settings")
+                            }
+
+                            Button(
+                                onClick = {
+                                    clearData()
+                                }
+                            ) {
+                                Text("Clear All Settings")
+                            }
                         }
-                    )
-
-                    val threeModuleState = remember { threeModuleCreation }
-                    LabelledCheckbox(
-                        label = "3 module creation checked by default",
-                        checked = threeModuleState.value,
-                        onCheckedChange = {
-                            threeModuleState.value = it
-                        }
-                    )
-
-                    val useKtsState = remember { ktsFileExtension }
-                    LabelledCheckbox(
-                        label = "Use .kts file extension checked by default",
-                        checked = useKtsState.value,
-                        onCheckedChange = {
-                            useKtsState.value = it
-                        }
-                    )
-
-                    val gradleFileNameState = remember { gradleFileNamedAfterModule }
-                    LabelledCheckbox(
-                        label = "Gradle file named after module by default",
-                        checked = gradleFileNameState.value,
-                        onCheckedChange = {
-                            gradleFileNameState.value = it
-                        }
-                    )
-
-                    val readmeState = remember { addReadme }
-                    LabelledCheckbox(
-                        label = "Add README.md by default",
-                        checked = readmeState.value,
-                        onCheckedChange = {
-                            readmeState.value = it
-                        }
-                    )
-
-                    val gitIgnoreState = remember { addGitignore }
-                    LabelledCheckbox(
-                        label = "Add .gitignore by default",
-                        checked = addGitignore.value,
-                        onCheckedChange = {
-                            gitIgnoreState.value = it
-                        }
-                    )
-
-                    Button(
-                        onClick = {
-                            importSettings()
-                        }
-                    ) {
-                        Text("Import Settings")
-                    }
-
-                    Button(
-                        onClick = {
-                            exportSettings()
-                        }
-                    ) {
-                        Text("Export Settings")
-                    }
-
-                    Button(
-                        onClick = {
-                            clearData()
-                        }
-                    ) {
-                        Text("Clear All Settings")
-                    }
-                }
-            }
-        }
-    }
-
-    @Composable
-    fun ScrollablePane(
-        modifier: Modifier = Modifier,
-        content: @Composable
-        (ColumnScope) -> Unit
-    ) {
-        WidgetTheme {
-            Box(
-                modifier = modifier.fillMaxSize()
-                    .padding(8.dp)
-            ) {
-                val stateVertical = rememberScrollState(0)
-                val stateHorizontal = rememberScrollState(0)
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(stateVertical)
-                        .padding(end = 12.dp, bottom = 12.dp)
-                        .horizontalScroll(stateHorizontal)
-                ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        content(this)
                     }
                 }
-                VerticalScrollbar(
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                        .fillMaxHeight(),
-                    adapter = rememberScrollbarAdapter(stateVertical)
-                )
-                HorizontalScrollbar(
-                    modifier = Modifier.align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .padding(end = 12.dp),
-                    adapter = rememberScrollbarAdapter(stateHorizontal)
-                )
             }
         }
     }
@@ -369,8 +326,8 @@ class SettingsDialogWrapper(
 
             val state = Json.decodeFromString<PreferenceServiceImpl.Companion.State>(data)
 
-            androidTemplateTextArea.text = state.androidTemplate
-            kotlinTemplateTextArea.text = state.kotlinTemplate
+            androidTemplateTextArea.value = TextFieldValue(state.androidTemplate)
+            kotlinTemplateTextArea.value = TextFieldValue(state.kotlinTemplate)
             apiTemplateTextArea.value = TextFieldValue(state.apiTemplate)
             implTemplateTextArea.value = TextFieldValue(state.implTemplate)
             glueTemplateTextArea.value = TextFieldValue(state.glueTemplate)
@@ -409,8 +366,8 @@ class SettingsDialogWrapper(
     }
 
     private fun getJsonFromSettings(): String {
-        val androidTemplate: String = androidTemplateTextArea.text
-        val kotlinTemplate: String = kotlinTemplateTextArea.text
+        val androidTemplate: String = androidTemplateTextArea.value.text
+        val kotlinTemplate: String = kotlinTemplateTextArea.value.text
         val apiTemplate: String = apiTemplateTextArea.value.text
         val glueTemplate: String = glueTemplateTextArea.value.text
         val implTemplate: String = implTemplateTextArea.value.text
@@ -445,280 +402,129 @@ class SettingsDialogWrapper(
         return Json.encodeToString(newState)
     }
 
-    private fun createTemplateDefaultComponent(): JComponent {
-        val settingExplanationLabel = JLabel(
-            """
-            <html>
-            You can override the gradle templates created with your own project specific defaults.
-            <br/><br/>
-            If nothing is specified here, a sensible default will be generated for you.
-            </html>
-            """.trimIndent()
-        )
+    private fun createTemplateDefaultComponentCompose(): JComponent {
+        return ComposePanel().apply {
+            setContent {
+                WidgetTheme {
+                    Surface {
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
+                        ) {
+                            val settingExplanationText =
+                                "You can override the gradle templates created with your own project specific defaults./n/n If nothing is specified here, a sensible default will be generated for you."
 
-        val supportedVariablesString = TemplateVariable.values().joinToString("<br/>") {
-            it.templateVariable
-        }
+                            val supportedVariablesString = TemplateVariable.values().joinToString("\n") {
+                                it.templateVariable
+                            }
+                            val supportedVariablesLabel =
+                                "If you do have a custom template, there are some variable names that will be automatically replaced for you.\n\n Supported variables are:\n\n $supportedVariablesString"
 
-        val supportedVariablesLabel = JLabel(
-            """
-            <html>
-            If you do have a custom template, there are some variable names that will be automatically replaced for you.
-            <br/><br/>
-            Supported variables are:
-            <br/><br/>
-            $supportedVariablesString
-            </html>
-            """.trimIndent()
-        )
+                            Text(settingExplanationText)
 
-        val kotlinTemplateLabel = JLabel("Kotlin Template")
-        var kotlinTemplateFromPref = preferenceService.preferenceState.kotlinTemplate
+                            val kotlinTemplateState = remember { kotlinTemplateTextArea }
+                            OutlinedTextField(
+                                label = { Text("Kotlin Template") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                                value = kotlinTemplateState.value,
+                                onValueChange = {
+                                    kotlinTemplateState.value = it
+                                }
+                            )
 
-        if (kotlinTemplateFromPref.isBlank()) {
-            kotlinTemplateFromPref = if (isKtsCurrentlyChecked) {
-                KotlinModuleTemplate.data
-            } else {
-                KotlinModuleKtsTemplate.data
+                            val androidTemplateState = remember { androidTemplateTextArea }
+                            OutlinedTextField(
+                                label = { Text("Android Template") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                                value = androidTemplateState.value,
+                                onValueChange = {
+                                    androidTemplateState.value = it
+                                }
+                            )
+
+                            Text(supportedVariablesLabel)
+                        }
+                    }
+                }
             }
         }
-
-        kotlinTemplateTextArea = JTextArea(
-            kotlinTemplateFromPref,
-            kotlinTemplateFromPref.getRowsFromText(),
-            kotlinTemplateFromPref.getColumnFromText()
-        )
-        kotlinTemplateTextArea.addDocumentListener()
-
-        kotlinTemplateTextArea.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 3)
-        val kotlinTemplateScrollPane = JScrollPane(
-            kotlinTemplateTextArea,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
-        kotlinTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 3 - EXTRA_PADDING * 2)
-
-        val androidTemplateLabel = JLabel("Android Template")
-        var androidTemplateFromPref = preferenceService.preferenceState.androidTemplate
-
-        if (androidTemplateFromPref.isBlank()) {
-            androidTemplateFromPref = if (isKtsCurrentlyChecked) {
-                AndroidModuleKtsTemplate.data
-            } else {
-                AndroidModuleTemplate.data
-            }
-        }
-
-        androidTemplateTextArea = JTextArea(
-            androidTemplateFromPref,
-            androidTemplateFromPref.getRowsFromText(),
-            androidTemplateFromPref.getColumnFromText()
-        )
-        androidTemplateTextArea.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 3 + EXTRA_PADDING * 2)
-        androidTemplateTextArea.addDocumentListener()
-        val androidTemplateScrollPane = JScrollPane(
-            androidTemplateTextArea,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
-        androidTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 3 - EXTRA_PADDING * 2)
-
-        val templateDefaultPanel = JPanel()
-
-        val templateDefaultPanelLayout = SpringLayout()
-        templateDefaultPanel.layout = templateDefaultPanelLayout
-        templateDefaultPanel.add(kotlinTemplateLabel)
-        templateDefaultPanel.add(kotlinTemplateScrollPane)
-        templateDefaultPanel.add(androidTemplateLabel)
-        templateDefaultPanel.add(androidTemplateScrollPane)
-        templateDefaultPanel.add(settingExplanationLabel)
-        templateDefaultPanel.add(supportedVariablesLabel)
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            settingExplanationLabel,
-            EXTRA_PADDING,
-            SpringLayout.NORTH,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            settingExplanationLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            kotlinTemplateLabel,
-            EXTRA_PADDING * 2,
-            SpringLayout.SOUTH,
-            settingExplanationLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            kotlinTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            kotlinTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            kotlinTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            kotlinTemplateLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            kotlinTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            androidTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            androidTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            kotlinTemplateScrollPane
-        )
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            androidTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            androidTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            androidTemplateLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            androidTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            supportedVariablesLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            androidTemplateScrollPane
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            supportedVariablesLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-
-        templateDefaultPanel.preferredSize = templateDefaultPanel.getPreferredDimensionForComponent()
-
-        return JScrollPane(
-            templateDefaultPanel,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
     }
 
     private fun createEnhancedTemplateDefaultComponentCompose(): JComponent {
         return ComposePanel().apply {
             setContent {
                 WidgetTheme {
-                    Column(
-                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                    ) {
-                        val apiTemplateState = remember { apiTemplateTextArea }
-                        OutlinedTextField(
-                            label = { Text("Api Template") },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                            value = apiTemplateState.value,
-                            onValueChange = {
-                                apiTemplateState.value = it
-                            }
-                        )
+                    Surface {
+                        Column(
+                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                        ) {
+                            val apiTemplateState = remember { apiTemplateTextArea }
+                            OutlinedTextField(
+                                label = { Text("Api Template") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                                value = apiTemplateState.value,
+                                onValueChange = {
+                                    apiTemplateState.value = it
+                                }
+                            )
 
-                        val glueTemplateState = remember { glueTemplateTextArea }
-                        OutlinedTextField(
-                            label = { Text("Glue Template") },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                            value = glueTemplateState.value,
-                            onValueChange = {
-                                glueTemplateState.value = it
-                            }
-                        )
+                            val glueTemplateState = remember { glueTemplateTextArea }
+                            OutlinedTextField(
+                                label = { Text("Glue Template") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                                value = glueTemplateState.value,
+                                onValueChange = {
+                                    glueTemplateState.value = it
+                                }
+                            )
 
-                        val implTemplateState = remember { implTemplateTextArea }
-                        OutlinedTextField(
-                            label = { Text("Impl Template") },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                            value = implTemplateState.value,
-                            onValueChange = {
-                                implTemplateState.value = it
-                            }
-                        )
+                            val implTemplateState = remember { implTemplateTextArea }
+                            OutlinedTextField(
+                                label = { Text("Impl Template") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                                value = implTemplateState.value,
+                                onValueChange = {
+                                    implTemplateState.value = it
+                                }
+                            )
 
-                        val apiModuleNameState = remember { apiModuleNameTextArea }
+                            val apiModuleNameState = remember { apiModuleNameTextArea }
 
-                        OutlinedTextField(
-                            label = { Text("Api Module Name") },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            value = apiModuleNameState.value,
-                            onValueChange = {
-                                apiModuleNameState.value = it
-                            }
-                        )
+                            OutlinedTextField(
+                                label = { Text("Api Module Name") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                value = apiModuleNameState.value,
+                                onValueChange = {
+                                    apiModuleNameState.value = it
+                                }
+                            )
 
-                        val glueModuleNameState = remember { glueModuleNameTextArea }
+                            val glueModuleNameState = remember { glueModuleNameTextArea }
 
-                        OutlinedTextField(
-                            label = { Text("Glue Module Name") },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            value = glueModuleNameState.value,
-                            onValueChange = {
-                                glueModuleNameState.value = it
-                            }
-                        )
+                            OutlinedTextField(
+                                label = { Text("Glue Module Name") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                value = glueModuleNameState.value,
+                                onValueChange = {
+                                    glueModuleNameState.value = it
+                                }
+                            )
 
-                        val implModuleNameState = remember { implModuleNameTextArea }
+                            val implModuleNameState = remember { implModuleNameTextArea }
 
-                        OutlinedTextField(
-                            label = { Text("Impl Module Name") },
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            value = implModuleNameState.value,
-                            onValueChange = {
-                                implModuleNameState.value = it
-                            }
-                        )
+                            OutlinedTextField(
+                                label = { Text("Impl Module Name") },
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                value = implModuleNameState.value,
+                                onValueChange = {
+                                    implModuleNameState.value = it
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -743,8 +549,8 @@ class SettingsDialogWrapper(
 
     private fun saveDate() {
         preferenceService.preferenceState = preferenceService.preferenceState.copy(
-            androidTemplate = androidTemplateTextArea.text,
-            kotlinTemplate = kotlinTemplateTextArea.text,
+            androidTemplate = androidTemplateTextArea.value.text,
+            kotlinTemplate = kotlinTemplateTextArea.value.text,
             apiTemplate = apiTemplateTextArea.value.text,
             implTemplate = implTemplateTextArea.value.text,
             glueTemplate = glueTemplateTextArea.value.text,
@@ -764,8 +570,8 @@ class SettingsDialogWrapper(
     }
 
     private fun clearData() {
-        androidTemplateTextArea.text = getDefaultTemplate()
-        kotlinTemplateTextArea.text = getDefaultTemplate(isKotlin = true)
+        androidTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
+        kotlinTemplateTextArea.value = TextFieldValue(getDefaultTemplate(isKotlin = true))
         apiTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
         implTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
         glueTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
@@ -782,36 +588,6 @@ class SettingsDialogWrapper(
         implModuleNameTextArea.value = TextFieldValue(DEFAULT_IMPL_MODULE_NAME)
         glueModuleNameTextArea.value = TextFieldValue(DEFAULT_GLUE_MODULE_NAME)
         apiModuleNameTextArea.value = TextFieldValue(DEFAULT_API_MODULE_NAME)
-    }
-
-    private fun String.getRowsFromText(): Int {
-        return this.lines().count()
-    }
-
-    private fun String.getColumnFromText(): Int {
-        return this.lines().maxOf {
-            it.length
-        }
-    }
-
-    private fun JTextArea.addDocumentListener() {
-        val currentTextArea = this
-        this.document.addDocumentListener(object : DocumentListener {
-            override fun insertUpdate(e: javax.swing.event.DocumentEvent?) {
-                currentTextArea.rows = currentTextArea.text.getRowsFromText()
-                currentTextArea.columns = currentTextArea.text.getColumnFromText()
-            }
-
-            override fun removeUpdate(e: javax.swing.event.DocumentEvent?) {
-                currentTextArea.rows = currentTextArea.text.getRowsFromText()
-                currentTextArea.columns = currentTextArea.text.getColumnFromText()
-            }
-
-            override fun changedUpdate(e: javax.swing.event.DocumentEvent?) {
-                currentTextArea.rows = currentTextArea.text.getRowsFromText()
-                currentTextArea.columns = currentTextArea.text.getColumnFromText()
-            }
-        })
     }
 
     private fun getDefaultTemplate(isKotlin: Boolean = false): String {
@@ -836,15 +612,5 @@ class SettingsDialogWrapper(
                 KotlinModuleTemplate.data
             }
         }
-    }
-
-    private fun JComponent.getPreferredDimensionForComponent(): Dimension {
-        var totalHeight = 0
-        for (component in this.components) {
-            val preferredSize = component.preferredSize
-            totalHeight += preferredSize.height
-        }
-
-        return Dimension(WINDOW_WIDTH - SCROLLBAR_WIDTH, totalHeight + SCROLLBAR_WIDTH * 2)
     }
 }
