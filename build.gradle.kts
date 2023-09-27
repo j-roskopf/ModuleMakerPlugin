@@ -1,6 +1,8 @@
+import org.gradle.internal.classpath.Instrumented.systemProperty
+import org.gradle.internal.impldep.org.bouncycastle.cms.RecipientId.password
+import org.gradle.internal.impldep.org.eclipse.jgit.lib.ObjectChecker.type
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.kotlin.config.JvmTarget
 
 fun properties(key: String) = providers.gradleProperty(key)
 fun environment(key: String) = providers.environmentVariable(key)
@@ -11,6 +13,7 @@ plugins {
     alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     kotlin("plugin.serialization") version "1.9.10"
+    id("org.jetbrains.compose")
 }
 
 group = properties("pluginGroup").get()
@@ -30,6 +33,7 @@ buildscript {
 // Configure project's dependencies
 repositories {
     mavenCentral()
+    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
 }
 
 apply(
@@ -39,6 +43,7 @@ apply(
 dependencies {
     implementation(libs.freemarker)
     implementation(libs.serialization)
+    implementation(compose.desktop.currentOs)
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
@@ -79,7 +84,7 @@ tasks {
             val start = "<!-- Plugin description -->"
             val end = "<!-- Plugin description end -->"
 
-            with (it.lines()) {
+            with(it.lines()) {
                 if (!containsAll(listOf(start, end))) {
                     throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
                 }
@@ -95,7 +100,7 @@ tasks {
                     (getOrNull(pluginVersion) ?: getUnreleased())
                         .withHeader(false)
                         .withEmptySections(false),
-                    Changelog.OutputType.HTML,
+                    Changelog.OutputType.HTML
                 )
             }
         }
