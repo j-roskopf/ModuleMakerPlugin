@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -68,7 +69,6 @@ import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.JTextArea
-import javax.swing.JTextField
 import javax.swing.ScrollPaneConstants
 import javax.swing.SpringLayout
 import javax.swing.event.DocumentListener
@@ -98,14 +98,6 @@ class SettingsDialogWrapper(
     private lateinit var kotlinTemplateTextArea: JTextArea
     private lateinit var androidTemplateTextArea: JTextArea
 
-    private lateinit var apiTemplateTextArea: JTextArea
-    private lateinit var glueTemplateTextArea: JTextArea
-    private lateinit var implTemplateTextArea: JTextArea
-
-    private lateinit var apiModuleNameTextArea: JTextField
-    private lateinit var glueModuleNameTextArea: JTextField
-    private lateinit var implModuleNameTextArea: JTextField
-
     private val preferenceService = PreferenceServiceImpl.instance
 
     private val refreshOnModuleAdd = mutableStateOf(preferenceService.preferenceState.refreshOnModuleAdd)
@@ -117,11 +109,20 @@ class SettingsDialogWrapper(
     private val addGitignore = mutableStateOf(preferenceService.preferenceState.addGitIgnore)
 
     private val packageNameTextField = mutableStateOf(TextFieldValue(preferenceService.preferenceState.packageName))
-    private val gitignoreTemplateTextArea = mutableStateOf(TextFieldValue(preferenceService.preferenceState.gitignoreTemplate))
+    private val gitignoreTemplateTextArea =
+        mutableStateOf(TextFieldValue(preferenceService.preferenceState.gitignoreTemplate))
     private val includeProjectKeywordTextField =
         mutableStateOf(TextFieldValue(preferenceService.preferenceState.includeProjectKeyword))
 
+    private val apiTemplateTextArea = mutableStateOf(TextFieldValue(preferenceService.preferenceState.apiTemplate))
+    private val glueTemplateTextArea = mutableStateOf(TextFieldValue(preferenceService.preferenceState.glueTemplate))
+    private val implTemplateTextArea = mutableStateOf(TextFieldValue(preferenceService.preferenceState.implTemplate))
 
+    private val apiModuleNameTextArea = mutableStateOf(TextFieldValue(preferenceService.preferenceState.apiModuleName))
+    private val glueModuleNameTextArea =
+        mutableStateOf(TextFieldValue(preferenceService.preferenceState.glueModuleName))
+    private val implModuleNameTextArea =
+        mutableStateOf(TextFieldValue(preferenceService.preferenceState.implModuleName))
 
     init {
         title = "Settings"
@@ -134,7 +135,7 @@ class SettingsDialogWrapper(
         dialogPanel.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         val templateDefaultPanel = createTemplateDefaultComponent()
-        val templateEnhancedDefaultPanel = createEnhancedTemplateDefaultComponent()
+        val templateEnhancedDefaultPanel = createEnhancedTemplateDefaultComponentCompose()
         val generalPanel = createGeneralPanelCompose()
         val gitignoreTemplateDefaultPanel = createGitIgnoreTemplateDefaultPanelCompose()
 
@@ -154,10 +155,10 @@ class SettingsDialogWrapper(
         return ComposePanel().apply {
             setContent {
                 WidgetTheme {
-                    Column (modifier = Modifier.fillMaxSize().padding(8.dp)) {
+                    Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
                         Text(
                             modifier = Modifier.padding(8.dp),
-                            text = "You can override the .gitignore templates created with your own project specific default. \n If nothing is specified here, a sensible default will be generated for you."
+                            text = "You can override the .gitignore templates created with your own project specific default.\n\nIf nothing is specified here, a sensible default will be generated for you."
                         )
 
                         val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
@@ -370,9 +371,9 @@ class SettingsDialogWrapper(
 
             androidTemplateTextArea.text = state.androidTemplate
             kotlinTemplateTextArea.text = state.kotlinTemplate
-            apiTemplateTextArea.text = state.apiTemplate
-            implTemplateTextArea.text = state.implTemplate
-            glueTemplateTextArea.text = state.glueTemplate
+            apiTemplateTextArea.value = TextFieldValue(state.apiTemplate)
+            implTemplateTextArea.value = TextFieldValue(state.implTemplate)
+            glueTemplateTextArea.value = TextFieldValue(state.glueTemplate)
             packageNameTextField.value = TextFieldValue(state.packageName)
             includeProjectKeywordTextField.value = TextFieldValue(state.includeProjectKeyword)
             refreshOnModuleAdd.value = state.refreshOnModuleAdd
@@ -410,9 +411,9 @@ class SettingsDialogWrapper(
     private fun getJsonFromSettings(): String {
         val androidTemplate: String = androidTemplateTextArea.text
         val kotlinTemplate: String = kotlinTemplateTextArea.text
-        val apiTemplate: String = apiTemplateTextArea.text
-        val glueTemplate: String = glueTemplateTextArea.text
-        val implTemplate: String = implTemplateTextArea.text
+        val apiTemplate: String = apiTemplateTextArea.value.text
+        val glueTemplate: String = glueTemplateTextArea.value.text
+        val implTemplate: String = implTemplateTextArea.value.text
         val packageName: String = packageNameTextField.value.text
         val includeProject: String = includeProjectKeywordTextField.value.text
         val shouldRefresh = refreshOnModuleAdd.value
@@ -646,333 +647,82 @@ class SettingsDialogWrapper(
         )
     }
 
-    private fun createEnhancedTemplateDefaultComponent(): JComponent {
-        val apiTemplateLabel = JLabel("Api Template")
-        var apiTemplateFromPref = preferenceService.preferenceState.apiTemplate
+    private fun createEnhancedTemplateDefaultComponentCompose(): JComponent {
+        return ComposePanel().apply {
+            setContent {
+                WidgetTheme {
+                    Column(
+                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                    ) {
+                        val apiTemplateState = remember { apiTemplateTextArea }
+                        OutlinedTextField(
+                            label = { Text("Api Template") },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                            value = apiTemplateState.value,
+                            onValueChange = {
+                                apiTemplateState.value = it
+                            }
+                        )
 
-        if (apiTemplateFromPref.isBlank()) {
-            apiTemplateFromPref = getDefaultTemplate()
+                        val glueTemplateState = remember { glueTemplateTextArea }
+                        OutlinedTextField(
+                            label = { Text("Glue Template") },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                            value = glueTemplateState.value,
+                            onValueChange = {
+                                glueTemplateState.value = it
+                            }
+                        )
+
+                        val implTemplateState = remember { implTemplateTextArea }
+                        OutlinedTextField(
+                            label = { Text("Impl Template") },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                            value = implTemplateState.value,
+                            onValueChange = {
+                                implTemplateState.value = it
+                            }
+                        )
+
+                        val apiModuleNameState = remember { apiModuleNameTextArea }
+
+                        OutlinedTextField(
+                            label = { Text("Api Module Name") },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            value = apiModuleNameState.value,
+                            onValueChange = {
+                                apiModuleNameState.value = it
+                            }
+                        )
+
+                        val glueModuleNameState = remember { glueModuleNameTextArea }
+
+                        OutlinedTextField(
+                            label = { Text("Glue Module Name") },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            value = glueModuleNameState.value,
+                            onValueChange = {
+                                glueModuleNameState.value = it
+                            }
+                        )
+
+                        val implModuleNameState = remember { implModuleNameTextArea }
+
+                        OutlinedTextField(
+                            label = { Text("Impl Module Name") },
+                            modifier = Modifier.fillMaxWidth().padding(8.dp),
+                            value = implModuleNameState.value,
+                            onValueChange = {
+                                implModuleNameState.value = it
+                            }
+                        )
+                    }
+                }
+            }
         }
-
-        apiTemplateTextArea = JTextArea(
-            apiTemplateFromPref,
-            apiTemplateFromPref.getRowsFromText(),
-            apiTemplateFromPref.getColumnFromText()
-        )
-        apiTemplateTextArea.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4)
-        apiTemplateTextArea.addDocumentListener()
-        val apiTemplateScrollPane = JScrollPane(
-            apiTemplateTextArea,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
-        apiTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
-
-        val glueTemplateLabel = JLabel("Glue Template")
-        var glueTemplateFromPref = preferenceService.preferenceState.glueTemplate
-
-        if (glueTemplateFromPref.isBlank()) {
-            glueTemplateFromPref = getDefaultTemplate()
-        }
-
-        glueTemplateTextArea = JTextArea(
-            glueTemplateFromPref,
-            glueTemplateFromPref.getRowsFromText(),
-            glueTemplateFromPref.getColumnFromText()
-        )
-        glueTemplateTextArea.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4)
-        glueTemplateTextArea.addDocumentListener()
-        val glueTemplateScrollPane = JScrollPane(
-            glueTemplateTextArea,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
-        glueTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
-
-        val implTemplateLabel = JLabel("Impl Template")
-        var implTemplateFromPref = preferenceService.preferenceState.implTemplate
-
-        if (implTemplateFromPref.isBlank()) {
-            implTemplateFromPref = getDefaultTemplate()
-        }
-
-        implTemplateTextArea = JTextArea(
-            implTemplateFromPref,
-            implTemplateFromPref.getRowsFromText(),
-            implTemplateFromPref.getColumnFromText()
-        )
-        implTemplateTextArea.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4)
-        implTemplateTextArea.addDocumentListener()
-        val implTemplateScrollPane = JScrollPane(
-            implTemplateTextArea,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
-        implTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 4 - EXTRA_PADDING * 2)
-
-        val apiModuleNameLabel = JLabel("api module name")
-        apiModuleNameTextArea = JTextField(preferenceService.preferenceState.apiModuleName)
-
-        val glueModuleNameLabel = JLabel("glue module name")
-        glueModuleNameTextArea = JTextField(preferenceService.preferenceState.glueModuleName)
-
-        val implModuleNameLabel = JLabel("impl module name")
-        implModuleNameTextArea = JTextField(preferenceService.preferenceState.implModuleName)
-
-        val templateDefaultPanel = JPanel()
-        val templateDefaultPanelLayout = SpringLayout()
-        templateDefaultPanel.layout = templateDefaultPanelLayout
-
-        templateDefaultPanel.add(apiTemplateLabel)
-        templateDefaultPanel.add(apiTemplateScrollPane)
-        templateDefaultPanel.add(glueTemplateLabel)
-        templateDefaultPanel.add(glueTemplateScrollPane)
-        templateDefaultPanel.add(implTemplateLabel)
-        templateDefaultPanel.add(implTemplateScrollPane)
-
-        templateDefaultPanel.add(apiModuleNameTextArea)
-        templateDefaultPanel.add(implModuleNameTextArea)
-        templateDefaultPanel.add(glueModuleNameTextArea)
-
-        templateDefaultPanel.add(apiModuleNameLabel)
-        templateDefaultPanel.add(glueModuleNameLabel)
-        templateDefaultPanel.add(implModuleNameLabel)
-
-        // api label
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            apiTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.NORTH,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            apiTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-
-        // api text area
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            apiTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            apiTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            apiTemplateLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            apiTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-
-        // glue label
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            glueTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            glueTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            apiTemplateScrollPane
-        )
-
-        // glue text area
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            glueTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            glueTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            glueTemplateLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            glueTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-
-        // impl label
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            implTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            implTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            glueTemplateScrollPane
-        )
-
-        // impl text area
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            implTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            implTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            implTemplateLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            implTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-
-        // api module name label + text area
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            apiModuleNameTextArea,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            apiModuleNameLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            apiModuleNameTextArea,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.BASELINE,
-            apiModuleNameTextArea,
-            0,
-            SpringLayout.BASELINE,
-            apiModuleNameLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            apiModuleNameLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            apiModuleNameLabel,
-            EXTRA_PADDING * 2,
-            SpringLayout.SOUTH,
-            implTemplateScrollPane
-        )
-
-        // glue module name label + text area
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            glueModuleNameTextArea,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            glueModuleNameLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            glueModuleNameTextArea,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.BASELINE,
-            glueModuleNameTextArea,
-            0,
-            SpringLayout.BASELINE,
-            glueModuleNameLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            glueModuleNameLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            glueModuleNameLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            apiModuleNameTextArea
-        )
-
-        // impl module name label + text area
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            implModuleNameTextArea,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            implModuleNameLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            implModuleNameTextArea,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.BASELINE,
-            implModuleNameTextArea,
-            0,
-            SpringLayout.BASELINE,
-            implModuleNameLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            implModuleNameLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            implModuleNameLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            glueModuleNameTextArea
-        )
-
-        templateDefaultPanel.preferredSize = templateDefaultPanel.getPreferredDimensionForComponent()
-
-        return JScrollPane(
-            templateDefaultPanel,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
     }
 
     override fun createActions(): Array<Action> {
@@ -995,9 +745,9 @@ class SettingsDialogWrapper(
         preferenceService.preferenceState = preferenceService.preferenceState.copy(
             androidTemplate = androidTemplateTextArea.text,
             kotlinTemplate = kotlinTemplateTextArea.text,
-            apiTemplate = apiTemplateTextArea.text,
-            implTemplate = implTemplateTextArea.text,
-            glueTemplate = glueTemplateTextArea.text,
+            apiTemplate = apiTemplateTextArea.value.text,
+            implTemplate = implTemplateTextArea.value.text,
+            glueTemplate = glueTemplateTextArea.value.text,
             packageName = packageNameTextField.value.text,
             includeProjectKeyword = includeProjectKeywordTextField.value.text,
             refreshOnModuleAdd = refreshOnModuleAdd.value,
@@ -1007,19 +757,19 @@ class SettingsDialogWrapper(
             addReadme = addReadme.value,
             addGitIgnore = addGitignore.value,
             gitignoreTemplate = gitignoreTemplateTextArea.value.text,
-            apiModuleName = apiModuleNameTextArea.text,
-            glueModuleName = glueModuleNameTextArea.text,
-            implModuleName = implModuleNameTextArea.text
+            apiModuleName = apiModuleNameTextArea.value.text,
+            glueModuleName = glueModuleNameTextArea.value.text,
+            implModuleName = implModuleNameTextArea.value.text
         )
     }
 
     private fun clearData() {
-        androidTemplateTextArea.text = ""
-        kotlinTemplateTextArea.text = ""
-        apiTemplateTextArea.text = ""
-        implTemplateTextArea.text = ""
-        glueTemplateTextArea.text = ""
-        gitignoreTemplateTextArea.value = TextFieldValue("")
+        androidTemplateTextArea.text = getDefaultTemplate()
+        kotlinTemplateTextArea.text = getDefaultTemplate(isKotlin = true)
+        apiTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
+        implTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
+        glueTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
+        gitignoreTemplateTextArea.value = TextFieldValue(GitIgnoreTemplate.data)
         packageNameTextField.value = TextFieldValue(DEFAULT_BASE_PACKAGE_NAME)
         includeProjectKeywordTextField.value = TextFieldValue(DEFAULT_INCLUDE_KEYWORD)
         refreshOnModuleAdd.value = DEFAULT_REFRESH_ON_MODULE_ADD
@@ -1029,9 +779,9 @@ class SettingsDialogWrapper(
         addReadme.value = DEFAULT_ADD_README
         addGitignore.value = DEFAULT_ADD_GIT_IGNORE
 
-        implModuleNameTextArea.text = DEFAULT_IMPL_MODULE_NAME
-        glueModuleNameTextArea.text = DEFAULT_GLUE_MODULE_NAME
-        apiModuleNameTextArea.text = DEFAULT_API_MODULE_NAME
+        implModuleNameTextArea.value = TextFieldValue(DEFAULT_IMPL_MODULE_NAME)
+        glueModuleNameTextArea.value = TextFieldValue(DEFAULT_GLUE_MODULE_NAME)
+        apiModuleNameTextArea.value = TextFieldValue(DEFAULT_API_MODULE_NAME)
     }
 
     private fun String.getRowsFromText(): Int {
@@ -1064,7 +814,15 @@ class SettingsDialogWrapper(
         })
     }
 
-    private fun getDefaultTemplate(): String {
+    private fun getDefaultTemplate(isKotlin: Boolean = false): String {
+        if (isKotlin) {
+            return if (isKtsCurrentlyChecked) {
+                KotlinModuleKtsTemplate.data
+            } else {
+                KotlinModuleTemplate.data
+            }
+        }
+
         return if (isAndroidChecked) {
             if (isKtsCurrentlyChecked) {
                 AndroidModuleKtsTemplate.data
