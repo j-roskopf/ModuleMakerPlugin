@@ -1,6 +1,28 @@
 package com.joetr.modulemaker
 
-import com.intellij.icons.AllIcons
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.RadioButton
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.awt.ComposePanel
+import androidx.compose.ui.unit.dp
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
@@ -10,30 +32,24 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.joetr.modulemaker.data.FileTreeNode
 import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
+import com.joetr.modulemaker.ui.LabelledCheckbox
 import com.joetr.modulemaker.ui.ModuleMakerFileTree
 import com.joetr.modulemaker.ui.ModuleMakerTreeCellRenderer
 import com.joetr.modulemaker.ui.ModuleMakerTreeNode
+import com.joetr.modulemaker.ui.theme.WidgetTheme
 import org.jetbrains.annotations.Nullable
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.event.ActionEvent
-import java.awt.event.MouseEvent
-import java.awt.event.MouseListener
 import java.io.File
 import java.nio.file.Path
-import java.util.*
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.BorderFactory
-import javax.swing.ButtonGroup
-import javax.swing.JCheckBox
 import javax.swing.JComponent
-import javax.swing.JLabel
 import javax.swing.JPanel
-import javax.swing.JRadioButton
 import javax.swing.JScrollPane
-import javax.swing.JTextField
 import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
 import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
 import javax.swing.SpringLayout
@@ -64,18 +80,16 @@ class ModuleMakerDialogWrapper(
         preferenceService = preferenceService
     )
 
-    private var selectedSrcValue = DEFAULT_SRC_VALUE
-    private lateinit var selectedSrcJLabel: JLabel
-    private lateinit var packageNameTextField: JTextField
-    private lateinit var moduleNameTextField: JTextField
-    private lateinit var moduleTypeRadioGroup: ButtonGroup
-    private lateinit var androidTypeRadioButton: JRadioButton
-    private lateinit var kotlinTypeRadioButton: JRadioButton
-    private lateinit var threeModuleCreationCheckbox: JCheckBox
-    private lateinit var ktsCheckbox: JCheckBox
-    private lateinit var gradleFileNamedAfterModule: JCheckBox
-    private lateinit var addReadme: JCheckBox
-    private lateinit var addGitIgnore: JCheckBox
+    private var selectedSrcValue = mutableStateOf(DEFAULT_SRC_VALUE)
+    private val threeModuleCreation = mutableStateOf(preferenceService.preferenceState.threeModuleCreationDefault)
+    private val useKtsExtension = mutableStateOf(preferenceService.preferenceState.useKtsFileExtension)
+    private val gradleFileNamedAfterModule =
+        mutableStateOf(preferenceService.preferenceState.gradleFileNamedAfterModule)
+    private val addReadme = mutableStateOf(preferenceService.preferenceState.addReadme)
+    private val addGitIgnore = mutableStateOf(preferenceService.preferenceState.addGitIgnore)
+    private val moduleTypeSelection = mutableStateOf(ANDROID)
+    private val moduleName = mutableStateOf("")
+    private val packageName = mutableStateOf(preferenceService.preferenceState.packageName)
 
     init {
         title = "Module Maker"
@@ -84,13 +98,11 @@ class ModuleMakerDialogWrapper(
 
     @Nullable
     override fun createCenterPanel(): JComponent {
-        customInitialize()
-
         val dialogPanel = JPanel(BorderLayout())
         dialogPanel.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
 
         val fileTreeJPanel = createFileTreeJPanel()
-        val configurationJPanel = createConfigurationPanel()
+        val configurationJPanel = createConfigurationPanelCompose()
 
         val baseLayout = SpringLayout()
         dialogPanel.layout = baseLayout
@@ -140,19 +152,13 @@ class ModuleMakerDialogWrapper(
         return arrayOf(
             object : AbstractAction("Settings") {
                 override fun actionPerformed(e: ActionEvent?) {
-                    val isAndroidChecked = when {
-                        androidTypeRadioButton.isSelected -> true
-                        kotlinTypeRadioButton.isSelected -> false
-                        else -> throw RuntimeException()
-                    }
-
                     SettingsDialogWrapper(
                         project = project,
                         onSave = {
                             onSettingsSaved()
                         },
-                        isKtsCurrentlyChecked = ktsCheckbox.isSelected,
-                        isAndroidChecked = isAndroidChecked
+                        isKtsCurrentlyChecked = useKtsExtension.value,
+                        isAndroidChecked = moduleTypeSelection.value == ANDROID
                     ).show()
                 }
             }
@@ -160,12 +166,12 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun onSettingsSaved() {
-        packageNameTextField.text = preferenceService.preferenceState.packageName
-        threeModuleCreationCheckbox.isSelected = preferenceService.preferenceState.threeModuleCreationDefault
-        ktsCheckbox.isSelected = preferenceService.preferenceState.useKtsFileExtension
-        gradleFileNamedAfterModule.isSelected = preferenceService.preferenceState.gradleFileNamedAfterModule
-        addReadme.isSelected = preferenceService.preferenceState.addReadme
-        addGitIgnore.isSelected = preferenceService.preferenceState.addGitIgnore
+        packageName.value = preferenceService.preferenceState.packageName
+        threeModuleCreation.value = preferenceService.preferenceState.threeModuleCreationDefault
+        useKtsExtension.value = preferenceService.preferenceState.useKtsFileExtension
+        gradleFileNamedAfterModule.value = preferenceService.preferenceState.gradleFileNamedAfterModule
+        addReadme.value = preferenceService.preferenceState.addReadme
+        addGitIgnore.value = preferenceService.preferenceState.addGitIgnore
     }
 
     override fun createActions(): Array<Action> {
@@ -187,17 +193,9 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun validateInput(): Boolean {
-        return packageNameTextField.text.isNotEmpty() &&
-            selectedSrcValue != DEFAULT_SRC_VALUE &&
-            moduleNameTextField.text.isNotEmpty() && moduleNameTextField.text != DEFAULT_MODULE_NAME
-    }
-
-    private fun customInitialize() {
-        initSelectedSrcJLabel()
-    }
-
-    private fun initSelectedSrcJLabel() {
-        selectedSrcJLabel = JLabel("Selected src: $selectedSrcValue")
+        return packageName.value.isNotEmpty() &&
+            selectedSrcValue.value != DEFAULT_SRC_VALUE &&
+            moduleName.value.isNotEmpty() && moduleName.value != DEFAULT_MODULE_NAME
     }
 
     private fun createFileTreeJPanel(): Component {
@@ -218,7 +216,7 @@ class ModuleMakerDialogWrapper(
         // reload
         tree.customTreeModel.reload((tree.customTreeModel.root as DefaultMutableTreeNode))
 
-        // set custom cell renderer so we can get our names / icons
+        // set custom cell renderer, so we can get our names / icons
         tree.cellRenderer = ModuleMakerTreeCellRenderer()
 
         tree.addTreeExpansionListener(object : TreeExpansionListener {
@@ -287,8 +285,7 @@ class ModuleMakerDialogWrapper(
                         absolutePathAtNode.removePrefix(rootDirectoryStringDropLast()).removePrefix(File.separator)
 
                     if (fileTreeNode.file.isDirectory) {
-                        selectedSrcValue = relativePath
-                        selectedSrcJLabel.text = "Selected root: $selectedSrcValue"
+                        selectedSrcValue.value = relativePath
                     }
                 }
 
@@ -334,310 +331,137 @@ class ModuleMakerDialogWrapper(
         return fileTreeJPanel
     }
 
-    private fun createConfigurationPanel(): Component {
-        val configurationJPanel = JPanel()
-        val configurationLayout = SpringLayout()
-        val moduleNameTextLabel = JLabel("Module Name: ")
-        val packageNameTextLabel = JLabel("Package Name: ")
-        val threeModuleQuestionMarkIcon = AllIcons.Actions.Help
-        val threeModuleQuestionMarkButton = JLabel(threeModuleQuestionMarkIcon).apply {
-            preferredSize = Dimension(24, 24)
-        }
-        threeModuleQuestionMarkButton.addMouseListener(
-            object : MouseListener {
-                override fun mouseClicked(e: MouseEvent?) {
-                    MessageDialogWrapper(
-                        """
-                            The 3 module creation adds an api, glue, and impl module.
+    private fun createConfigurationPanelCompose(): JComponent {
+        return ComposePanel().apply {
+            setBounds(0, 0, WINDOW_WIDTH - FILE_TREE_WIDTH, WINDOW_HEIGHT)
+            setContent {
+                WidgetTheme {
+                    Surface {
+                        Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(8.dp)) {
+                            val selectedRootState = remember { selectedSrcValue }
+                            Text("Selected root: ${selectedRootState.value}")
 
-                            More info can be found here https://www.droidcon.com/2019/11/15/android-at-scale-square/
-                        """.trimIndent()
-                    ).show()
-                }
+                            Row {
+                                val threeModuleCreationState = remember { threeModuleCreation }
+                                LabelledCheckbox(
+                                    label = "3 Module Creation",
+                                    checked = threeModuleCreationState.value,
+                                    onCheckedChange = {
+                                        threeModuleCreationState.value = it
+                                    }
+                                )
+                                IconButton(
+                                    onClick = {
+                                        MessageDialogWrapper(
+                                            """
+                                            The 3 module creation adds an api, glue, and impl module.
 
-                override fun mousePressed(e: MouseEvent?) {
-                }
+                                            More info can be found here https://www.droidcon.com/2019/11/15/android-at-scale-square/
+                                            """.trimIndent()
+                                        ).show()
+                                    },
+                                    content = {
+                                        Icon(
+                                            imageVector = Icons.Filled.Info,
+                                            contentDescription = "info",
+                                            modifier = Modifier.padding(end = 4.dp)
+                                        )
+                                    }
+                                )
+                            }
 
-                override fun mouseReleased(e: MouseEvent?) {
-                }
+                            val useKtsExtensionState = remember { useKtsExtension }
+                            LabelledCheckbox(
+                                label = "Use .kts file extension",
+                                checked = useKtsExtensionState.value,
+                                onCheckedChange = {
+                                    useKtsExtensionState.value = it
+                                }
+                            )
 
-                override fun mouseEntered(e: MouseEvent?) {
-                }
+                            val gradleFileNamedAfterModuleState = remember { gradleFileNamedAfterModule }
+                            LabelledCheckbox(
+                                label = "Gradle file named after module",
+                                checked = gradleFileNamedAfterModuleState.value,
+                                onCheckedChange = {
+                                    gradleFileNamedAfterModuleState.value = it
+                                }
+                            )
 
-                override fun mouseExited(e: MouseEvent?) {
+                            val addReadmeState = remember { addReadme }
+                            LabelledCheckbox(
+                                label = "Add README.md",
+                                checked = addReadmeState.value,
+                                onCheckedChange = {
+                                    addReadmeState.value = it
+                                }
+                            )
+
+                            val addGitIgnoreState = remember { addGitIgnore }
+                            LabelledCheckbox(
+                                label = "Add .gitignore",
+                                checked = addGitIgnoreState.value,
+                                onCheckedChange = {
+                                    addGitIgnoreState.value = it
+                                }
+                            )
+
+                            val radioOptions = listOf(ANDROID, KOTLIN)
+                            val moduleTypeSelectionState = remember { moduleTypeSelection }
+                            Column {
+                                radioOptions.forEach { text ->
+                                    Row(
+                                        modifier = Modifier
+                                            .selectable(
+                                                selected = (text == moduleTypeSelectionState.value),
+                                                onClick = {
+                                                    moduleTypeSelectionState.value = text
+                                                }
+                                            ).padding(end = 16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            selected = (text == moduleTypeSelectionState.value),
+                                            onClick = {
+                                                moduleTypeSelectionState.value = text
+                                            }
+                                        )
+                                        Text(
+                                            text = text,
+                                            style = MaterialTheme.typography.body1.merge(),
+                                            modifier = Modifier.padding(start = 8.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            val packageNameState = remember { packageName }
+                            OutlinedTextField(
+                                label = { Text("Package Name") },
+                                modifier = Modifier.fillMaxWidth(),
+                                value = packageNameState.value,
+                                onValueChange = {
+                                    packageNameState.value = it
+                                }
+                            )
+
+                            val moduleNameState = remember { moduleName }
+                            OutlinedTextField(
+                                label = { Text("Module Name") },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = {
+                                    Text(DEFAULT_MODULE_NAME)
+                                },
+                                value = moduleNameState.value,
+                                onValueChange = {
+                                    moduleNameState.value = it
+                                }
+                            )
+                        }
+                    }
                 }
             }
-        )
-        configurationJPanel.layout = configurationLayout
-        threeModuleCreationCheckbox = JCheckBox("3 Module Creation").apply {
-            isSelected = preferenceService.preferenceState.threeModuleCreationDefault
         }
-        ktsCheckbox = JCheckBox("Use .kts file extension").apply {
-            isSelected = preferenceService.preferenceState.useKtsFileExtension
-        }
-        gradleFileNamedAfterModule = JCheckBox("Gradle file named after module").apply {
-            isSelected = preferenceService.preferenceState.gradleFileNamedAfterModule
-        }
-        addReadme = JCheckBox("Add README.md").apply {
-            isSelected = preferenceService.preferenceState.addReadme
-        }
-        addGitIgnore = JCheckBox("Add .gitignore").apply {
-            isSelected = preferenceService.preferenceState.addGitIgnore
-        }
-        packageNameTextField = JTextField(preferenceService.preferenceState.packageName)
-        moduleNameTextField = JTextField(DEFAULT_MODULE_NAME)
-
-        configurationJPanel.add(selectedSrcJLabel)
-        configurationJPanel.add(threeModuleCreationCheckbox)
-        configurationJPanel.add(ktsCheckbox)
-        configurationJPanel.add(gradleFileNamedAfterModule)
-        configurationJPanel.add(packageNameTextField)
-        configurationJPanel.add(moduleNameTextLabel)
-        configurationJPanel.add(moduleNameTextField)
-        configurationJPanel.add(packageNameTextLabel)
-        configurationJPanel.add(threeModuleQuestionMarkButton)
-        configurationJPanel.add(addReadme)
-        configurationJPanel.add(addGitIgnore)
-
-        kotlinTypeRadioButton = JRadioButton(KOTLIN)
-        androidTypeRadioButton = JRadioButton(ANDROID).apply {
-            isSelected = true
-        }
-        moduleTypeRadioGroup = ButtonGroup()
-        moduleTypeRadioGroup.add(kotlinTypeRadioButton)
-        moduleTypeRadioGroup.add(androidTypeRadioButton)
-
-        configurationJPanel.add(kotlinTypeRadioButton)
-        configurationJPanel.add(androidTypeRadioButton)
-
-        // selected src label
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            selectedSrcJLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            selectedSrcJLabel,
-            EXTRA_PADDING,
-            SpringLayout.NORTH,
-            configurationJPanel
-        )
-
-        // 3 module creation
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            threeModuleCreationCheckbox,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            threeModuleCreationCheckbox,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            selectedSrcJLabel
-        )
-
-        // kts checkbox
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            ktsCheckbox,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            ktsCheckbox,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            threeModuleCreationCheckbox
-        )
-
-        // gradle file name after module
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            gradleFileNamedAfterModule,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            gradleFileNamedAfterModule,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            ktsCheckbox
-        )
-
-        // readme
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            addReadme,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            addReadme,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            gradleFileNamedAfterModule
-        )
-
-        // gitignore
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            addGitIgnore,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            addGitIgnore,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            addReadme
-        )
-
-        // type radio group
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            androidTypeRadioButton,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            androidTypeRadioButton,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            addGitIgnore
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            kotlinTypeRadioButton,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            androidTypeRadioButton
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            kotlinTypeRadioButton,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-
-        // package label
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            packageNameTextLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            kotlinTypeRadioButton
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            packageNameTextLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-
-        // package text field
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            packageNameTextField,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            packageNameTextLabel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.EAST,
-            packageNameTextField,
-            -EXTRA_PADDING,
-            SpringLayout.EAST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.BASELINE,
-            packageNameTextField,
-            0,
-            SpringLayout.BASELINE,
-            packageNameTextLabel
-        )
-
-        // module label
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            moduleNameTextLabel,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            packageNameTextField
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            moduleNameTextLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            configurationJPanel
-        )
-
-        // module name text field
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            moduleNameTextField,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            moduleNameTextLabel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.EAST,
-            moduleNameTextField,
-            -EXTRA_PADDING,
-            SpringLayout.EAST,
-            configurationJPanel
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.BASELINE,
-            moduleNameTextField,
-            0,
-            SpringLayout.BASELINE,
-            moduleNameTextLabel
-        )
-
-        configurationLayout.putConstraint(
-            SpringLayout.WEST,
-            threeModuleQuestionMarkButton,
-            DEFAULT_PADDING,
-            SpringLayout.EAST,
-            threeModuleCreationCheckbox
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.NORTH,
-            threeModuleQuestionMarkButton,
-            0,
-            SpringLayout.NORTH,
-            threeModuleCreationCheckbox
-        )
-        configurationLayout.putConstraint(
-            SpringLayout.SOUTH,
-            threeModuleQuestionMarkButton,
-            0,
-            SpringLayout.SOUTH,
-            threeModuleCreationCheckbox
-        )
-
-        configurationJPanel.preferredSize = Dimension(WINDOW_WIDTH - FILE_TREE_WIDTH, WINDOW_HEIGHT)
-        return configurationJPanel
     }
 
     /**
@@ -646,8 +470,10 @@ class ModuleMakerDialogWrapper(
      * This is helpful in case of multi-application projects.
      */
     private fun getSettingsGradleFile(): File? {
-        val settingsGradleKtsCurrentlySelectedRoot = Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle.kts").toFile()
-        val settingsGradleCurrentlySelectedRoot = Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle").toFile()
+        val settingsGradleKtsCurrentlySelectedRoot =
+            Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle.kts").toFile()
+        val settingsGradleCurrentlySelectedRoot =
+            Path.of(getCurrentlySelectedFile().absolutePath, "settings.gradle").toFile()
         val settingsGradleKtsPath = Path.of(rootDirectoryString(), "settings.gradle.kts").toFile()
         val settingsGradlePath = Path.of(rootDirectoryString(), "settings.gradle").toFile()
 
@@ -666,21 +492,15 @@ class ModuleMakerDialogWrapper(
 
     private fun create() {
         val settingsGradleFile = getSettingsGradleFile()
-        val moduleType = if (androidTypeRadioButton.isSelected) {
-            ANDROID
-        } else if (kotlinTypeRadioButton.isSelected) {
-            KOTLIN
-        } else {
-            throw RuntimeException("No valid module type selected")
-        }
+        val moduleType = moduleTypeSelection.value
         val currentlySelectedFile = getCurrentlySelectedFile()
         if (settingsGradleFile != null) {
             fileWriter.createModule(
                 // at this point, selectedSrcValue has a value of something like /root/module/module2/
                 // - we want to remove the root of the project to use as the file path in settings.gradle
-                rootPathString = removeRootFromPath(selectedSrcValue),
+                rootPathString = removeRootFromPath(selectedSrcValue.value),
                 settingsGradleFile = settingsGradleFile,
-                modulePathAsString = moduleNameTextField.text,
+                modulePathAsString = moduleName.value,
                 moduleType = moduleType,
                 showErrorDialog = {
                     MessageDialogWrapper(it).show()
@@ -696,12 +516,12 @@ class ModuleMakerDialogWrapper(
                     }
                 },
                 workingDirectory = currentlySelectedFile,
-                enhancedModuleCreationStrategy = threeModuleCreationCheckbox.isSelected,
-                useKtsBuildFile = ktsCheckbox.isSelected,
-                gradleFileFollowModule = gradleFileNamedAfterModule.isSelected,
-                packageName = packageNameTextField.text,
-                addReadme = addReadme.isSelected,
-                addGitIgnore = addGitIgnore.isSelected
+                enhancedModuleCreationStrategy = threeModuleCreation.value,
+                useKtsBuildFile = useKtsExtension.value,
+                gradleFileFollowModule = gradleFileNamedAfterModule.value,
+                packageName = packageName.value,
+                addReadme = addReadme.value,
+                addGitIgnore = addGitIgnore.value
             )
         } else {
             MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
@@ -732,7 +552,7 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun getCurrentlySelectedFile(): File {
-        return File(rootDirectoryStringDropLast() + File.separator + selectedSrcValue)
+        return File(rootDirectoryStringDropLast() + File.separator + selectedSrcValue.value)
     }
 
     private fun rootDirectoryStringDropLast(): String {
@@ -741,13 +561,6 @@ class ModuleMakerDialogWrapper(
         // so we remove it and join the nodes of the tree by our file separator
         return project.basePath!!.split(File.separator).dropLast(1)
             .joinToString(File.separator)
-    }
-
-    private fun lastPathInRootDirectory(): String {
-        // rootDirectoryString() gives us back something like /Users/user/path/to/project
-        // the first path element in the tree node starts with 'project' (last folder above)
-        // so we remove it and join the nodes of the tree by our file separator
-        return project.basePath!!.split(File.separator).takeLast(1).first()
     }
 
     private fun rootDirectoryString(): String {

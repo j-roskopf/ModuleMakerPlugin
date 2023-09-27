@@ -2,9 +2,7 @@
 
 package com.joetr.modulemaker
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
-import androidx.compose.material.Checkbox
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
 import androidx.compose.material.Tab
@@ -24,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.graphics.Color
@@ -45,6 +41,7 @@ import com.joetr.modulemaker.template.GitIgnoreTemplate
 import com.joetr.modulemaker.template.KotlinModuleKtsTemplate
 import com.joetr.modulemaker.template.KotlinModuleTemplate
 import com.joetr.modulemaker.template.TemplateVariable
+import com.joetr.modulemaker.ui.LabelledCheckbox
 import com.joetr.modulemaker.ui.theme.WidgetTheme
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -397,29 +394,6 @@ class SettingsDialogWrapper(
                     implModuleNameState.value = it
                 }
             )
-        }
-    }
-
-    @Composable
-    fun LabelledCheckbox(
-        modifier: Modifier = Modifier,
-        label: String,
-        checked: Boolean,
-        onCheckedChange: (Boolean) -> Unit
-    ) {
-        Row(
-            modifier = modifier.padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = {
-                    onCheckedChange(it)
-                },
-                enabled = true
-            )
-            Text(text = label)
         }
     }
 
