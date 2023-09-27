@@ -41,6 +41,7 @@ class TemplateWriter(
         try {
             // Build the data-model
             val data: MutableMap<String, Any> = HashMap()
+            data["packageName"] = packageName
 
             // load gradle file from template folder
             val gradleTemplate: Template = when (moduleType) {
@@ -67,7 +68,6 @@ class TemplateWriter(
                 }
                 ANDROID -> {
                     val customPreferences = getPreferenceFromKey(defaultKey, ANDROID_KEY)
-                    data["packageName"] = packageName
                     if (customPreferences.isNotEmpty()) {
                         Template(
                             null,
