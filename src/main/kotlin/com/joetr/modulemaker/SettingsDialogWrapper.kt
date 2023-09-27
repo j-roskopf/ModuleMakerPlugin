@@ -15,6 +15,8 @@ import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Surface
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
@@ -25,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
@@ -35,7 +38,6 @@ import com.intellij.openapi.fileChooser.FileChooserFactory
 import com.intellij.openapi.fileChooser.FileSaverDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.ui.components.JBTabbedPane
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import com.joetr.modulemaker.template.AndroidModuleKtsTemplate
 import com.joetr.modulemaker.template.AndroidModuleTemplate
@@ -48,9 +50,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.Nullable
-import java.awt.BorderLayout
-import java.awt.Component
-import java.awt.Dimension
 import java.awt.event.ActionEvent
 import java.io.FileWriter
 import java.nio.file.Files
@@ -59,9 +58,8 @@ import java.nio.file.Paths
 import javax.swing.AbstractAction
 import javax.swing.Action
 import javax.swing.JComponent
-import javax.swing.JPanel
 
-private const val WINDOW_WIDTH = 800
+private const val WINDOW_WIDTH = 900
 private const val WINDOW_HEIGHT = 900
 
 const val DEFAULT_BASE_PACKAGE_NAME = "com.company.app"
@@ -121,166 +119,284 @@ class SettingsDialogWrapper(
 
     @Nullable
     override fun createCenterPanel(): JComponent {
-        val dialogPanel = JPanel(BorderLayout())
-        dialogPanel.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
-
-        val templateDefaultPanel = createTemplateDefaultComponentCompose()
-        val templateEnhancedDefaultPanel = createEnhancedTemplateDefaultComponentCompose()
-        val generalPanel = createGeneralPanelCompose()
-        val gitignoreTemplateDefaultPanel = createGitIgnoreTemplateDefaultPanelCompose()
-
-        val tabbedPane = JBTabbedPane()
-        tabbedPane.setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
-        tabbedPane.add("Module Template Defaults", templateDefaultPanel)
-        tabbedPane.add("Enhanced Template Defaults", templateEnhancedDefaultPanel)
-        tabbedPane.add(".gitignore Template Defaults", gitignoreTemplateDefaultPanel)
-        tabbedPane.add("General", generalPanel)
-        dialogPanel.add(tabbedPane)
-        dialogPanel.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT)
-
-        return dialogPanel
+        return ComposePanel().apply {
+            setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
+            setContent {
+                SettingsTab()
+            }
+        }
     }
 
-    private fun createGitIgnoreTemplateDefaultPanelCompose(): Component {
-        return ComposePanel().apply {
-            setContent {
-                WidgetTheme {
-                    Surface {
-                        Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-                            Text(
-                                modifier = Modifier.padding(8.dp),
-                                text = "You can override the .gitignore templates created with your own project specific default.\n\nIf nothing is specified here, a sensible default will be generated for you."
-                            )
+    @Composable
+    fun SettingsTab() {
+        var tabIndex by remember { mutableStateOf(0) }
 
-                            val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
+        val tabs = listOf("Module Template Defaults", "Enhanced Template Defaults", ".gitignore Template Defaults", "General")
 
-                            OutlinedTextField(
-                                modifier = Modifier.fillMaxSize().padding(8.dp),
-                                value = gitIgnoreTemplateState.value,
-                                onValueChange = {
-                                    gitIgnoreTemplateState.value = it
-                                }
+        WidgetTheme {
+            Surface {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    TabRow(selectedTabIndex = tabIndex, backgroundColor = Color.Transparent) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                text = { Text(title) },
+                                selected = tabIndex == index,
+                                onClick = { tabIndex = index }
                             )
                         }
+                    }
+                    when (tabIndex) {
+                        0 -> TemplateDefaultComponent()
+                        1 -> EnhancedTemplateDefaultComponent()
+                        2 -> GitIgnoreTemplateDefaultPanel()
+                        3 -> GeneralPanel()
                     }
                 }
             }
         }
     }
 
-    private fun createGeneralPanelCompose(): JComponent {
-        return ComposePanel().apply {
-            setContent {
-                WidgetTheme {
-                    Surface {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
-                        ) {
-                            var basePackageName by remember { packageNameTextField }
+    @Composable
+    private fun GitIgnoreTemplateDefaultPanel() {
+        Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = "You can override the .gitignore templates created with your own project specific default.\n\nIf nothing is specified here, a sensible default will be generated for you."
+            )
 
-                            TextField(
-                                value = basePackageName,
-                                onValueChange = { newValue ->
-                                    basePackageName = newValue
-                                },
-                                modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
-                                label = { Text("Base Package Name:") }
-                            )
+            val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
 
-                            var includeKeyword by remember { includeProjectKeywordTextField }
-
-                            TextField(
-                                value = includeKeyword,
-                                onValueChange = { newValue ->
-                                    includeKeyword = newValue
-                                },
-                                modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
-                                label = { Text("Include keyword for settings.gradle(.kts):") }
-                            )
-
-                            val refreshAfterModuleCreationState = remember { refreshOnModuleAdd }
-                            LabelledCheckbox(
-                                label = "Refresh after creating modules",
-                                checked = refreshAfterModuleCreationState.value,
-                                onCheckedChange = {
-                                    refreshAfterModuleCreationState.value = it
-                                }
-                            )
-
-                            val threeModuleState = remember { threeModuleCreation }
-                            LabelledCheckbox(
-                                label = "3 module creation checked by default",
-                                checked = threeModuleState.value,
-                                onCheckedChange = {
-                                    threeModuleState.value = it
-                                }
-                            )
-
-                            val useKtsState = remember { ktsFileExtension }
-                            LabelledCheckbox(
-                                label = "Use .kts file extension checked by default",
-                                checked = useKtsState.value,
-                                onCheckedChange = {
-                                    useKtsState.value = it
-                                }
-                            )
-
-                            val gradleFileNameState = remember { gradleFileNamedAfterModule }
-                            LabelledCheckbox(
-                                label = "Gradle file named after module by default",
-                                checked = gradleFileNameState.value,
-                                onCheckedChange = {
-                                    gradleFileNameState.value = it
-                                }
-                            )
-
-                            val readmeState = remember { addReadme }
-                            LabelledCheckbox(
-                                label = "Add README.md by default",
-                                checked = readmeState.value,
-                                onCheckedChange = {
-                                    readmeState.value = it
-                                }
-                            )
-
-                            val gitIgnoreState = remember { addGitignore }
-                            LabelledCheckbox(
-                                label = "Add .gitignore by default",
-                                checked = addGitignore.value,
-                                onCheckedChange = {
-                                    gitIgnoreState.value = it
-                                }
-                            )
-
-                            Button(
-                                onClick = {
-                                    importSettings()
-                                }
-                            ) {
-                                Text("Import Settings")
-                            }
-
-                            Button(
-                                onClick = {
-                                    exportSettings()
-                                }
-                            ) {
-                                Text("Export Settings")
-                            }
-
-                            Button(
-                                onClick = {
-                                    clearData()
-                                }
-                            ) {
-                                Text("Clear All Settings")
-                            }
-                        }
-                    }
+            OutlinedTextField(
+                modifier = Modifier.fillMaxSize().padding(8.dp),
+                value = gitIgnoreTemplateState.value,
+                onValueChange = {
+                    gitIgnoreTemplateState.value = it
                 }
+            )
+        }
+    }
+
+    @Composable
+    private fun GeneralPanel() {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
+        ) {
+            var basePackageName by remember { packageNameTextField }
+
+            TextField(
+                value = basePackageName,
+                onValueChange = { newValue ->
+                    basePackageName = newValue
+                },
+                modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
+                label = { Text("Base Package Name:") }
+            )
+
+            var includeKeyword by remember { includeProjectKeywordTextField }
+
+            TextField(
+                value = includeKeyword,
+                onValueChange = { newValue ->
+                    includeKeyword = newValue
+                },
+                modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
+                label = { Text("Include keyword for settings.gradle(.kts):") }
+            )
+
+            val refreshAfterModuleCreationState = remember { refreshOnModuleAdd }
+            LabelledCheckbox(
+                label = "Refresh after creating modules",
+                checked = refreshAfterModuleCreationState.value,
+                onCheckedChange = {
+                    refreshAfterModuleCreationState.value = it
+                }
+            )
+
+            val threeModuleState = remember { threeModuleCreation }
+            LabelledCheckbox(
+                label = "3 module creation checked by default",
+                checked = threeModuleState.value,
+                onCheckedChange = {
+                    threeModuleState.value = it
+                }
+            )
+
+            val useKtsState = remember { ktsFileExtension }
+            LabelledCheckbox(
+                label = "Use .kts file extension checked by default",
+                checked = useKtsState.value,
+                onCheckedChange = {
+                    useKtsState.value = it
+                }
+            )
+
+            val gradleFileNameState = remember { gradleFileNamedAfterModule }
+            LabelledCheckbox(
+                label = "Gradle file named after module by default",
+                checked = gradleFileNameState.value,
+                onCheckedChange = {
+                    gradleFileNameState.value = it
+                }
+            )
+
+            val readmeState = remember { addReadme }
+            LabelledCheckbox(
+                label = "Add README.md by default",
+                checked = readmeState.value,
+                onCheckedChange = {
+                    readmeState.value = it
+                }
+            )
+
+            val gitIgnoreState = remember { addGitignore }
+            LabelledCheckbox(
+                label = "Add .gitignore by default",
+                checked = addGitignore.value,
+                onCheckedChange = {
+                    gitIgnoreState.value = it
+                }
+            )
+
+            Button(
+                onClick = {
+                    importSettings()
+                }
+            ) {
+                Text("Import Settings")
             }
+
+            Button(
+                onClick = {
+                    exportSettings()
+                }
+            ) {
+                Text("Export Settings")
+            }
+
+            Button(
+                onClick = {
+                    clearData()
+                }
+            ) {
+                Text("Clear All Settings")
+            }
+        }
+    }
+
+    @Composable
+    private fun TemplateDefaultComponent() {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
+        ) {
+            val settingExplanationText =
+                "You can override the gradle templates created with your own project specific defaults./n/n If nothing is specified here, a sensible default will be generated for you."
+
+            val supportedVariablesString = TemplateVariable.values().joinToString("\n") {
+                it.templateVariable
+            }
+            val supportedVariablesLabel =
+                "If you do have a custom template, there are some variable names that will be automatically replaced for you.\n\n Supported variables are:\n\n $supportedVariablesString"
+
+            Text(settingExplanationText)
+
+            val kotlinTemplateState = remember { kotlinTemplateTextArea }
+            OutlinedTextField(
+                label = { Text("Kotlin Template") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                value = kotlinTemplateState.value,
+                onValueChange = {
+                    kotlinTemplateState.value = it
+                }
+            )
+
+            val androidTemplateState = remember { androidTemplateTextArea }
+            OutlinedTextField(
+                label = { Text("Android Template") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                value = androidTemplateState.value,
+                onValueChange = {
+                    androidTemplateState.value = it
+                }
+            )
+
+            Text(supportedVariablesLabel)
+        }
+    }
+
+    @Composable
+    private fun EnhancedTemplateDefaultComponent() {
+        Column(
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+        ) {
+            val apiTemplateState = remember { apiTemplateTextArea }
+            OutlinedTextField(
+                label = { Text("Api Template") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                value = apiTemplateState.value,
+                onValueChange = {
+                    apiTemplateState.value = it
+                }
+            )
+
+            val glueTemplateState = remember { glueTemplateTextArea }
+            OutlinedTextField(
+                label = { Text("Glue Template") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                value = glueTemplateState.value,
+                onValueChange = {
+                    glueTemplateState.value = it
+                }
+            )
+
+            val implTemplateState = remember { implTemplateTextArea }
+            OutlinedTextField(
+                label = { Text("Impl Template") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                value = implTemplateState.value,
+                onValueChange = {
+                    implTemplateState.value = it
+                }
+            )
+
+            val apiModuleNameState = remember { apiModuleNameTextArea }
+
+            OutlinedTextField(
+                label = { Text("Api Module Name") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                value = apiModuleNameState.value,
+                onValueChange = {
+                    apiModuleNameState.value = it
+                }
+            )
+
+            val glueModuleNameState = remember { glueModuleNameTextArea }
+
+            OutlinedTextField(
+                label = { Text("Glue Module Name") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                value = glueModuleNameState.value,
+                onValueChange = {
+                    glueModuleNameState.value = it
+                }
+            )
+
+            val implModuleNameState = remember { implModuleNameTextArea }
+
+            OutlinedTextField(
+                label = { Text("Impl Module Name") },
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                value = implModuleNameState.value,
+                onValueChange = {
+                    implModuleNameState.value = it
+                }
+            )
         }
     }
 
@@ -400,135 +516,6 @@ class SettingsDialogWrapper(
         )
 
         return Json.encodeToString(newState)
-    }
-
-    private fun createTemplateDefaultComponentCompose(): JComponent {
-        return ComposePanel().apply {
-            setContent {
-                WidgetTheme {
-                    Surface {
-                        Column(
-                            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
-                        ) {
-                            val settingExplanationText =
-                                "You can override the gradle templates created with your own project specific defaults./n/n If nothing is specified here, a sensible default will be generated for you."
-
-                            val supportedVariablesString = TemplateVariable.values().joinToString("\n") {
-                                it.templateVariable
-                            }
-                            val supportedVariablesLabel =
-                                "If you do have a custom template, there are some variable names that will be automatically replaced for you.\n\n Supported variables are:\n\n $supportedVariablesString"
-
-                            Text(settingExplanationText)
-
-                            val kotlinTemplateState = remember { kotlinTemplateTextArea }
-                            OutlinedTextField(
-                                label = { Text("Kotlin Template") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                                value = kotlinTemplateState.value,
-                                onValueChange = {
-                                    kotlinTemplateState.value = it
-                                }
-                            )
-
-                            val androidTemplateState = remember { androidTemplateTextArea }
-                            OutlinedTextField(
-                                label = { Text("Android Template") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                                value = androidTemplateState.value,
-                                onValueChange = {
-                                    androidTemplateState.value = it
-                                }
-                            )
-
-                            Text(supportedVariablesLabel)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun createEnhancedTemplateDefaultComponentCompose(): JComponent {
-        return ComposePanel().apply {
-            setContent {
-                WidgetTheme {
-                    Surface {
-                        Column(
-                            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                        ) {
-                            val apiTemplateState = remember { apiTemplateTextArea }
-                            OutlinedTextField(
-                                label = { Text("Api Template") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                                value = apiTemplateState.value,
-                                onValueChange = {
-                                    apiTemplateState.value = it
-                                }
-                            )
-
-                            val glueTemplateState = remember { glueTemplateTextArea }
-                            OutlinedTextField(
-                                label = { Text("Glue Template") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                                value = glueTemplateState.value,
-                                onValueChange = {
-                                    glueTemplateState.value = it
-                                }
-                            )
-
-                            val implTemplateState = remember { implTemplateTextArea }
-                            OutlinedTextField(
-                                label = { Text("Impl Template") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
-                                value = implTemplateState.value,
-                                onValueChange = {
-                                    implTemplateState.value = it
-                                }
-                            )
-
-                            val apiModuleNameState = remember { apiModuleNameTextArea }
-
-                            OutlinedTextField(
-                                label = { Text("Api Module Name") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                value = apiModuleNameState.value,
-                                onValueChange = {
-                                    apiModuleNameState.value = it
-                                }
-                            )
-
-                            val glueModuleNameState = remember { glueModuleNameTextArea }
-
-                            OutlinedTextField(
-                                label = { Text("Glue Module Name") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                value = glueModuleNameState.value,
-                                onValueChange = {
-                                    glueModuleNameState.value = it
-                                }
-                            )
-
-                            val implModuleNameState = remember { implModuleNameTextArea }
-
-                            OutlinedTextField(
-                                label = { Text("Impl Module Name") },
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                value = implModuleNameState.value,
-                                onValueChange = {
-                                    implModuleNameState.value = it
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
     }
 
     override fun createActions(): Array<Action> {
