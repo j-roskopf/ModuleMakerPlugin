@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.15]
+- Compose UI migration
+
 ## [1.0.14]
 - Support new intellij platform versions
 - Update to Kotlin 1.9
