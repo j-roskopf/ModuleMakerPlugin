@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.Checkbox
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
@@ -97,8 +98,6 @@ class SettingsDialogWrapper(
     private lateinit var kotlinTemplateTextArea: JTextArea
     private lateinit var androidTemplateTextArea: JTextArea
 
-    private lateinit var gitignoreTemplateTextArea: JTextArea
-
     private lateinit var apiTemplateTextArea: JTextArea
     private lateinit var glueTemplateTextArea: JTextArea
     private lateinit var implTemplateTextArea: JTextArea
@@ -112,12 +111,17 @@ class SettingsDialogWrapper(
     private val refreshOnModuleAdd = mutableStateOf(preferenceService.preferenceState.refreshOnModuleAdd)
     private val threeModuleCreation = mutableStateOf(preferenceService.preferenceState.threeModuleCreationDefault)
     private val ktsFileExtension = mutableStateOf(preferenceService.preferenceState.useKtsFileExtension)
-    private val gradleFileNamedAfterModule = mutableStateOf(preferenceService.preferenceState.gradleFileNamedAfterModule)
+    private val gradleFileNamedAfterModule =
+        mutableStateOf(preferenceService.preferenceState.gradleFileNamedAfterModule)
     private val addReadme = mutableStateOf(preferenceService.preferenceState.addReadme)
     private val addGitignore = mutableStateOf(preferenceService.preferenceState.addGitIgnore)
 
     private val packageNameTextField = mutableStateOf(TextFieldValue(preferenceService.preferenceState.packageName))
-    private val includeProjectKeywordTextField = mutableStateOf(TextFieldValue(preferenceService.preferenceState.includeProjectKeyword))
+    private val gitignoreTemplateTextArea = mutableStateOf(TextFieldValue(preferenceService.preferenceState.gitignoreTemplate))
+    private val includeProjectKeywordTextField =
+        mutableStateOf(TextFieldValue(preferenceService.preferenceState.includeProjectKeyword))
+
+
 
     init {
         title = "Settings"
@@ -132,7 +136,7 @@ class SettingsDialogWrapper(
         val templateDefaultPanel = createTemplateDefaultComponent()
         val templateEnhancedDefaultPanel = createEnhancedTemplateDefaultComponent()
         val generalPanel = createGeneralPanelCompose()
-        val gitignoreTemplateDefaultPanel = createGitIgnoreTemplateDefaultPanel()
+        val gitignoreTemplateDefaultPanel = createGitIgnoreTemplateDefaultPanelCompose()
 
         val tabbedPane = JBTabbedPane()
         tabbedPane.setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
@@ -146,103 +150,34 @@ class SettingsDialogWrapper(
         return dialogPanel
     }
 
-    private fun createGitIgnoreTemplateDefaultPanel(): Component {
-        val settingExplanationLabel = JLabel(
-            """
-            <html>
-            You can override the .gitignore templates created with your own project specific default.
-            <br/><br/>
-            If nothing is specified here, a sensible default will be generated for you.
-            </html>
-            """.trimIndent()
-        )
+    private fun createGitIgnoreTemplateDefaultPanelCompose(): Component {
+        return ComposePanel().apply {
+            setContent {
+                WidgetTheme {
+                    Column (modifier = Modifier.fillMaxSize().padding(8.dp)) {
+                        Text(
+                            modifier = Modifier.padding(8.dp),
+                            text = "You can override the .gitignore templates created with your own project specific default. \n If nothing is specified here, a sensible default will be generated for you."
+                        )
 
-        val gitignoreTemplateLabel = JLabel(".gitignore Template")
-        var gitIgnoreTemplateFromPref = preferenceService.preferenceState.gitignoreTemplate
+                        val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
 
-        if (gitIgnoreTemplateFromPref.isBlank()) {
-            gitIgnoreTemplateFromPref = GitIgnoreTemplate.data
+                        OutlinedTextField(
+                            modifier = Modifier.fillMaxSize().padding(8.dp),
+                            value = gitIgnoreTemplateState.value,
+                            onValueChange = {
+                                gitIgnoreTemplateState.value = it
+                            }
+                        )
+                    }
+                }
+            }
         }
-
-        gitignoreTemplateTextArea = JTextArea(
-            gitIgnoreTemplateFromPref,
-            gitIgnoreTemplateFromPref.getRowsFromText(),
-            gitIgnoreTemplateFromPref.getColumnFromText()
-        )
-        gitignoreTemplateTextArea.addDocumentListener()
-
-        gitignoreTemplateTextArea.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 2)
-        val gitignoreTemplateScrollPane = JScrollPane(
-            gitignoreTemplateTextArea,
-            ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
-            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS
-        )
-        gitignoreTemplateScrollPane.preferredSize = Dimension(WINDOW_WIDTH, WINDOW_HEIGHT / 2 - EXTRA_PADDING * 2)
-
-        val templateDefaultPanel = JPanel()
-        val templateDefaultPanelLayout = SpringLayout()
-        templateDefaultPanel.layout = templateDefaultPanelLayout
-        templateDefaultPanel.add(gitignoreTemplateLabel)
-        templateDefaultPanel.add(gitignoreTemplateScrollPane)
-        templateDefaultPanel.add(settingExplanationLabel)
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            settingExplanationLabel,
-            EXTRA_PADDING,
-            SpringLayout.NORTH,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            settingExplanationLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            gitignoreTemplateLabel,
-            EXTRA_PADDING * 2,
-            SpringLayout.SOUTH,
-            settingExplanationLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            gitignoreTemplateLabel,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.WEST,
-            gitignoreTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.WEST,
-            templateDefaultPanel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.NORTH,
-            gitignoreTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.SOUTH,
-            gitignoreTemplateLabel
-        )
-        templateDefaultPanelLayout.putConstraint(
-            SpringLayout.EAST,
-            gitignoreTemplateScrollPane,
-            EXTRA_PADDING,
-            SpringLayout.EAST,
-            templateDefaultPanel
-        )
-
-        return templateDefaultPanel
     }
 
     private fun createGeneralPanelCompose(): JComponent {
         return ComposePanel().apply {
+            setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
             setContent {
                 ScrollablePane {
                     var basePackageName by remember { packageNameTextField }
@@ -372,7 +307,7 @@ class SettingsDialogWrapper(
                         .padding(end = 12.dp, bottom = 12.dp)
                         .horizontalScroll(stateHorizontal)
                 ) {
-                    Column {
+                    Column(modifier = Modifier.fillMaxSize()) {
                         content(this)
                     }
                 }
@@ -446,7 +381,7 @@ class SettingsDialogWrapper(
             gradleFileNamedAfterModule.value = state.gradleFileNamedAfterModule
             addReadme.value = state.addReadme
             addGitignore.value = state.addGitIgnore
-            gitignoreTemplateTextArea.text = state.gitignoreTemplate
+            gitignoreTemplateTextArea.value = TextFieldValue(state.gitignoreTemplate)
         }
     }
 
@@ -486,7 +421,7 @@ class SettingsDialogWrapper(
         val gradleFileNamedAfterModule = gradleFileNamedAfterModule.value
         val addReadme = addReadme.value
         val addGitignore = addGitignore.value
-        val gitignoreTemplate = gitignoreTemplateTextArea.text
+        val gitignoreTemplate = gitignoreTemplateTextArea.value.text
 
         // if more parameters get added, add support to import / export
         val newState = PreferenceServiceImpl.Companion.State(
@@ -1071,7 +1006,7 @@ class SettingsDialogWrapper(
             gradleFileNamedAfterModule = gradleFileNamedAfterModule.value,
             addReadme = addReadme.value,
             addGitIgnore = addGitignore.value,
-            gitignoreTemplate = gitignoreTemplateTextArea.text,
+            gitignoreTemplate = gitignoreTemplateTextArea.value.text,
             apiModuleName = apiModuleNameTextArea.text,
             glueModuleName = glueModuleNameTextArea.text,
             implModuleName = implModuleNameTextArea.text
@@ -1084,7 +1019,7 @@ class SettingsDialogWrapper(
         apiTemplateTextArea.text = ""
         implTemplateTextArea.text = ""
         glueTemplateTextArea.text = ""
-        gitignoreTemplateTextArea.text = ""
+        gitignoreTemplateTextArea.value = TextFieldValue("")
         packageNameTextField.value = TextFieldValue(DEFAULT_BASE_PACKAGE_NAME)
         includeProjectKeywordTextField.value = TextFieldValue(DEFAULT_INCLUDE_KEYWORD)
         refreshOnModuleAdd.value = DEFAULT_REFRESH_ON_MODULE_ADD
