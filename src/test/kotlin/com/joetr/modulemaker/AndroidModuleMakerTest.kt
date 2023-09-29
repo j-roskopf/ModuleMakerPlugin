@@ -4,7 +4,6 @@ import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
 import com.joetr.modulemaker.template.GitIgnoreTemplate
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Before
@@ -113,7 +112,7 @@ class AndroidModuleMakerTest {
             modulePathAsString = modulePath,
             moduleType = ANDROID,
             showErrorDialog = {
-                Assert.fail("No errors should be thrown")
+                fail("No errors should be thrown")
             },
             showSuccessDialog = {
                 assert(true)
@@ -164,7 +163,7 @@ class AndroidModuleMakerTest {
             modulePathAsString = modulePath,
             moduleType = ANDROID,
             showErrorDialog = {
-                Assert.fail("No errors should be thrown")
+                fail("No errors should be thrown")
             },
             showSuccessDialog = {
                 assert(true)

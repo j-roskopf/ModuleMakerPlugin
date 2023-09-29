@@ -1,5 +1,3 @@
-@file:Suppress("UndesirableClassUsage")
-
 package com.joetr.modulemaker
 
 import androidx.compose.foundation.layout.Column
