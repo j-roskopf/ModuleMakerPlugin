@@ -445,7 +445,7 @@ class EnhancedModuleMakerTest {
             modulePathAsString = modulePath,
             moduleType = KOTLIN,
             showErrorDialog = {
-                Assert.fail("No errors should be thrown")
+                fail("No errors should be thrown")
             },
             showSuccessDialog = {
                 assert(true)
