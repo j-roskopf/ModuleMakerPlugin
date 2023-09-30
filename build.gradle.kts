@@ -1,6 +1,3 @@
-import org.gradle.internal.classpath.Instrumented.systemProperty
-import org.gradle.internal.impldep.org.bouncycastle.cms.RecipientId.password
-import org.gradle.internal.impldep.org.eclipse.jgit.lib.ObjectChecker.type
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 
@@ -12,8 +9,9 @@ plugins {
     alias(libs.plugins.kotlin) // Kotlin support
     alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
-    kotlin("plugin.serialization") version "1.9.10"
+    kotlin("plugin.serialization") version libs.versions.kotlin.get()
     id("org.jetbrains.compose")
+    alias(libs.plugins.spotless)
 }
 
 group = properties("pluginGroup").get()
@@ -24,9 +22,6 @@ buildscript {
         mavenCentral()
         google()
         maven { url = uri("https://plugins.gradle.org/m2/") }
-    }
-    dependencies {
-        classpath("com.diffplug.spotless:spotless-plugin-gradle:6.8.0")
     }
 }
 
@@ -45,12 +40,13 @@ dependencies {
     implementation(libs.serialization)
     implementation(compose.desktop.currentOs)
     implementation(compose.materialIconsExtended)
+    implementation(libs.segment)
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdk.get()))
     }
 }
 
