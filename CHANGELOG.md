@@ -1,5 +1,9 @@
 # Module Maker Changelog
 
+## [1.0.16]
+- Finished Compose UI migration (all UI is now in Compose!)
+- Added basic telemetry. There is no project or user specific data collected, just general module settings used when creating a module.
+
 ## [1.0.15]
 - Compose UI migration
 
