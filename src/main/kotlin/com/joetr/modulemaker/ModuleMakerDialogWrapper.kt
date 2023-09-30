@@ -33,6 +33,8 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
+import com.joetr.modulemaker.data.analytics.ModuleCreationAnalytics
+import com.joetr.modulemaker.data.analytics.ModuleCreationErrorAnalytics
 import com.joetr.modulemaker.data.toProjectFile
 import com.joetr.modulemaker.file.FileWriter
 import com.joetr.modulemaker.persistence.PreferenceServiceImpl
@@ -40,6 +42,7 @@ import com.joetr.modulemaker.ui.LabelledCheckbox
 import com.joetr.modulemaker.ui.file.FileTree
 import com.joetr.modulemaker.ui.file.FileTreeView
 import com.joetr.modulemaker.ui.theme.WidgetTheme
+import com.segment.analytics.kotlin.core.Analytics
 import org.jetbrains.annotations.Nullable
 import java.awt.event.ActionEvent
 import java.io.File
@@ -79,11 +82,18 @@ class ModuleMakerDialogWrapper(
     private val moduleName = mutableStateOf("")
     private val packageName = mutableStateOf(preferenceService.preferenceState.packageName)
 
+    // Segment's write key isn't really a secret
+    private var analytics: Analytics = Analytics("CNghGjhOHipwGB9YdWMBwkMTJbRFtizc") {
+        application = "ModuleMaker"
+        flushAt = 1
+    }
+
     init {
         title = "Module Maker"
         init()
         // give default value of just the root project
-        selectedSrcValue.value = File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast()).removePrefix(File.separator)
+        selectedSrcValue.value = File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast())
+            .removePrefix(File.separator)
     }
 
     @Nullable
@@ -345,6 +355,17 @@ class ModuleMakerDialogWrapper(
         val moduleType = moduleTypeSelection.value
         val currentlySelectedFile = getCurrentlySelectedFile()
         if (settingsGradleFile != null) {
+            analytics.track(
+                "module_created",
+                ModuleCreationAnalytics(
+                    moduleType = moduleType,
+                    threeModule = threeModuleCreation.value,
+                    addGitIgnore = addGitIgnore.value,
+                    addReadme = addReadme.value,
+                    gradleNameToFollow = gradleFileNamedAfterModule.value,
+                    useKts = useKtsExtension.value
+                )
+            )
             fileWriter.createModule(
                 // at this point, selectedSrcValue has a value of something like /root/module/module2/
                 // - we want to remove the root of the project to use as the file path in settings.gradle
@@ -353,9 +374,11 @@ class ModuleMakerDialogWrapper(
                 modulePathAsString = moduleName.value,
                 moduleType = moduleType,
                 showErrorDialog = {
+                    analytics.track("module_creation_error", ModuleCreationErrorAnalytics(message = it))
                     MessageDialogWrapper(it).show()
                 },
                 showSuccessDialog = {
+                    analytics.track("module_creation_success")
                     MessageDialogWrapper("Success").show()
                     refreshFileSystem(
                         settingsGradleFile = settingsGradleFile,
