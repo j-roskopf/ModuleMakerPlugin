@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.17]
+- Attempt to fix crash on startup
+
 ## [1.0.16]
 - Finished Compose UI migration (all UI is now in Compose!)
 - Added basic telemetry. There is no project or user specific data collected, just general module settings used when creating a module.
