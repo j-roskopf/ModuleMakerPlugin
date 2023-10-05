@@ -42,25 +42,14 @@ dependencies {
     implementation(compose.materialIconsExtended)
     implementation(libs.segment)
 
-    val osName = System.getProperty("os.name")
-    val targetOs = when {
-        osName == "Mac OS X" -> "macos"
-        osName.startsWith("Win") -> "windows"
-        osName.startsWith("Linux") -> "linux"
-        else -> error("Unsupported OS: $osName")
-    }
-
-    val targetArch = when (val osArch = System.getProperty("os.arch")) {
-        "x86_64", "amd64" -> "x64"
-        "aarch64" -> "arm64"
-        else -> error("Unsupported arch: $osArch")
-    }
-
     val version = "0.7.81"
-    val target = "$targetOs-$targetArch"
+    val macTarget = "macos-arm64"
+    val windowsTarget = "windows-x64"
+    val linuxTarget = "linux-x64"
 
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-$target:$version")
-    implementation(compose.desktop.currentOs)
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-$macTarget:$version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-$windowsTarget:$version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-$linuxTarget:$version")
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for 2022.2+.
