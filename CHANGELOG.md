@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.18]
+- Attempt to fix crash on startup (again)
+
 ## [1.0.17]
 - Attempt to fix crash on startup
 
