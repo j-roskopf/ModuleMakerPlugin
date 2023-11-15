@@ -1,4 +1,7 @@
-# Module Maker
+<div align="center">
+  <img src="./assets/icon.svg" width="128px">
+  <h1>Module Maker</h1>
+</div>
 
 Featured in issue [355](https://us12.campaign-archive.com/?u=f39692e245b94f7fb693b6d82&id=46a6fab551) and [356](https://us12.campaign-archive.com/?u=f39692e245b94f7fb693b6d82&id=fb7f5353b9) of [Kotlin Weekly](http://www.kotlinweekly.net/)
 
@@ -36,6 +39,8 @@ Creating a release tag that follows `release/x.x.x` will create a Github release
   <kbd>Tools</kbd> > <kbd>Module Maker</kbd>
 
 ## Installation
+
+<div align="center"><a href="https://plugins.jetbrains.com/plugin/21724-module-maker"><img src="assets/marketplace.png"/></a></div>
 
 - Using IDE built-in plugin system:
 
