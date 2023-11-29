@@ -3,13 +3,14 @@
   <h1>Module Maker</h1>
 </div>
 
-Featured in issue [355](https://us12.campaign-archive.com/?u=f39692e245b94f7fb693b6d82&id=46a6fab551) and [356](https://us12.campaign-archive.com/?u=f39692e245b94f7fb693b6d82&id=fb7f5353b9) of [Kotlin Weekly](http://www.kotlinweekly.net/)
-
-Featured in issue [579](https://androidweekly.net/issues/issue-579) of [Android Weekly](https://androidweekly.net/)
-
-[![Build](https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml/badge.svg)](https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml)
-[![Version](https://img.shields.io/jetbrains/plugin/v/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/21724.svg)](https://plugins.jetbrains.com/plugin/21724)
+<p align="center">
+  <a href="https://opensource.org/license/mit/"><img alt="License" src="https://img.shields.io/badge/License-MIT-blue.svg"/></a>
+  <a href="https://androidweekly.net/issues/issue-579"><img alt="Android Weekly" src="https://skydoves.github.io/badges/android-weekly.svg"/></a>
+  <a href="https://us12.campaign-archive.com/?u=f39692e245b94f7fb693b6d82&id=fb7f5353b9"><img alt="Kotlin Weekly" src="https://skydoves.github.io/badges/kotlin-weekly.svg"/></a>
+  <a href="https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml"><img alt="Release Workflow" src="https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml/badge.svg"/></a>
+  <a href="https://plugins.jetbrains.com/plugin/21724"><img src="https://img.shields.io/jetbrains/plugin/v/21724.svg"/></a>
+  <a href="https://plugins.jetbrains.com/plugin/21724"><img src="https://img.shields.io/jetbrains/plugin/d/21724.svg"/></a>
+</p><br>
 
 <!-- Plugin description -->
 This is a plugin that allows one to create modules without having to copy / paste / modify existing modules.
@@ -19,7 +20,7 @@ Creating both single modules and enhanced modules (representing the 3 module sys
 Additional features include:
 
 1. Specifying gradle template for modules to align with your project specific defaults.
-   1. Allows for custom variables to be replaced with generated values
+  1. Allows for custom variables to be replaced with generated values
 2. Aligning the gradle files to follow the module name
 3. Generating both .gradle and .gradle.kts build files for a given module
 <!-- Plugin description end -->
