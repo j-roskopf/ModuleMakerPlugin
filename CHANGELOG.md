@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.19]
+- Dependency updates
+
 ## [1.0.18]
 - Attempt to fix crash on startup (again)
 
