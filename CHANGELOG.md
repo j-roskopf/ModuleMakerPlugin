@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.20]
+- Accept starting file location when starting Module Maker
+
 ## [1.0.19]
 - Dependency updates
 

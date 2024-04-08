@@ -33,6 +33,7 @@ import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.VfsUtil
+import com.intellij.openapi.vfs.VirtualFile
 import com.joetr.modulemaker.data.analytics.ModuleCreationAnalytics
 import com.joetr.modulemaker.data.analytics.ModuleCreationErrorAnalytics
 import com.joetr.modulemaker.data.toProjectFile
@@ -62,7 +63,8 @@ private const val DEFAULT_MODULE_NAME = ":repository:database (as an example)"
 private const val DEFAULT_SRC_VALUE = "EMPTY"
 
 class ModuleMakerDialogWrapper(
-    private val project: Project
+    private val project: Project,
+    private val startingLocation: VirtualFile?
 ) : DialogWrapper(true) {
 
     private val preferenceService = PreferenceServiceImpl.instance
@@ -91,9 +93,16 @@ class ModuleMakerDialogWrapper(
     init {
         title = "Module Maker"
         init()
-        // give default value of just the root project
-        selectedSrcValue.value = File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast())
-            .removePrefix(File.separator)
+
+        selectedSrcValue.value = if (startingLocation != null) {
+            // give default of starting location
+            File(startingLocation.path).absolutePath.removePrefix(rootDirectoryStringDropLast())
+                .removePrefix(File.separator)
+        } else {
+            // give default value of the root project
+            File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast())
+                .removePrefix(File.separator)
+        }
     }
 
     @Nullable
