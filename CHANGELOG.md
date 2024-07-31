@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.22]
+- Don't specify pluginUntilBuild. This plugin will work forever ;)
+
 ## [1.0.21]
 - Update supported platform versions
 
