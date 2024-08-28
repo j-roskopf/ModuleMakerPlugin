@@ -24,6 +24,9 @@ import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.Launch
+import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.BrokenImage
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Code
@@ -144,7 +147,7 @@ private fun FileItemIcon(modifier: Modifier, model: FileTree.Item) = Box(modifie
             )
 
             else -> Icon(
-                Icons.Default.KeyboardArrowRight,
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 tint = LocalContentColor.current
             )
@@ -170,8 +173,8 @@ private fun FileItemIcon(modifier: Modifier, model: FileTree.Item) = Box(modifie
                 contentDescription = null,
                 tint = Color(0xFF62B543)
             )
-            "bat" -> Icon(Icons.Default.Launch, contentDescription = null, tint = Color(0xFF87939A))
-            else -> Icon(Icons.Default.TextSnippet, contentDescription = null, tint = Color(0xFF87939A))
+            "bat" -> Icon(Icons.AutoMirrored.Filled.Launch, contentDescription = null, tint = Color(0xFF87939A))
+            else -> Icon(Icons.AutoMirrored.Filled.TextSnippet, contentDescription = null, tint = Color(0xFF87939A))
         }
     }
 }
