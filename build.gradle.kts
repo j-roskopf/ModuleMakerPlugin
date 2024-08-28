@@ -12,6 +12,7 @@ plugins {
     kotlin("plugin.serialization") version libs.versions.kotlin.get()
     id("org.jetbrains.compose")
     alias(libs.plugins.spotless)
+    alias(libs.plugins.compose)
 }
 
 group = properties("pluginGroup").get()
@@ -28,6 +29,8 @@ buildscript {
 // Configure project's dependencies
 repositories {
     mavenCentral()
+    google()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
     intellijPlatform {
         defaultRepositories()
@@ -45,7 +48,7 @@ dependencies {
     implementation(compose.materialIconsExtended)
     implementation(libs.segment)
 
-    val version = "0.7.81"
+    val version = "0.8.10"
     val macTarget = "macos-arm64"
     val windowsTarget = "windows-x64"
     val linuxTarget = "linux-x64"
@@ -58,13 +61,13 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
+        create(properties("platformType").get(), properties("platformVersion").get())
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
-        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
+        bundledPlugins(properties("platformBundledPlugins").map { it.split(',') })
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
-        plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
+        plugins(properties("platformPlugins").map { it.split(',') })
 
         instrumentationTools()
         pluginVerifier()
@@ -88,9 +91,9 @@ tasks {
     }
 
     patchPluginXml {
-        version = properties("pluginVersion")
-        sinceBuild = properties("pluginSinceBuild")
-        untilBuild = properties("pluginUntilBuild")
+        version = properties("pluginVersion").get()
+        sinceBuild = properties("pluginSinceBuild").get()
+        // untilBuild = properties("pluginUntilBuild").get()
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
@@ -150,7 +153,7 @@ intellijPlatformTesting {
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
 intellijPlatform {
     pluginConfiguration {
-        version = providers.gradleProperty("pluginVersion")
+        version = properties("pluginVersion").get()
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         description = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
@@ -167,7 +170,7 @@ intellijPlatform {
 
         val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
-        changeNotes = providers.gradleProperty("pluginVersion").map { pluginVersion ->
+        changeNotes = properties("pluginVersion").map { pluginVersion ->
             with(changelog) {
                 renderItem(
                     (getOrNull(pluginVersion) ?: getUnreleased())
@@ -179,8 +182,8 @@ intellijPlatform {
         }
 
         ideaVersion {
-            sinceBuild = providers.gradleProperty("pluginSinceBuild")
-            untilBuild = providers.gradleProperty("pluginUntilBuild")
+            sinceBuild = properties("pluginSinceBuild").get()
+            untilBuild = properties("pluginUntilBuild").get()
         }
     }
 
@@ -195,7 +198,8 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels = properties("pluginVersion")
+            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {

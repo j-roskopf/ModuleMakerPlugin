@@ -2,7 +2,7 @@
 freemarker = "2.3.30"
 serialization = "1.5.1"
 jdk = "17"
-kotlin = "1.9.22"
+kotlin = "2.0.20"
 changelog = "2.0.0"
 gradleIntelliJPlugin = "2.0.1"
 spotless = "6.8.0"
@@ -17,6 +17,7 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
+compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 gradleIntelliJPlugin = { id = "org.jetbrains.intellij.platform", version.ref = "gradleIntelliJPlugin" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
