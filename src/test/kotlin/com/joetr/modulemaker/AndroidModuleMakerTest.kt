@@ -61,7 +61,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = true,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert it was added to settings.gradle
@@ -123,7 +124,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert build.gradle is generated
@@ -174,7 +176,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
 
         )
 
@@ -214,7 +217,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = true,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert it was added to settings.gradle
@@ -273,7 +277,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert build.gradle.kts is generated
@@ -306,7 +311,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert it was added to settings.gradle
@@ -339,7 +345,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = true,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert readme exists
@@ -372,7 +379,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert readme does not exists
@@ -404,7 +412,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert gitignore was not generated
@@ -436,7 +445,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = true,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert gitignore was generated and has the expected contents
@@ -476,7 +486,8 @@ class AndroidModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = true,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert gitignore was generated and has the expected contents

@@ -25,6 +25,7 @@ class ExpandableFile(
 }
 
 class FileTree(root: File) {
+
     private val expandableRoot = ExpandableFile(root, 0).apply {
         toggleExpanded()
     }

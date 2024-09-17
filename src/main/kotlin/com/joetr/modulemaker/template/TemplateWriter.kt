@@ -36,8 +36,9 @@ class TemplateWriter(
         useKtsBuildFile: Boolean,
         defaultKey: String?,
         gradleFileFollowModule: Boolean,
-        packageName: String
-    ) {
+        packageName: String,
+        previewMode: Boolean
+    ): List<File> {
         try {
             // Build the data-model
             val data: MutableMap<String, Any> = HashMap()
@@ -101,18 +102,27 @@ class TemplateWriter(
             } else {
                 "build".plus(extension)
             }
-            val file: Writer = FileWriter(Paths.get(moduleFile.absolutePath, fileName).toFile())
-            gradleTemplate.process(data, file)
-            file.flush()
-            file.close()
+
+            val filePath = Paths.get(moduleFile.absolutePath, fileName).toFile()
+
+            if (previewMode.not()) {
+                val file: Writer = FileWriter(Paths.get(moduleFile.absolutePath, fileName).toFile())
+                gradleTemplate.process(data, file)
+                file.flush()
+                file.close()
+            }
+
+            return listOf(filePath)
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: TemplateException) {
             e.printStackTrace()
         }
+
+        return emptyList()
     }
 
-    fun createReadmeFile(moduleFile: File, moduleName: String) {
+    fun createReadmeFile(moduleFile: File, moduleName: String, previewMode: Boolean): List<File> {
         try {
             val manifestTemplate = Template(
                 null,
@@ -126,18 +136,27 @@ class TemplateWriter(
 
             // create directory for the readme
             val manifestFile = Paths.get(moduleFile.absolutePath).toFile()
-            manifestFile.mkdirs()
 
-            // File output
-            val file: Writer = FileWriter(Paths.get(manifestFile.absolutePath, "README.md").toFile())
-            manifestTemplate.process(data, file)
-            file.flush()
-            file.close()
+            val filePath = Paths.get(manifestFile.absolutePath, "README.md").toFile()
+
+            if (previewMode.not()) {
+                manifestFile.mkdirs()
+
+                // File output
+                val file: Writer = FileWriter(filePath)
+                manifestTemplate.process(data, file)
+                file.flush()
+                file.close()
+            }
+
+            return listOf(filePath)
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: TemplateException) {
             e.printStackTrace()
         }
+
+        return emptyList()
     }
 
     private fun getPreferenceFromKey(key: String?, fallback: String): String {
