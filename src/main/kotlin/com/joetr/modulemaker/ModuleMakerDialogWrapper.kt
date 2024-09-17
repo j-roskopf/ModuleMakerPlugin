@@ -158,16 +158,30 @@ class ModuleMakerDialogWrapper(
                 "Cancel",
                 2
             ),
+            object : AbstractAction("Preview") {
+                override fun actionPerformed(e: ActionEvent?) {
+                    if (validateInput()) {
+                        displayPreviewDialog()
+                    } else {
+                        MessageDialogWrapper("Please fill out required values").show()
+                    }
+                }
+            },
             object : AbstractAction("Create") {
                 override fun actionPerformed(e: ActionEvent?) {
                     if (validateInput()) {
-                        create()
+                        create(previewMode = false)
                     } else {
                         MessageDialogWrapper("Please fill out required values").show()
                     }
                 }
             }
         )
+    }
+
+    private fun displayPreviewDialog() {
+        val filesToBeCreated = create(previewMode = true)
+        PreviewDialogWrapper(filesToBeCreated = filesToBeCreated, root = rootFromPath(rootDirectoryString())).show()
     }
 
     private fun validateInput(): Boolean {
@@ -359,7 +373,7 @@ class ModuleMakerDialogWrapper(
         }
     }
 
-    private fun create() {
+    private fun create(previewMode: Boolean): List<File> {
         val settingsGradleFile = getSettingsGradleFile()
         val moduleType = moduleTypeSelection.value
         val currentlySelectedFile = getCurrentlySelectedFile()
@@ -375,7 +389,7 @@ class ModuleMakerDialogWrapper(
                     useKts = useKtsExtension.value
                 )
             )
-            fileWriter.createModule(
+            val filesCreated = fileWriter.createModule(
                 // at this point, selectedSrcValue has a value of something like /root/module/module2/
                 // - we want to remove the root of the project to use as the file path in settings.gradle
                 rootPathString = removeRootFromPath(selectedSrcValue.value),
@@ -403,10 +417,14 @@ class ModuleMakerDialogWrapper(
                 gradleFileFollowModule = gradleFileNamedAfterModule.value,
                 packageName = packageName.value,
                 addReadme = addReadme.value,
-                addGitIgnore = addGitIgnore.value
+                addGitIgnore = addGitIgnore.value,
+                previewMode = previewMode
             )
+
+            return filesCreated
         } else {
             MessageDialogWrapper("Couldn't find settings.gradle(.kts)").show()
+            return emptyList()
         }
     }
 
@@ -450,5 +468,9 @@ class ModuleMakerDialogWrapper(
 
     private fun removeRootFromPath(path: String): String {
         return path.split(File.separator).drop(1).joinToString(File.separator)
+    }
+
+    private fun rootFromPath(path: String): String {
+        return path.split(File.separator).last()
     }
 }

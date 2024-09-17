@@ -55,7 +55,7 @@ fun FileTreeView(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit,
     modifier = modifier.height(height)
 ) {
     with(LocalDensity.current) {
-        Box() {
+        Box {
             val lazyListState = rememberLazyListState()
             val scrollState = rememberScrollState()
 

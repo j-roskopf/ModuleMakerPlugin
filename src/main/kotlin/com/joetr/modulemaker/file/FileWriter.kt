@@ -39,8 +39,11 @@ class FileWriter(
         packageName: String,
         addReadme: Boolean,
         addGitIgnore: Boolean,
-        rootPathString: String
-    ) {
+        rootPathString: String,
+        previewMode: Boolean = false
+    ): List<File> {
+        val filesCreated = mutableListOf<File>()
+
         val fileReady = modulePathAsString.replace(":", "/")
 
         val path = Paths.get(workingDirectory.toURI())
@@ -53,33 +56,36 @@ class FileWriter(
         if (moduleName.isEmpty()) {
             // display alert
             showErrorDialog("Module name empty / not as expected (is it formatted as :module?)")
-            return
+            return emptyList()
         }
 
-        // create if it doesn't exist
-        moduleFile.mkdirs()
+        if (previewMode.not()) {
+            // create if it doesn't exist
+            moduleFile.mkdirs()
 
-        // add to settings.gradle.kts
-        addToSettingsAtCorrectLocation(
-            rootPathAsString = rootPathString,
-            modulePathAsString = modulePathAsString,
-            settingsGradleFile = settingsGradleFile,
-            enhancedModuleCreationStrategy = enhancedModuleCreationStrategy,
-            showErrorDialog = showErrorDialog
-        )
+            // add to settings.gradle.kts
+            addToSettingsAtCorrectLocation(
+                rootPathAsString = rootPathString,
+                modulePathAsString = modulePathAsString,
+                settingsGradleFile = settingsGradleFile,
+                enhancedModuleCreationStrategy = enhancedModuleCreationStrategy,
+                showErrorDialog = showErrorDialog
+            )
+        }
 
         if (enhancedModuleCreationStrategy) {
-            createEnhancedModuleStructure(
+            filesCreated += createEnhancedModuleStructure(
                 moduleFile = moduleFile,
                 moduleType = moduleType,
                 useKtsBuildFile = useKtsBuildFile,
                 gradleFileFollowModule = gradleFileFollowModule,
                 packageName = packageName,
                 addReadme = addReadme,
-                addGitIgnore = addGitIgnore
+                addGitIgnore = addGitIgnore,
+                previewMode = previewMode
             )
         } else {
-            createDefaultModuleStructure(
+            filesCreated += createDefaultModuleStructure(
                 moduleFile = moduleFile,
                 moduleName = moduleName,
                 moduleType = moduleType,
@@ -87,11 +93,16 @@ class FileWriter(
                 gradleFileFollowModule = gradleFileFollowModule,
                 packageName = packageName,
                 addReadme = addReadme,
-                addGitIgnore = addGitIgnore
+                addGitIgnore = addGitIgnore,
+                previewMode = previewMode
             )
         }
 
-        showSuccessDialog()
+        if (previewMode.not()) {
+            showSuccessDialog()
+        }
+
+        return filesCreated
     }
 
     private fun createEnhancedModuleStructure(
@@ -101,13 +112,18 @@ class FileWriter(
         gradleFileFollowModule: Boolean,
         packageName: String,
         addReadme: Boolean,
-        addGitIgnore: Boolean
-    ) {
+        addGitIgnore: Boolean,
+        previewMode: Boolean
+    ): List<File> {
+        val filesCreated = mutableListOf<File>()
+
         // make the 3 module
         moduleFile.toPath().resolve(preferenceService.preferenceState.glueModuleName).toFile().apply {
-            mkdirs()
+            if (previewMode.not()) {
+                mkdirs()
+            }
             // create the gradle file
-            templateWriter.createGradleFile(
+            filesCreated += templateWriter.createGradleFile(
                 moduleFile = this,
                 moduleName = moduleFile.path.split(File.separator).toList().last().plus("-")
                     .plus(preferenceService.preferenceState.glueModuleName),
@@ -115,25 +131,30 @@ class FileWriter(
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = GLUE_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}")
+                packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}"),
+                previewMode = previewMode
             )
 
             // create default packages
-            createDefaultPackages(
+            filesCreated += createDefaultPackages(
                 moduleFile = this,
-                packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}")
+                packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}"),
+                previewMode = previewMode
             )
 
             if (addGitIgnore) {
-                createGitIgnore(
-                    moduleFile = this
+                filesCreated += createGitIgnore(
+                    moduleFile = this,
+                    previewMode = previewMode
                 )
             }
         }
 
         moduleFile.toPath().resolve(preferenceService.preferenceState.implModuleName).toFile().apply {
-            mkdirs()
-            templateWriter.createGradleFile(
+            if (previewMode.not()) {
+                mkdirs()
+            }
+            filesCreated += templateWriter.createGradleFile(
                 moduleFile = this,
                 moduleName = moduleFile.path.split(File.separator).toList().last().plus("-")
                     .plus(preferenceService.preferenceState.implModuleName),
@@ -141,25 +162,30 @@ class FileWriter(
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = IMPL_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}")
+                packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}"),
+                previewMode = previewMode
             )
 
             // create default packages
-            createDefaultPackages(
+            filesCreated += createDefaultPackages(
                 moduleFile = this,
-                packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}")
+                packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}"),
+                previewMode = previewMode
             )
 
             if (addGitIgnore) {
-                createGitIgnore(
-                    moduleFile = this
+                filesCreated += createGitIgnore(
+                    moduleFile = this,
+                    previewMode = previewMode
                 )
             }
         }
 
         moduleFile.toPath().resolve(preferenceService.preferenceState.apiModuleName).toFile().apply {
-            mkdirs()
-            templateWriter.createGradleFile(
+            if (previewMode.not()) {
+                mkdirs()
+            }
+            filesCreated += templateWriter.createGradleFile(
                 moduleFile = this,
                 moduleName = moduleFile.path.split(File.separator).toList().last().plus("-")
                     .plus(preferenceService.preferenceState.apiModuleName),
@@ -167,29 +193,35 @@ class FileWriter(
                 useKtsBuildFile = useKtsBuildFile,
                 defaultKey = API_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
-                packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}")
+                packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}"),
+                previewMode = previewMode
             )
 
             if (addReadme) {
                 // create readme file for the api module
-                templateWriter.createReadmeFile(
+                filesCreated += templateWriter.createReadmeFile(
                     moduleFile = this,
-                    moduleName = preferenceService.preferenceState.apiModuleName
+                    moduleName = preferenceService.preferenceState.apiModuleName,
+                    previewMode = previewMode
                 )
             }
 
             // create default packages
-            createDefaultPackages(
+            filesCreated += createDefaultPackages(
                 moduleFile = this,
-                packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}")
+                packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}"),
+                previewMode = previewMode
             )
 
             if (addGitIgnore) {
-                createGitIgnore(
-                    moduleFile = this
+                filesCreated += createGitIgnore(
+                    moduleFile = this,
+                    previewMode = previewMode
                 )
             }
         }
+
+        return filesCreated
     }
 
     private fun createDefaultModuleStructure(
@@ -200,52 +232,68 @@ class FileWriter(
         gradleFileFollowModule: Boolean,
         packageName: String,
         addReadme: Boolean,
-        addGitIgnore: Boolean
-    ) {
+        addGitIgnore: Boolean,
+        previewMode: Boolean
+    ): List<File> {
+        val filesCreated = mutableListOf<File>()
+
         // create gradle files
-        templateWriter.createGradleFile(
+        filesCreated += templateWriter.createGradleFile(
             moduleFile = moduleFile,
             moduleName = moduleName,
             moduleType = moduleType,
             useKtsBuildFile = useKtsBuildFile,
             defaultKey = null,
             gradleFileFollowModule = gradleFileFollowModule,
-            packageName = packageName
+            packageName = packageName,
+            previewMode = previewMode
         )
 
         if (addReadme) {
             // create readme file
-            templateWriter.createReadmeFile(
+            filesCreated += templateWriter.createReadmeFile(
                 moduleFile = moduleFile,
-                moduleName = moduleName
+                moduleName = moduleName,
+                previewMode = previewMode
             )
         }
 
         // create default packages
-        createDefaultPackages(
+        filesCreated += createDefaultPackages(
             moduleFile = moduleFile,
-            packageName = packageName
+            packageName = packageName,
+            previewMode = previewMode
         )
 
         if (addGitIgnore) {
-            createGitIgnore(
-                moduleFile = moduleFile
+            filesCreated += createGitIgnore(
+                moduleFile = moduleFile,
+                previewMode = previewMode
             )
         }
+
+        return filesCreated
     }
 
-    private fun createGitIgnore(moduleFile: File) {
+    private fun createGitIgnore(moduleFile: File, previewMode: Boolean): List<File> {
         val gitignoreFile = Paths.get(moduleFile.absolutePath).toFile()
 
-        val writer: Writer = java.io.FileWriter(Paths.get(gitignoreFile.absolutePath, ".gitignore").toFile())
+        val filePath = Paths.get(gitignoreFile.absolutePath, ".gitignore").toFile()
 
-        val customPreferences = preferenceService.preferenceState.gitignoreTemplate
-        val dataToWrite = customPreferences.ifEmpty {
-            GitIgnoreTemplate.data
+        if (previewMode.not()) {
+            val writer: Writer = java.io.FileWriter(filePath)
+
+            val customPreferences = preferenceService.preferenceState.gitignoreTemplate
+            val dataToWrite = customPreferences.ifEmpty {
+                GitIgnoreTemplate.data
+            }
+
+            writer.write(dataToWrite)
+            writer.flush()
+            writer.close()
         }
-        writer.write(dataToWrite)
-        writer.flush()
-        writer.close()
+
+        return listOf(filePath)
     }
 
     /**
@@ -255,17 +303,21 @@ class FileWriter(
      */
     private fun createDefaultPackages(
         moduleFile: File,
-        packageName: String
-    ) {
+        packageName: String,
+        previewMode: Boolean
+    ): List<File> {
         // create src/main
         val srcPath = Paths.get(moduleFile.absolutePath, "src/main/kotlin").toFile()
         val packagePath = Paths.get(srcPath.path, packageName.split(".").joinToString(File.separator)).toFile()
-        packagePath.mkdirs()
-
         // create default package
         val stringBuilder = StringBuilder()
+        val filePath = Paths.get(srcPath.absolutePath, stringBuilder.toString()).toFile()
+        if (previewMode.not()) {
+            packagePath.mkdirs()
+            filePath.mkdirs()
+        }
 
-        Paths.get(srcPath.absolutePath, stringBuilder.toString()).toFile().mkdirs()
+        return listOf(packagePath)
     }
 
     /**

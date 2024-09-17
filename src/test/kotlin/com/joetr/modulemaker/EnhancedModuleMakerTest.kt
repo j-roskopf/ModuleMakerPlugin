@@ -61,7 +61,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = true,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert it was added to settings.gradle
@@ -159,7 +160,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert build.gradle is generated for all 3 modules
@@ -222,7 +224,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert build.gradle is generated for all 3 modules
@@ -279,7 +282,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert readme was not generated in the api module
@@ -311,7 +315,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert gitignore was not generated in any of the modules module
@@ -351,7 +356,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = true,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         val apiGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + ".gitignore")
@@ -405,7 +411,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = true,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         val apiGitIgnore = File(folder.root.path + File.separator + modulePathAsFile + File.separator + "api" + File.separator + ".gitignore")
@@ -456,7 +463,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = false,
             addGitIgnore = true,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
@@ -500,7 +508,8 @@ class EnhancedModuleMakerTest {
             packageName = testPackageName,
             addReadme = true,
             addGitIgnore = false,
-            rootPathString = folder.root.toString()
+            rootPathString = folder.root.toString(),
+            previewMode = false
         )
 
         // assert it was added to settings.gradle
