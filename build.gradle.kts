@@ -183,7 +183,7 @@ intellijPlatform {
 
         ideaVersion {
             sinceBuild = properties("pluginSinceBuild").get()
-            //untilBuild = properties("pluginUntilBuild").get()
+            // untilBuild = properties("pluginUntilBuild").get()
         }
     }
 
