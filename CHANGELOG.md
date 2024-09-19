@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.24]
+- Update Platform Version
+
 ## [1.0.23]
 - Add file preview
 
