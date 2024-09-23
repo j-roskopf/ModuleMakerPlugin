@@ -55,6 +55,7 @@ import javax.swing.JComponent
 private const val WINDOW_WIDTH = 840
 private const val WINDOW_HEIGHT = 600
 private const val FILE_TREE_WIDTH = 300
+private const val CONFIGURATION_PANEL_WIDTH = 540
 
 const val ANDROID = "Android"
 const val KOTLIN = "Kotlin"
@@ -115,11 +116,12 @@ class ModuleMakerDialogWrapper(
                         Row {
                             val startingHeight = remember { mutableStateOf(WINDOW_HEIGHT) }
                             val fileTreeWidth = remember { mutableStateOf(FILE_TREE_WIDTH) }
+                            val configurationPanelWidth = remember { mutableStateOf(CONFIGURATION_PANEL_WIDTH) }
                             FileTreeJPanel(
                                 modifier = Modifier.height(startingHeight.value.dp).width(fileTreeWidth.value.dp)
                             )
                             ConfigurationPanel(
-                                modifier = Modifier.height(startingHeight.value.dp)
+                                modifier = Modifier.height(startingHeight.value.dp).width(configurationPanelWidth.value.dp)
                             )
                         }
                     }
