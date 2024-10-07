@@ -8,7 +8,7 @@ import com.intellij.openapi.vfs.VirtualFile
 
 class ModuleMakerAction : AnAction() {
     override fun actionPerformed(event: AnActionEvent) {
-        val project: Project = event.getRequiredData(CommonDataKeys.PROJECT)
+        val project: Project = event.project ?: return
 
         val startingLocation: VirtualFile? = event.getData(CommonDataKeys.VIRTUAL_FILE)
 
