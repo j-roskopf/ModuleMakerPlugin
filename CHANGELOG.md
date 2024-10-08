@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.0.26]
+- Platform updates
+
 ## [1.0.25]
 - Update window sizes
 
