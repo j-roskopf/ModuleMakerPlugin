@@ -10,9 +10,8 @@
   <a href="https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml"><img alt="Release Workflow" src="https://github.com/j-roskopf/ModuleMakerPlugin/actions/workflows/release.yml/badge.svg"/></a>
   <a href="https://plugins.jetbrains.com/plugin/21724"><img src="https://img.shields.io/jetbrains/plugin/v/21724.svg"/></a>
   <a href="https://plugins.jetbrains.com/plugin/21724"><img src="https://img.shields.io/jetbrains/plugin/d/21724.svg"/></a>
+  <a href="https://hitsofcode.com/github/j-roskopf/ModuleMakerPlugin?branch=main"><img src="https://camo.githubusercontent.com/adc9708a2336e24e5a557d4b6d25c5bc21401eb8966a3c8eb34eba0871eb5a72/68747470733a2f2f686974736f66636f64652e636f6d2f6769746875622f6a2d726f736b6f70662f4d6f64756c654d616b6572506c7567696e3f6272616e63683d6d61696e"/></a>
 </p><br>
-
-[![Hits-of-Code](https://hitsofcode.com/github/j-roskopf/ModuleMakerPlugin?branch=main)](https://hitsofcode.com/github/j-roskopf/ModuleMakerPlugin/view?branch=main)
 
 <!-- Plugin description -->
 This is a plugin that allows one to create modules without having to copy / paste / modify existing modules.
