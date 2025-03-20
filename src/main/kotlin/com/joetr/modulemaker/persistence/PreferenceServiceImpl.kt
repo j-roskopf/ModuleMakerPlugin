@@ -45,6 +45,7 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
         data class State(
             var androidTemplate: String = "",
             var kotlinTemplate: String = "",
+            var multiplatformTemplate: String = "",
             var apiTemplate: String = "",
             var apiModuleName: String = DEFAULT_API_MODULE_NAME,
             var glueTemplate: String = "",
