@@ -1,5 +1,7 @@
 package com.joetr.modulemaker.file
 
+import com.joetr.modulemaker.ANDROID
+import com.joetr.modulemaker.MULTIPLATFORM
 import com.joetr.modulemaker.persistence.PreferenceService
 import com.joetr.modulemaker.template.GitIgnoreTemplate
 import com.joetr.modulemaker.template.TemplateWriter
@@ -40,7 +42,9 @@ class FileWriter(
         addReadme: Boolean,
         addGitIgnore: Boolean,
         rootPathString: String,
-        previewMode: Boolean = false
+        previewMode: Boolean = false,
+        platformType: String = ANDROID,
+        sourceSets: List<String> = emptyList()
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -82,7 +86,9 @@ class FileWriter(
                 packageName = packageName,
                 addReadme = addReadme,
                 addGitIgnore = addGitIgnore,
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType,
+                sourceSets = sourceSets
             )
         } else {
             filesCreated += createDefaultModuleStructure(
@@ -94,7 +100,9 @@ class FileWriter(
                 packageName = packageName,
                 addReadme = addReadme,
                 addGitIgnore = addGitIgnore,
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType,
+                sourceSets = sourceSets
             )
         }
 
@@ -113,7 +121,9 @@ class FileWriter(
         packageName: String,
         addReadme: Boolean,
         addGitIgnore: Boolean,
-        previewMode: Boolean
+        previewMode: Boolean,
+        platformType: String,
+        sourceSets: List<String>
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -132,14 +142,17 @@ class FileWriter(
                 defaultKey = GLUE_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
                 packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}"),
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType
             )
 
             // create default packages
             filesCreated += createDefaultPackages(
                 moduleFile = this,
                 packageName = packageName.plus(".${preferenceService.preferenceState.glueModuleName}"),
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType,
+                sourceSets = sourceSets
             )
 
             if (addGitIgnore) {
@@ -163,14 +176,17 @@ class FileWriter(
                 defaultKey = IMPL_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
                 packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}"),
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType
             )
 
             // create default packages
             filesCreated += createDefaultPackages(
                 moduleFile = this,
                 packageName = packageName.plus(".${preferenceService.preferenceState.implModuleName}"),
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType,
+                sourceSets = sourceSets
             )
 
             if (addGitIgnore) {
@@ -194,7 +210,8 @@ class FileWriter(
                 defaultKey = API_KEY,
                 gradleFileFollowModule = gradleFileFollowModule,
                 packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}"),
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType
             )
 
             if (addReadme) {
@@ -210,7 +227,9 @@ class FileWriter(
             filesCreated += createDefaultPackages(
                 moduleFile = this,
                 packageName = packageName.plus(".${preferenceService.preferenceState.apiModuleName}"),
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformType,
+                sourceSets = sourceSets
             )
 
             if (addGitIgnore) {
@@ -233,7 +252,9 @@ class FileWriter(
         packageName: String,
         addReadme: Boolean,
         addGitIgnore: Boolean,
-        previewMode: Boolean
+        previewMode: Boolean,
+        platformType: String,
+        sourceSets: List<String>
     ): List<File> {
         val filesCreated = mutableListOf<File>()
 
@@ -246,7 +267,8 @@ class FileWriter(
             defaultKey = null,
             gradleFileFollowModule = gradleFileFollowModule,
             packageName = packageName,
-            previewMode = previewMode
+            previewMode = previewMode,
+            platformType = platformType
         )
 
         if (addReadme) {
@@ -262,7 +284,9 @@ class FileWriter(
         filesCreated += createDefaultPackages(
             moduleFile = moduleFile,
             packageName = packageName,
-            previewMode = previewMode
+            previewMode = previewMode,
+            platformType = platformType,
+            sourceSets = sourceSets
         )
 
         if (addGitIgnore) {
@@ -304,20 +328,39 @@ class FileWriter(
     private fun createDefaultPackages(
         moduleFile: File,
         packageName: String,
-        previewMode: Boolean
+        previewMode: Boolean,
+        platformType: String,
+        sourceSets: List<String>
     ): List<File> {
+        fun makePath(srcPath: File): File {
+            val packagePath = Paths.get(srcPath.path, packageName.split(".").joinToString(File.separator)).toFile()
+            // create default package
+            val stringBuilder = StringBuilder()
+            val filePath = Paths.get(srcPath.absolutePath, stringBuilder.toString()).toFile()
+            if (previewMode.not()) {
+                packagePath.mkdirs()
+                filePath.mkdirs()
+            }
+            return packagePath
+        }
         // create src/main
-        val srcPath = Paths.get(moduleFile.absolutePath, "src/main/kotlin").toFile()
-        val packagePath = Paths.get(srcPath.path, packageName.split(".").joinToString(File.separator)).toFile()
-        // create default package
-        val stringBuilder = StringBuilder()
-        val filePath = Paths.get(srcPath.absolutePath, stringBuilder.toString()).toFile()
-        if (previewMode.not()) {
-            packagePath.mkdirs()
-            filePath.mkdirs()
+        val packagePaths = if (platformType == ANDROID) {
+            val srcPath = Paths.get(moduleFile.absolutePath, "src/main/kotlin").toFile()
+            val packagePath = makePath(srcPath)
+            listOf(packagePath)
+        } else if (platformType == MULTIPLATFORM) {
+            val paths = mutableListOf<File>()
+            sourceSets.forEach {
+                val srcPath = Paths.get(moduleFile.absolutePath, "src/$it/kotlin").toFile()
+                val packagePath = makePath(srcPath)
+                paths.add(packagePath)
+            }
+            paths
+        } else {
+            throw IllegalArgumentException("Unknown platform type $platformType")
         }
 
-        return listOf(packagePath)
+        return packagePaths
     }
 
     /**

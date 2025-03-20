@@ -1,6 +1,9 @@
 package com.joetr.modulemaker
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +24,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -53,12 +57,13 @@ import javax.swing.Action
 import javax.swing.JComponent
 
 private const val WINDOW_WIDTH = 840
-private const val WINDOW_HEIGHT = 600
+private const val WINDOW_HEIGHT = 800
 private const val FILE_TREE_WIDTH = 300
 private const val CONFIGURATION_PANEL_WIDTH = 540
 
 const val ANDROID = "Android"
-const val KOTLIN = "Kotlin"
+const val MULTIPLATFORM = "Multiplatform"
+const val KOTLIN = "Kotlin / JVM"
 
 private const val DEFAULT_MODULE_NAME = ":repository:database (as an example)"
 private const val DEFAULT_SRC_VALUE = "EMPTY"
@@ -82,8 +87,10 @@ class ModuleMakerDialogWrapper(
     private val addReadme = mutableStateOf(preferenceService.preferenceState.addReadme)
     private val addGitIgnore = mutableStateOf(preferenceService.preferenceState.addGitIgnore)
     private val moduleTypeSelection = mutableStateOf(ANDROID)
+    private val platformTypeSelection = mutableStateOf(ANDROID)
     private val moduleName = mutableStateOf("")
     private val packageName = mutableStateOf(preferenceService.preferenceState.packageName)
+    private val sourceSets = mutableStateListOf<String>()
 
     // Segment's write key isn't really a secret
     private var analytics: Analytics = Analytics("CNghGjhOHipwGB9YdWMBwkMTJbRFtizc") {
@@ -121,7 +128,8 @@ class ModuleMakerDialogWrapper(
                                 modifier = Modifier.height(startingHeight.value.dp).width(fileTreeWidth.value.dp)
                             )
                             ConfigurationPanel(
-                                modifier = Modifier.height(startingHeight.value.dp).width(configurationPanelWidth.value.dp)
+                                modifier = Modifier.height(startingHeight.value.dp)
+                                    .width(configurationPanelWidth.value.dp)
                             )
                         }
                     }
@@ -222,6 +230,7 @@ class ModuleMakerDialogWrapper(
         )
     }
 
+    @OptIn(ExperimentalLayoutApi::class)
     @Composable
     private fun ConfigurationPanel(
         modifier: Modifier = Modifier
@@ -295,6 +304,7 @@ class ModuleMakerDialogWrapper(
             val radioOptions = listOf(ANDROID, KOTLIN)
             val moduleTypeSelectionState = remember { moduleTypeSelection }
             Column {
+                Text("Module Type")
                 radioOptions.forEach { text ->
                     Row(
                         modifier = Modifier.selectable(
@@ -320,6 +330,85 @@ class ModuleMakerDialogWrapper(
                             style = MaterialTheme.typography.body1.merge(),
                             modifier = Modifier.padding(start = 8.dp)
                         )
+                    }
+                }
+            }
+
+            val platformTypeRadioOptions = listOf(ANDROID, MULTIPLATFORM)
+            val platformTypeRadioOptionsState = remember { platformTypeSelection }
+            Column {
+                Text("Platform Type")
+                platformTypeRadioOptions.forEach { text ->
+                    Row(
+                        modifier = Modifier.selectable(
+                            selected = (text == platformTypeRadioOptionsState.value),
+                            onClick = {
+                                platformTypeRadioOptionsState.value = text
+                            }
+                        ).padding(end = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = MaterialTheme.colors.primary,
+                                unselectedColor = MaterialTheme.colors.primaryVariant
+                            ),
+                            selected = (text == platformTypeRadioOptionsState.value),
+                            onClick = {
+                                platformTypeRadioOptionsState.value = text
+                            }
+                        )
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.body1.merge(),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+
+                val selectedSourceSets = remember {
+                    sourceSets
+                }
+
+                AnimatedVisibility(
+                    platformTypeSelection.value == MULTIPLATFORM
+                ) {
+                    Column {
+                        Text(modifier = Modifier.padding(vertical = 8.dp), text = "Selected Source Sets: ${selectedSourceSets.joinToString(separator = ", ")}")
+
+                        FlowRow(Modifier.padding(vertical = 8.dp)) {
+                            kotlinMultiplatformSourceSets.forEach { sourceSet ->
+                                LabelledCheckbox(
+                                    label = sourceSet,
+                                    checked = selectedSourceSets.contains(sourceSet),
+                                    onCheckedChange = {
+                                        if (it) {
+                                            selectedSourceSets.add(sourceSet)
+                                        } else {
+                                            selectedSourceSets.remove(sourceSet)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        Text("Test Source Sets")
+
+                        FlowRow(Modifier.padding(vertical = 8.dp)) {
+                            kotlinMultiplatformTestSourceSets.forEach { sourceSet ->
+                                LabelledCheckbox(
+                                    label = sourceSet,
+                                    checked = selectedSourceSets.contains(sourceSet),
+                                    onCheckedChange = {
+                                        if (it) {
+                                            selectedSourceSets.add(sourceSet)
+                                        } else {
+                                            selectedSourceSets.remove(sourceSet)
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -420,7 +509,9 @@ class ModuleMakerDialogWrapper(
                 packageName = packageName.value,
                 addReadme = addReadme.value,
                 addGitIgnore = addGitIgnore.value,
-                previewMode = previewMode
+                previewMode = previewMode,
+                platformType = platformTypeSelection.value,
+                sourceSets = sourceSets.toList()
             )
 
             return filesCreated
@@ -476,3 +567,7 @@ class ModuleMakerDialogWrapper(
         return path.split(File.separator).last()
     }
 }
+
+/*
+kotlin multiplatform template in settings
+        create folders for each source set*/

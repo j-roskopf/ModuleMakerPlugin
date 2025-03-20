@@ -40,6 +40,7 @@ import com.joetr.modulemaker.template.AndroidModuleTemplate
 import com.joetr.modulemaker.template.GitIgnoreTemplate
 import com.joetr.modulemaker.template.KotlinModuleKtsTemplate
 import com.joetr.modulemaker.template.KotlinModuleTemplate
+import com.joetr.modulemaker.template.MultiplatformKtsTemplate
 import com.joetr.modulemaker.template.TemplateVariable
 import com.joetr.modulemaker.ui.LabelledCheckbox
 import com.joetr.modulemaker.ui.theme.WidgetTheme
@@ -109,6 +110,8 @@ class SettingsDialogWrapper(
     private val kotlinTemplateTextArea =
         mutableStateOf(TextFieldValue(preferenceService.preferenceState.kotlinTemplate))
 
+    private val multiplatformTemplateTextArea =
+        mutableStateOf(TextFieldValue(preferenceService.preferenceState.multiplatformTemplate))
     init {
         title = "Settings"
         init()
@@ -128,7 +131,13 @@ class SettingsDialogWrapper(
     fun SettingsTab() {
         var tabIndex by remember { mutableStateOf(0) }
 
-        val tabs = listOf("Module Template Defaults", "Enhanced Template Defaults", ".gitignore Template Defaults", "General")
+        val tabs = listOf(
+            "Module Template Defaults",
+            "Enhanced Template Defaults",
+            "Multiplatform Template Defaults",
+            ".gitignore Template Defaults",
+            "General"
+        )
 
         WidgetTheme {
             Surface {
@@ -145,11 +154,38 @@ class SettingsDialogWrapper(
                     when (tabIndex) {
                         0 -> TemplateDefaultComponent()
                         1 -> EnhancedTemplateDefaultComponent()
-                        2 -> GitIgnoreTemplateDefaultPanel()
-                        3 -> GeneralPanel()
+                        2 -> MultiplatformDefaultComponent()
+                        3 -> GitIgnoreTemplateDefaultPanel()
+                        4 -> GeneralPanel()
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun MultiplatformDefaultComponent() {
+        Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
+            val settingExplanationText =
+                """
+                    You can override the multiplatform gradle templates created with your own project specific defaults.
+
+                    If nothing is specified here, a sensible default will be generated for you.
+                """.trimIndent()
+
+            Text(
+                modifier = Modifier.padding(8.dp),
+                text = settingExplanationText
+            )
+            val multiplatformModuleTemplateState = remember { multiplatformTemplateTextArea }
+
+            OutlinedTextField(
+                modifier = Modifier.fillMaxSize().padding(8.dp),
+                value = multiplatformModuleTemplateState.value,
+                onValueChange = {
+                    multiplatformModuleTemplateState.value = it
+                }
+            )
         }
     }
 
@@ -158,7 +194,11 @@ class SettingsDialogWrapper(
         Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = "You can override the .gitignore templates created with your own project specific default.\n\nIf nothing is specified here, a sensible default will be generated for you."
+                text = """
+                    You can override the .gitignore templates created with your own project specific default.
+
+                    If nothing is specified here, a sensible default will be generated for you.
+                """.trimIndent()
             )
 
             val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
@@ -288,13 +328,23 @@ class SettingsDialogWrapper(
             modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
         ) {
             val settingExplanationText =
-                "You can override the gradle templates created with your own project specific defaults./n/n If nothing is specified here, a sensible default will be generated for you."
+                """
+                    You can override the gradle templates created with your own project specific defaults.
+
+                     If nothing is specified here, a sensible default will be generated for you.
+                """.trimIndent()
 
             val supportedVariablesString = TemplateVariable.values().joinToString("\n") {
                 it.templateVariable
             }
             val supportedVariablesLabel =
-                "If you do have a custom template, there are some variable names that will be automatically replaced for you.\n\n Supported variables are:\n\n $supportedVariablesString"
+                """
+                    If you do have a custom template, there are some variable names that will be automatically replaced for you.
+
+                     Supported variables are:
+
+                     $supportedVariablesString
+                """.trimIndent()
 
             Text(settingExplanationText)
 
@@ -418,6 +468,7 @@ class SettingsDialogWrapper(
 
             androidTemplateTextArea.value = TextFieldValue(state.androidTemplate)
             kotlinTemplateTextArea.value = TextFieldValue(state.kotlinTemplate)
+            multiplatformTemplateTextArea.value = TextFieldValue(state.multiplatformTemplate)
             apiTemplateTextArea.value = TextFieldValue(state.apiTemplate)
             implTemplateTextArea.value = TextFieldValue(state.implTemplate)
             glueTemplateTextArea.value = TextFieldValue(state.glueTemplate)
@@ -458,6 +509,7 @@ class SettingsDialogWrapper(
     private fun getJsonFromSettings(): String {
         val androidTemplate: String = androidTemplateTextArea.value.text
         val kotlinTemplate: String = kotlinTemplateTextArea.value.text
+        val multiplatformTemplate: String = multiplatformTemplateTextArea.value.text
         val apiTemplate: String = apiTemplateTextArea.value.text
         val glueTemplate: String = glueTemplateTextArea.value.text
         val implTemplate: String = implTemplateTextArea.value.text
@@ -475,6 +527,7 @@ class SettingsDialogWrapper(
         val newState = PreferenceServiceImpl.Companion.State(
             androidTemplate = androidTemplate,
             kotlinTemplate = kotlinTemplate,
+            multiplatformTemplate = multiplatformTemplate,
             apiTemplate = apiTemplate,
             glueTemplate = glueTemplate,
             implTemplate = implTemplate,
@@ -512,6 +565,7 @@ class SettingsDialogWrapper(
         preferenceService.preferenceState = preferenceService.preferenceState.copy(
             androidTemplate = androidTemplateTextArea.value.text,
             kotlinTemplate = kotlinTemplateTextArea.value.text,
+            multiplatformTemplate = multiplatformTemplateTextArea.value.text,
             apiTemplate = apiTemplateTextArea.value.text,
             implTemplate = implTemplateTextArea.value.text,
             glueTemplate = glueTemplateTextArea.value.text,
@@ -533,6 +587,7 @@ class SettingsDialogWrapper(
     private fun clearData() {
         androidTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
         kotlinTemplateTextArea.value = TextFieldValue(getDefaultTemplate(isKotlin = true))
+        multiplatformTemplateTextArea.value = TextFieldValue(getDefaultTemplate(isMultiplatform = true))
         apiTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
         implTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
         glueTemplateTextArea.value = TextFieldValue(getDefaultTemplate())
@@ -551,7 +606,10 @@ class SettingsDialogWrapper(
         apiModuleNameTextArea.value = TextFieldValue(DEFAULT_API_MODULE_NAME)
     }
 
-    private fun getDefaultTemplate(isKotlin: Boolean = false): String {
+    private fun getDefaultTemplate(isKotlin: Boolean = false, isMultiplatform: Boolean = false): String {
+        if (isMultiplatform) {
+            return MultiplatformKtsTemplate.data
+        }
         if (isKotlin) {
             return if (isKtsCurrentlyChecked) {
                 KotlinModuleKtsTemplate.data

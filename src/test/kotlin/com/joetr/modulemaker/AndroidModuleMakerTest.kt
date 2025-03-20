@@ -63,6 +63,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert it was added to settings.gradle
@@ -219,6 +220,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert it was added to settings.gradle
@@ -279,6 +281,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert build.gradle.kts is generated
@@ -313,6 +316,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert it was added to settings.gradle
@@ -347,6 +351,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert readme exists
@@ -381,6 +386,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert readme does not exists
@@ -414,6 +420,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert gitignore was not generated
@@ -447,6 +454,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert gitignore was generated and has the expected contents
@@ -488,6 +496,7 @@ class AndroidModuleMakerTest {
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
             previewMode = false
+
         )
 
         // assert gitignore was generated and has the expected contents

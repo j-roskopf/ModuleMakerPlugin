@@ -3,6 +3,7 @@ package com.joetr.modulemaker.template
 import com.joetr.modulemaker.ANDROID
 import com.joetr.modulemaker.FREEMARKER_VERSION
 import com.joetr.modulemaker.KOTLIN
+import com.joetr.modulemaker.MULTIPLATFORM
 import com.joetr.modulemaker.file.ANDROID_KEY
 import com.joetr.modulemaker.file.API_KEY
 import com.joetr.modulemaker.file.GLUE_KEY
@@ -37,7 +38,8 @@ class TemplateWriter(
         defaultKey: String?,
         gradleFileFollowModule: Boolean,
         packageName: String,
-        previewMode: Boolean
+        previewMode: Boolean,
+        platformType: String
     ): List<File> {
         try {
             // Build the data-model
@@ -47,7 +49,7 @@ class TemplateWriter(
             // load gradle file from template folder
             val gradleTemplate: Template = when (moduleType) {
                 KOTLIN -> {
-                    val customPreferences = getPreferenceFromKey(defaultKey, KOTLIN_KEY)
+                    val customPreferences = getPreferenceFromKey(defaultKey, if (platformType == MULTIPLATFORM) MULTIPLATFORM else KOTLIN_KEY)
                     if (customPreferences.isNotEmpty()) {
                         Template(
                             null,
@@ -68,7 +70,8 @@ class TemplateWriter(
                     }
                 }
                 ANDROID -> {
-                    val customPreferences = getPreferenceFromKey(defaultKey, ANDROID_KEY)
+                    val customPreferences = getPreferenceFromKey(defaultKey, if (platformType == MULTIPLATFORM) MULTIPLATFORM else ANDROID_KEY)
+
                     if (customPreferences.isNotEmpty()) {
                         Template(
                             null,
@@ -76,10 +79,16 @@ class TemplateWriter(
                             cfg
                         )
                     } else {
-                        val template = if (useKtsBuildFile) {
-                            AndroidModuleKtsTemplate.data
+                        val template = if (platformType == ANDROID) {
+                            if (useKtsBuildFile) {
+                                AndroidModuleKtsTemplate.data
+                            } else {
+                                AndroidModuleTemplate.data
+                            }
+                        } else if (platformType == MULTIPLATFORM) {
+                            MultiplatformKtsTemplate.data
                         } else {
-                            AndroidModuleTemplate.data
+                            throw IllegalArgumentException("Unknown platform type $platformType")
                         }
                         Template(
                             null,
@@ -165,6 +174,7 @@ class TemplateWriter(
             API_KEY -> preferenceService.preferenceState.apiTemplate
             GLUE_KEY -> preferenceService.preferenceState.glueTemplate
             ANDROID_KEY -> preferenceService.preferenceState.androidTemplate
+            MULTIPLATFORM -> preferenceService.preferenceState.multiplatformTemplate
             KOTLIN_KEY -> preferenceService.preferenceState.kotlinTemplate
             else -> ""
         }
