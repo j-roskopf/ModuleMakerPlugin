@@ -23,6 +23,9 @@ buildscript {
         mavenCentral()
         google()
         maven { url = uri("https://plugins.gradle.org/m2/") }
+        maven {
+            url = uri("https://www.jetbrains.com/intellij-repository/releases")
+        }
     }
 }
 
@@ -48,7 +51,7 @@ dependencies {
     implementation(compose.materialIconsExtended)
     implementation(libs.segment)
 
-    val version = "0.8.10"
+    val version = "0.8.18"
     val macTarget = "macos-arm64"
     val windowsTarget = "windows-x64"
     val linuxTarget = "linux-x64"
@@ -61,6 +64,7 @@ dependencies {
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
+        javaCompiler("243.26053.29") // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1894
         create(properties("platformType").get(), properties("platformVersion").get())
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
@@ -69,7 +73,7 @@ dependencies {
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(properties("platformPlugins").map { it.split(',') })
 
-        instrumentationTools()
+        // instrumentationTools()
         pluginVerifier()
         zipSigner()
     }

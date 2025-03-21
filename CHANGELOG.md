@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.1.1]
+- Platform updates
+
 ## [1.1.0]
 - Support Multiplatform modules
 
