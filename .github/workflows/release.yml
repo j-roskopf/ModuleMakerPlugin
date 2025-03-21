@@ -24,7 +24,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Execute Gradle build
-        run: ./gradlew build --stacktrace
+        run: ./gradlew buildPlugin --stacktrace
 
       - name: Upload and Release
         uses: fnkr/github-action-ghr@v1
