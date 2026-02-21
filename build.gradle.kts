@@ -51,7 +51,10 @@ dependencies {
     implementation(compose.materialIconsExtended)
     implementation(libs.segment)
 
-    val version = "0.8.18"
+    // I usually do
+    // ./gradlew dependencies | grep "skiko"
+    // to get the skiko version that compose depends on
+    val version = "0.9.37.4"
     val macTarget = "macos-arm64"
     val windowsTarget = "windows-x64"
     val linuxTarget = "linux-x64"
