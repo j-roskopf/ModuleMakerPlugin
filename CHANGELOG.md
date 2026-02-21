@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.1.2]
+- Fix startup issue on Windows
+
 ## [1.1.1]
 - Platform updates
 
