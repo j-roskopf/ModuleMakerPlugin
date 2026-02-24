@@ -262,11 +262,27 @@ class ModuleMakerUiTest {
     // ── Utilities ──────────────────────────────────────────────────────────────
 
     private fun RemoteRobot.dismissBlockingDialogs() {
+        // Trust project dialogs
         listOf("Trust Project", "Trust and Open Project", "Trust Projects").forEach { label ->
             findAll<ComponentFixture>(byXpath("//div[@text='$label']")).firstOrNull()?.click()
         }
+        // Data sharing / telemetry
         findAll<ComponentFixture>(byXpath("//div[@text=\"Don't Send\"]")).firstOrNull()?.click()
+        // Generic OK/Close buttons on any dialog
         findAll<JButtonFixture>(byXpath("//div[@class='JButton' and @text='OK']")).firstOrNull()?.click()
+        findAll<JButtonFixture>(byXpath("//div[@class='JButton' and @text='Close']")).firstOrNull()?.click()
+        // Tip of the Day
+        findAll<JButtonFixture>(byXpath("//div[@class='JButton' and @text='Got It']")).firstOrNull()?.click()
+        // What's New / changelog
+        findAll<ComponentFixture>(byXpath("//div[@text='Got It']")).firstOrNull()?.click()
+        // Import Settings dialog
+        findAll<ComponentFixture>(byXpath("//div[@text='Do not import settings']")).firstOrNull()?.click()
+        findAll<ComponentFixture>(byXpath("//div[@text='Skip Import']")).firstOrNull()?.click()
+        // License agreement
+        findAll<ComponentFixture>(byXpath("//div[@text='Accept']")).firstOrNull()?.click()
+        // Any "Continue" or "Skip" buttons
+        findAll<ComponentFixture>(byXpath("//div[@text='Continue']")).firstOrNull()?.click()
+        findAll<ComponentFixture>(byXpath("//div[@text='Skip Remaining and Set Defaults']")).firstOrNull()?.click()
     }
 
     private companion object {

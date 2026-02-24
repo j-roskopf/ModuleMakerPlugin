@@ -29,12 +29,17 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # Pre-download IDE and build plugin so the background launch is fast and doesn't fail silently.
+      - name: Build plugin and prepare sandbox
+        run: ./gradlew prepareSandbox_runIdeForUiTests
+
       # Linux runners have no display server; start a virtual one before launching the IDE.
       - name: Start virtual display (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo apt-get install -y xvfb
           Xvfb :99 -screen 0 1920x1080x24 &
+          sleep 2
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
 
       - name: Clean up test module (pre-test)
@@ -48,28 +53,20 @@ jobs:
           DISPLAY: ${{ env.DISPLAY }}
         run: |
           echo "Starting IDE with robot server..."
-          nohup ./gradlew runIdeForUiTests > ide-output.log 2>&1 &
+          ./gradlew runIdeForUiTests > ide-output.log 2>&1 &
           IDE_PID=$!
           echo "IDE PID: $IDE_PID"
 
-          # Poll until the robot server is accepting HTTP requests (works on all platforms).
+          # Poll until the robot server responds to HTTP requests.
           echo "Waiting for robot server on port 8082..."
           MAX_WAIT=90
           ATTEMPT=0
-          until curl -sf http://127.0.0.1:8082 > /dev/null 2>&1; do
+          until curl -sf --connect-timeout 2 http://127.0.0.1:8082/api/about > /dev/null 2>&1; do
             ATTEMPT=$((ATTEMPT + 1))
             if [ "$ATTEMPT" -ge "$MAX_WAIT" ]; then
               echo "ERROR: robot server did not start after $((MAX_WAIT * 5)) seconds"
               echo "=== IDE output (last 100 lines) ==="
-              tail -100 ide-output.log || true
-              kill "$IDE_PID" 2>/dev/null || true
-              exit 1
-            fi
-            # Check if IDE process is still running
-            if ! kill -0 "$IDE_PID" 2>/dev/null; then
-              echo "ERROR: IDE process exited prematurely"
-              echo "=== IDE output ==="
-              cat ide-output.log || true
+              tail -100 ide-output.log 2>/dev/null || true
               exit 1
             fi
             echo "  attempt $ATTEMPT/$MAX_WAIT — not ready yet, retrying in 5s..."
@@ -78,13 +75,12 @@ jobs:
           echo "Robot server is ready!"
 
           # Run the UI tests
-          ./gradlew uiTest
-          TEST_EXIT=$?
+          ./gradlew uiTest || TEST_EXIT=$?
 
-          # Stop the IDE
-          kill "$IDE_PID" 2>/dev/null || true
+          echo "=== IDE output (last 50 lines) ==="
+          tail -50 ide-output.log 2>/dev/null || true
 
-          exit $TEST_EXIT
+          exit ${TEST_EXIT:-0}
 
       - name: Clean up test module (post-test)
         if: always()

@@ -170,6 +170,12 @@ intellijPlatformTesting {
                         // Skip the "Trust Project?" dialog that blocks the IDE frame from appearing
                         "-Didea.trust.all.projects=true",
                         "-Didea.initially.ask.config=never",
+                        // Suppress Tip of the Day, What's New, and other first-run dialogs
+                        "-Dide.show.tips.on.startup.default.value=false",
+                        "-Didea.is.internal=false",
+                        "-Dide.no.platform.update=true",
+                        // Skip import settings dialog
+                        "-Didea.config.imported.in.current.session=true",
                         // Force the Swing menu bar so remote-robot can find menu items.
                         // Without this, macOS uses the native system menu bar which is
                         // invisible to the Swing component hierarchy that remote-robot inspects.
