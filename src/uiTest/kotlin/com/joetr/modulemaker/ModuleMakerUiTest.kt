@@ -311,21 +311,25 @@ class ModuleMakerUiTest {
         findAll<ComponentFixture>(byXpath("//div[@text='Continue']")).firstOrNull()?.click()
         findAll<ComponentFixture>(byXpath("//div[@text='Skip Remaining and Set Defaults']")).firstOrNull()?.click()
 
-        // Catch-all: if a DialogWrapper dialog is blocking with any JButton, click it.
-        // This handles Android Studio-specific dialogs (setup wizard, EULA, etc.)
-        // that use non-standard button text.
+        // Catch-all: if a DialogWrapper dialog is blocking, find buttons and click
+        // a safe one. Skip "Cancel"/"No"/"Exit" to avoid killing legitimate operations.
         val dialogButtons = findAll<JButtonFixture>(
             byXpath("//div[@class='MyDialog']//div[@class='JButton']")
         )
-        if (dialogButtons.isNotEmpty()) {
-            val btn = dialogButtons.first()
+        for (btn in dialogButtons) {
             val btnText = try {
-                btn.callJs<String>("component.getText()")
+                btn.callJs<String>("component.getText()")?.trim() ?: ""
             } catch (_: Exception) {
-                "unknown"
+                ""
+            }
+            val lower = btnText.lowercase()
+            if (lower in listOf("cancel", "no", "exit", "abort", "stop")) {
+                println("Skipping dangerous dialog button: '$btnText'")
+                continue
             }
             println("Dismissing blocking dialog by clicking button: '$btnText'")
             btn.click()
+            break
         }
     }
 
