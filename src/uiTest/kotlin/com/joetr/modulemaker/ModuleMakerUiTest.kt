@@ -34,37 +34,95 @@ class ModuleMakerUiTest {
     @Test
     fun `opens via Find Action and creates repository module`() {
         with(remoteRobot) {
-            step("Wait for IDE frame to load") {
+            step("Wait for IDE to be ready and dismiss blocking dialogs") {
                 waitFor(duration = Duration.ofMinutes(3), interval = Duration.ofSeconds(2)) {
                     dismissBlockingDialogs()
-                    findAll<ComponentFixture>(
+
+                    // Check if the project frame is open
+                    val ideFrame = findAll<ComponentFixture>(
                         byXpath("//div[@class='IdeFrameImpl']")
-                    ).isNotEmpty()
+                    )
+                    if (ideFrame.isNotEmpty()) {
+                        println("Found IdeFrameImpl")
+                        true
+                    } else {
+                        // Dump what top-level components exist so we can diagnose CI failures
+                        val allComponents = findAll<ComponentFixture>(byXpath("//div"))
+                        val classNames = allComponents.mapNotNull { fixture ->
+                            try {
+                                fixture.callJs<String>("component.getClass().getName()")
+                            } catch (_: Exception) {
+                                null
+                            }
+                        }.distinct()
+                        println("Waiting for IdeFrameImpl... Found components: ${classNames.take(30)}")
+
+                        // If stuck on Welcome screen, the project didn't auto-open
+                        val welcomeFrame = findAll<ComponentFixture>(
+                            byXpath("//div[@class='FlatWelcomeFrame']")
+                        )
+                        if (welcomeFrame.isNotEmpty()) {
+                            println("Detected Welcome screen - project did not auto-open")
+                        }
+
+                        false
+                    }
                 }
+            }
+
+            step("Wait for IDE to settle after loading") {
+                // On CI the IDE may still be indexing or initializing after the frame appears.
+                // Give it time before sending hotkeys.
+                Thread.sleep(10_000)
+                // Dismiss any dialogs that appeared during loading
+                dismissBlockingDialogs()
+                Thread.sleep(2_000)
             }
 
             step("Open Module Maker via Find Action") {
-                find<ComponentFixture>(
-                    byXpath("//div[@class='IdeFrameImpl']"),
-                    Duration.ofSeconds(10)
-                ).click()
-
                 val isMac = System.getProperty("os.name").contains("Mac", ignoreCase = true)
-                keyboard {
-                    if (isMac) {
-                        hotKey(KeyEvent.VK_META, KeyEvent.VK_SHIFT, KeyEvent.VK_A)
+
+                // Retry the Find Action flow — on CI the first attempt may fail
+                // if the IDE hasn't fully initialized its action system.
+                waitFor(duration = Duration.ofSeconds(60), interval = Duration.ofSeconds(5)) {
+                    // Click the IDE frame to ensure it has focus
+                    find<ComponentFixture>(
+                        byXpath("//div[@class='IdeFrameImpl']"),
+                        Duration.ofSeconds(10)
+                    ).click()
+                    Thread.sleep(500)
+
+                    keyboard {
+                        if (isMac) {
+                            hotKey(KeyEvent.VK_META, KeyEvent.VK_SHIFT, KeyEvent.VK_A)
+                        } else {
+                            hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_SHIFT, KeyEvent.VK_A)
+                        }
+                    }
+                    Thread.sleep(2_000)
+
+                    // Check if Find Action popup appeared
+                    val searchField = findAll<ComponentFixture>(
+                        byXpath("//div[@class='SearchEverywhereUI']")
+                    )
+                    if (searchField.isEmpty()) {
+                        println("Find Action popup not found, retrying...")
+                        // Press Escape to clean up any partial state
+                        keyboard { hotKey(KeyEvent.VK_ESCAPE) }
+                        Thread.sleep(1_000)
+                        false
                     } else {
-                        hotKey(KeyEvent.VK_CONTROL, KeyEvent.VK_SHIFT, KeyEvent.VK_A)
+                        println("Find Action popup appeared")
+                        keyboard { enterText("Module Maker") }
+                        Thread.sleep(1_000)
+                        keyboard { hotKey(KeyEvent.VK_ENTER) }
+                        true
                     }
                 }
-                Thread.sleep(1_000)
-                keyboard { enterText("Module Maker") }
-                Thread.sleep(500)
-                keyboard { hotKey(KeyEvent.VK_ENTER) }
             }
 
             step("Verify Module Maker dialog opened") {
-                waitFor(duration = Duration.ofSeconds(15)) {
+                waitFor(duration = Duration.ofSeconds(30)) {
                     findAll<ComponentFixture>(
                         byXpath("//div[@title='Module Maker']")
                     ).isNotEmpty()
@@ -283,6 +341,27 @@ class ModuleMakerUiTest {
         // Any "Continue" or "Skip" buttons
         findAll<ComponentFixture>(byXpath("//div[@text='Continue']")).firstOrNull()?.click()
         findAll<ComponentFixture>(byXpath("//div[@text='Skip Remaining and Set Defaults']")).firstOrNull()?.click()
+
+        // Catch-all: if a DialogWrapper dialog is blocking, find buttons and click
+        // a safe one. Skip "Cancel"/"No"/"Exit" to avoid killing legitimate operations.
+        val dialogButtons = findAll<JButtonFixture>(
+            byXpath("//div[@class='MyDialog']//div[@class='JButton']")
+        )
+        for (btn in dialogButtons) {
+            val btnText = try {
+                btn.callJs<String>("component.getText()")?.trim() ?: ""
+            } catch (_: Exception) {
+                ""
+            }
+            val lower = btnText.lowercase()
+            if (lower in listOf("cancel", "no", "exit", "abort", "stop")) {
+                println("Skipping dangerous dialog button: '$btnText'")
+                continue
+            }
+            println("Dismissing blocking dialog by clicking button: '$btnText'")
+            btn.click()
+            break
+        }
     }
 
     private companion object {
