@@ -33,11 +33,12 @@ jobs:
       - name: Build plugin and prepare sandbox
         run: ./gradlew prepareSandbox_runIdeForUiTests
 
-      # Linux runners have no display server; start a virtual one before launching the IDE.
-      - name: Start virtual display (Linux)
+      # Linux runners need a virtual display AND GUI toolkit libraries for the IDE to render.
+      - name: Install display dependencies (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get install -y xvfb
+          sudo apt-get update
+          sudo apt-get install -y xvfb libxrender1 libxtst6 libxi6 libxrandr2 libfreetype6 fontconfig
           Xvfb :99 -screen 0 1920x1080x24 &
           sleep 2
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
@@ -57,16 +58,19 @@ jobs:
           IDE_PID=$!
           echo "IDE PID: $IDE_PID"
 
-          # Poll until the robot server responds to HTTP requests.
+          # Poll until the robot server port accepts connections.
+          # curl without -f returns 0 for ANY HTTP response (even 404), which is fine —
+          # we just need to know the server is listening. curl is available on all
+          # GitHub Actions runners (Linux, macOS, Windows).
           echo "Waiting for robot server on port 8082..."
           MAX_WAIT=90
           ATTEMPT=0
-          until curl -sf --connect-timeout 2 http://127.0.0.1:8082/api/about > /dev/null 2>&1; do
+          until curl -s --connect-timeout 2 -o /dev/null http://127.0.0.1:8082/; do
             ATTEMPT=$((ATTEMPT + 1))
             if [ "$ATTEMPT" -ge "$MAX_WAIT" ]; then
               echo "ERROR: robot server did not start after $((MAX_WAIT * 5)) seconds"
-              echo "=== IDE output (last 100 lines) ==="
-              tail -100 ide-output.log 2>/dev/null || true
+              echo "=== IDE output (last 200 lines) ==="
+              tail -200 ide-output.log 2>/dev/null || true
               exit 1
             fi
             echo "  attempt $ATTEMPT/$MAX_WAIT — not ready yet, retrying in 5s..."
