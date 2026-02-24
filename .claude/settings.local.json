@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(grep)",
+      "Bash(chmod +x)",
+      "Bash(lsof)",
+      "Bash(grep*)",
+      "Bash(jar tf:*)",
+      "Bash(head:*)",
+      "Bash(./gradlew*)"
+    ]
+  }
+}

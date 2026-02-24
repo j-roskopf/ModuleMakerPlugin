@@ -390,13 +390,13 @@ class FileWriter(
 
         val twoParametersPattern = """\(".+", ".+"\)""".toRegex()
 
-        val lastNonEmptyLineInSettingsGradleFile = settingsFile.last { settingsFileLine ->
+        val lastNonEmptyLineInSettingsGradleFile = settingsFile.lastOrNull { settingsFileLine ->
             settingsFileLine.isNotEmpty() && includeKeywords.any {
                 settingsFileLine.contains(it)
             }
         }
         val projectIncludeKeyword = includeKeywords.firstOrNull { includeKeyword ->
-            lastNonEmptyLineInSettingsGradleFile.contains(includeKeyword)
+            lastNonEmptyLineInSettingsGradleFile?.contains(includeKeyword) ?: false
         }
 
         if (projectIncludeKeyword == null) {

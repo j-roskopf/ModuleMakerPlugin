@@ -7,12 +7,11 @@ fun environment(key: String) = providers.environmentVariable(key)
 plugins {
     id("java") // Java support
     alias(libs.plugins.kotlin) // Kotlin support
-    alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
+    alias(libs.plugins.gradleIntelliJPlugin) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
-    kotlin("plugin.serialization") version libs.versions.kotlin.get()
-    id("org.jetbrains.compose")
+    alias(libs.plugins.compose) // Gradle Compose Compiler Plugin
     alias(libs.plugins.spotless)
-    alias(libs.plugins.compose)
+    kotlin("plugin.serialization") version libs.versions.kotlin.get()
 }
 
 group = properties("pluginGroup").get()
@@ -38,36 +37,36 @@ repositories {
     intellijPlatform {
         defaultRepositories()
     }
+    maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
 }
 
 apply(
     from = "gradle/spotless.gradle"
 )
 
+sourceSets {
+    create("uiTest") {
+        kotlin.srcDir("src/uiTest/kotlin")
+    }
+}
+
 dependencies {
     implementation(libs.freemarker)
     implementation(libs.serialization)
-    implementation(compose.desktop.currentOs)
-    implementation(compose.materialIconsExtended)
     implementation(libs.segment)
-
-    // I usually do
-    // ./gradlew dependencies | grep "skiko"
-    // to get the skiko version that compose depends on
-    val version = "0.9.37.4"
-    val macTarget = "macos-arm64"
-    val windowsTarget = "windows-x64"
-    val linuxTarget = "linux-x64"
-
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-$macTarget:$version")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-$windowsTarget:$version")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-$linuxTarget:$version")
 
     testImplementation(libs.junit)
 
+    "uiTestImplementation"(kotlin("stdlib"))
+    "uiTestImplementation"(libs.remoteRobot)
+    "uiTestImplementation"(libs.remoteRobotFixtures)
+    "uiTestImplementation"(libs.junit)
+    "uiTestImplementation"("com.squareup.okhttp3:okhttp:4.12.0")
+    // The Compose compiler plugin applies to all source sets; uiTest needs the runtime on its classpath
+    "uiTestImplementation"("org.jetbrains.compose.runtime:runtime-desktop:1.7.3")
+
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        javaCompiler("243.26053.29") // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1894
         create(properties("platformType").get(), properties("platformVersion").get())
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
@@ -75,6 +74,10 @@ dependencies {
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(properties("platformPlugins").map { it.split(',') })
+
+        // Compose support dependencies
+        @Suppress("UnstableApiUsage")
+        composeUI()
 
         // instrumentationTools()
         pluginVerifier()
@@ -136,6 +139,24 @@ tasks {
     }
 }
 
+tasks.register<Test>("uiTest") {
+    description = "Runs UI tests against a running IDE instance"
+    group = "verification"
+    testClassesDirs = sourceSets["uiTest"].output.classesDirs
+    classpath = sourceSets["uiTest"].runtimeClasspath
+    systemProperty("robot-server.port", System.getProperty("robot-server.port", "8082"))
+    doNotTrackState("UI tests are not cacheable")
+    // Gson (used by the remote-robot client) reflectively accesses private fields such as
+    // Throwable.detailMessage when deserializing error responses from the robot server.
+    // JDK 17+ JPMS blocks this by default; --add-opens restores access.
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    // Echo test stdout/stderr directly to the Gradle console so diagnostic println calls
+    // (accessibility tree dumps, screenshots, component class lists) are visible live.
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
 intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
@@ -145,9 +166,24 @@ intellijPlatformTesting {
                         "-Drobot-server.port=8082",
                         "-Dide.mac.message.dialogs.as.sheets=false",
                         "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false"
+                        "-Djb.consents.confirmation.enabled=false",
+                        // Skip the "Trust Project?" dialog that blocks the IDE frame from appearing
+                        "-Didea.trust.all.projects=true",
+                        "-Didea.initially.ask.config=never",
+                        // Suppress Tip of the Day, What's New, and other first-run dialogs
+                        "-Dide.show.tips.on.startup.default.value=false",
+                        "-Didea.is.internal=false",
+                        "-Dide.no.platform.update=true",
+                        // Skip import settings dialog
+                        "-Didea.config.imported.in.current.session=true",
+                        // Force the Swing menu bar so remote-robot can find menu items.
+                        // Without this, macOS uses the native system menu bar which is
+                        // invisible to the Swing component hierarchy that remote-robot inspects.
+                        "-Dapple.laf.useScreenMenuBar=false"
                     )
                 }
+                // Open the test project so settings.gradle.kts is available for module creation
+                args(layout.projectDirectory.dir("src/uiTest/testProject").asFile.absolutePath)
             }
 
             plugins {

@@ -5,32 +5,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.RadioButton
-import androidx.compose.material.RadioButtonDefaults
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.awt.ComposePanel
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
 import com.intellij.openapi.externalSystem.service.execution.ProgressExecutionMode
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
@@ -49,6 +41,15 @@ import com.joetr.modulemaker.ui.file.FileTreeView
 import com.joetr.modulemaker.ui.theme.WidgetTheme
 import com.segment.analytics.kotlin.core.Analytics
 import org.jetbrains.annotations.Nullable
+import org.jetbrains.jewel.bridge.JewelComposeNoThemePanel
+import org.jetbrains.jewel.bridge.icon.fromPlatformIcon
+import org.jetbrains.jewel.foundation.ExperimentalJewelApi
+import org.jetbrains.jewel.ui.component.Icon
+import org.jetbrains.jewel.ui.component.IconButton
+import org.jetbrains.jewel.ui.component.RadioButtonRow
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextField
+import org.jetbrains.jewel.ui.icon.IntelliJIconKey
 import java.awt.event.ActionEvent
 import java.io.File
 import java.nio.file.Path
@@ -88,8 +89,8 @@ class ModuleMakerDialogWrapper(
     private val addGitIgnore = mutableStateOf(preferenceService.preferenceState.addGitIgnore)
     private val moduleTypeSelection = mutableStateOf(ANDROID)
     private val platformTypeSelection = mutableStateOf(ANDROID)
-    private val moduleName = mutableStateOf("")
-    private val packageName = mutableStateOf(preferenceService.preferenceState.packageName)
+    private val moduleName = mutableStateOf(TextFieldValue(""))
+    private val packageName = mutableStateOf(TextFieldValue(preferenceService.preferenceState.packageName))
     private val sourceSets = mutableStateListOf<String>()
 
     // Segment's write key isn't really a secret
@@ -113,26 +114,22 @@ class ModuleMakerDialogWrapper(
         }
     }
 
+    @OptIn(ExperimentalJewelApi::class)
     @Nullable
     override fun createCenterPanel(): JComponent {
-        return ComposePanel().apply {
-            setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
-            setContent {
-                WidgetTheme {
-                    Surface {
-                        Row {
-                            val startingHeight = remember { mutableStateOf(WINDOW_HEIGHT) }
-                            val fileTreeWidth = remember { mutableStateOf(FILE_TREE_WIDTH) }
-                            val configurationPanelWidth = remember { mutableStateOf(CONFIGURATION_PANEL_WIDTH) }
-                            FileTreeJPanel(
-                                modifier = Modifier.height(startingHeight.value.dp).width(fileTreeWidth.value.dp)
-                            )
-                            ConfigurationPanel(
-                                modifier = Modifier.height(startingHeight.value.dp)
-                                    .width(configurationPanelWidth.value.dp)
-                            )
-                        }
-                    }
+        return JewelComposeNoThemePanel(focusOnClickInside = true) {
+            WidgetTheme {
+                Row {
+                    val startingHeight = remember { mutableStateOf(WINDOW_HEIGHT) }
+                    val fileTreeWidth = remember { mutableStateOf(FILE_TREE_WIDTH) }
+                    val configurationPanelWidth = remember { mutableStateOf(CONFIGURATION_PANEL_WIDTH) }
+                    FileTreeJPanel(
+                        modifier = Modifier.height(startingHeight.value.dp).width(fileTreeWidth.value.dp)
+                    )
+                    ConfigurationPanel(
+                        modifier = Modifier.height(startingHeight.value.dp)
+                            .width(configurationPanelWidth.value.dp)
+                    )
                 }
             }
         }
@@ -154,7 +151,7 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun onSettingsSaved() {
-        packageName.value = preferenceService.preferenceState.packageName
+        packageName.value = TextFieldValue(preferenceService.preferenceState.packageName)
         threeModuleCreation.value = preferenceService.preferenceState.threeModuleCreationDefault
         useKtsExtension.value = preferenceService.preferenceState.useKtsFileExtension
         gradleFileNamedAfterModule.value = preferenceService.preferenceState.gradleFileNamedAfterModule
@@ -195,7 +192,10 @@ class ModuleMakerDialogWrapper(
     }
 
     private fun validateInput(): Boolean {
-        return packageName.value.isNotEmpty() && selectedSrcValue.value != DEFAULT_SRC_VALUE && moduleName.value.isNotEmpty() && moduleName.value != DEFAULT_MODULE_NAME
+        return packageName.value.text.isNotEmpty() &&
+            selectedSrcValue.value != DEFAULT_SRC_VALUE &&
+            moduleName.value.text.isNotEmpty() &&
+            moduleName.value.text != DEFAULT_MODULE_NAME
     }
 
     @Composable
@@ -203,9 +203,10 @@ class ModuleMakerDialogWrapper(
         modifier: Modifier = Modifier
     ) {
         val height = remember { mutableStateOf(WINDOW_HEIGHT) }
+        val fileTree = remember { FileTree(root = File(rootDirectoryString()).toProjectFile()) }
         FileTreeView(
             modifier = modifier,
-            model = FileTree(root = File(rootDirectoryString()).toProjectFile()),
+            model = fileTree,
             height = height.value.dp,
             onClick = { fileTreeNode ->
 
@@ -230,7 +231,7 @@ class ModuleMakerDialogWrapper(
         )
     }
 
-    @OptIn(ExperimentalLayoutApi::class)
+    @OptIn(ExperimentalLayoutApi::class, ExperimentalJewelApi::class)
     @Composable
     private fun ConfigurationPanel(
         modifier: Modifier = Modifier
@@ -238,6 +239,8 @@ class ModuleMakerDialogWrapper(
         Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(8.dp)) {
             val selectedRootState = remember { selectedSrcValue }
             Text("Selected root: ${selectedRootState.value}")
+
+            Spacer(Modifier.height(16.dp))
 
             Row {
                 val threeModuleCreationState = remember { threeModuleCreation }
@@ -256,14 +259,17 @@ class ModuleMakerDialogWrapper(
                                             More info can be found here https://www.droidcon.com/2019/11/15/android-at-scale-square/
                         """.trimIndent()
                     ).show()
-                }, content = {
-                        Icon(
-                            imageVector = Icons.Filled.Info,
-                            contentDescription = "info",
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
-                    })
+                }) { _ ->
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.Information),
+                        contentDescription = "info",
+                        iconClass = AllIcons::class.java,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                }
             }
+
+            Spacer(Modifier.height(8.dp))
 
             val useKtsExtensionState = remember { useKtsExtension }
             LabelledCheckbox(
@@ -274,6 +280,8 @@ class ModuleMakerDialogWrapper(
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             val gradleFileNamedAfterModuleState = remember { gradleFileNamedAfterModule }
             LabelledCheckbox(
                 label = "Gradle file named after module",
@@ -282,6 +290,8 @@ class ModuleMakerDialogWrapper(
                     gradleFileNamedAfterModuleState.value = it
                 }
             )
+
+            Spacer(Modifier.height(8.dp))
 
             val addReadmeState = remember { addReadme }
             LabelledCheckbox(
@@ -292,6 +302,8 @@ class ModuleMakerDialogWrapper(
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             val addGitIgnoreState = remember { addGitIgnore }
             LabelledCheckbox(
                 label = "Add .gitignore",
@@ -301,69 +313,42 @@ class ModuleMakerDialogWrapper(
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             val radioOptions = listOf(ANDROID, KOTLIN)
             val moduleTypeSelectionState = remember { moduleTypeSelection }
             Column {
                 Text("Module Type")
+                Spacer(Modifier.height(8.dp))
                 radioOptions.forEach { text ->
-                    Row(
-                        modifier = Modifier.selectable(
-                            selected = (text == moduleTypeSelectionState.value),
-                            onClick = {
-                                moduleTypeSelectionState.value = text
-                            }
-                        ).padding(end = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = MaterialTheme.colors.primary,
-                                unselectedColor = MaterialTheme.colors.primaryVariant
-                            ),
-                            selected = (text == moduleTypeSelectionState.value),
-                            onClick = {
-                                moduleTypeSelectionState.value = text
-                            }
-                        )
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.body1.merge(),
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
+                    RadioButtonRow(
+                        text = text,
+                        selected = (text == moduleTypeSelectionState.value),
+                        onClick = { moduleTypeSelectionState.value = text },
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                    Spacer(Modifier.height(8.dp))
                 }
             }
+
+            Spacer(Modifier.height(8.dp))
 
             val platformTypeRadioOptions = listOf(ANDROID, MULTIPLATFORM)
             val platformTypeRadioOptionsState = remember { platformTypeSelection }
             Column {
                 Text("Platform Type")
+
+                Spacer(Modifier.height(8.dp))
+
                 platformTypeRadioOptions.forEach { text ->
-                    Row(
-                        modifier = Modifier.selectable(
-                            selected = (text == platformTypeRadioOptionsState.value),
-                            onClick = {
-                                platformTypeRadioOptionsState.value = text
-                            }
-                        ).padding(end = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = MaterialTheme.colors.primary,
-                                unselectedColor = MaterialTheme.colors.primaryVariant
-                            ),
-                            selected = (text == platformTypeRadioOptionsState.value),
-                            onClick = {
-                                platformTypeRadioOptionsState.value = text
-                            }
-                        )
-                        Text(
-                            text = text,
-                            style = MaterialTheme.typography.body1.merge(),
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
+                    RadioButtonRow(
+                        text = text,
+                        selected = (text == platformTypeRadioOptionsState.value),
+                        onClick = { platformTypeRadioOptionsState.value = text },
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+
+                    Spacer(Modifier.height(8.dp))
                 }
 
                 val selectedSourceSets = remember {
@@ -373,6 +358,8 @@ class ModuleMakerDialogWrapper(
                 AnimatedVisibility(
                     platformTypeSelection.value == MULTIPLATFORM
                 ) {
+                    Spacer(Modifier.height(8.dp))
+
                     Column {
                         Text(modifier = Modifier.padding(vertical = 8.dp), text = "Selected Source Sets: ${selectedSourceSets.joinToString(separator = ", ")}")
 
@@ -392,7 +379,11 @@ class ModuleMakerDialogWrapper(
                             }
                         }
 
+                        Spacer(Modifier.height(8.dp))
+
                         Text("Test Source Sets")
+
+                        Spacer(Modifier.height(8.dp))
 
                         FlowRow(Modifier.padding(vertical = 8.dp)) {
                             kotlinMultiplatformTestSourceSets.forEach { sourceSet ->
@@ -413,20 +404,24 @@ class ModuleMakerDialogWrapper(
                 }
             }
 
+            Spacer(Modifier.height(8.dp))
+
             val packageNameState = remember { packageName }
-            OutlinedTextField(
-                label = { Text("Package Name") },
-                modifier = Modifier.fillMaxWidth(),
+            Text("Package Name")
+            TextField(
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Package Name" },
                 value = packageNameState.value,
                 onValueChange = {
                     packageNameState.value = it
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             val moduleNameState = remember { moduleName }
-            OutlinedTextField(
-                label = { Text("Module Name") },
-                modifier = Modifier.fillMaxWidth(),
+            Text("Module Name")
+            TextField(
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Module Name" },
                 placeholder = {
                     Text(DEFAULT_MODULE_NAME)
                 },
@@ -485,7 +480,7 @@ class ModuleMakerDialogWrapper(
                 // - we want to remove the root of the project to use as the file path in settings.gradle
                 rootPathString = removeRootFromPath(selectedSrcValue.value),
                 settingsGradleFile = settingsGradleFile,
-                modulePathAsString = moduleName.value,
+                modulePathAsString = moduleName.value.text,
                 moduleType = moduleType,
                 showErrorDialog = {
                     analytics.track("module_creation_error", ModuleCreationErrorAnalytics(message = it))
@@ -506,7 +501,7 @@ class ModuleMakerDialogWrapper(
                 enhancedModuleCreationStrategy = threeModuleCreation.value,
                 useKtsBuildFile = useKtsExtension.value,
                 gradleFileFollowModule = gradleFileNamedAfterModule.value,
-                packageName = packageName.value,
+                packageName = packageName.value.text,
                 addReadme = addReadme.value,
                 addGitIgnore = addGitIgnore.value,
                 previewMode = previewMode,
@@ -567,7 +562,3 @@ class ModuleMakerDialogWrapper(
         return path.split(File.separator).last()
     }
 }
-
-/*
-kotlin multiplatform template in settings
-        create folders for each source set*/

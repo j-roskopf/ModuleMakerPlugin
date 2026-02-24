@@ -1,0 +1,115 @@
+name: UI Tests
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  ui-test:
+    strategy:
+      # Keep running the other platforms even if one fails so we get full signal
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # Pre-download IDE and build plugin so the background launch is fast and doesn't fail silently.
+      - name: Build plugin and prepare sandbox
+        run: ./gradlew prepareSandbox_runIdeForUiTests
+
+      # Linux runners have no display server; start a virtual one before launching the IDE.
+      - name: Start virtual display (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1920x1080x24 &
+          sleep 2
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+
+      - name: Clean up test module (pre-test)
+        run: rm -rf src/uiTest/testProject/repository
+        shell: bash
+
+      # Run IDE + tests in a single step so the backgrounded IDE process stays alive.
+      - name: Start IDE, wait for robot server, and run UI tests
+        shell: bash
+        env:
+          DISPLAY: ${{ env.DISPLAY }}
+        run: |
+          echo "Starting IDE with robot server..."
+          ./gradlew runIdeForUiTests > ide-output.log 2>&1 &
+          IDE_PID=$!
+          echo "IDE PID: $IDE_PID"
+
+          # Poll until the robot server responds to HTTP requests.
+          echo "Waiting for robot server on port 8082..."
+          MAX_WAIT=90
+          ATTEMPT=0
+          until curl -sf --connect-timeout 2 http://127.0.0.1:8082/api/about > /dev/null 2>&1; do
+            ATTEMPT=$((ATTEMPT + 1))
+            if [ "$ATTEMPT" -ge "$MAX_WAIT" ]; then
+              echo "ERROR: robot server did not start after $((MAX_WAIT * 5)) seconds"
+              echo "=== IDE output (last 100 lines) ==="
+              tail -100 ide-output.log 2>/dev/null || true
+              exit 1
+            fi
+            echo "  attempt $ATTEMPT/$MAX_WAIT — not ready yet, retrying in 5s..."
+            sleep 5
+          done
+          echo "Robot server is ready!"
+
+          # Run the UI tests
+          ./gradlew uiTest || TEST_EXIT=$?
+
+          echo "=== IDE output (last 50 lines) ==="
+          tail -50 ide-output.log 2>/dev/null || true
+
+          exit ${TEST_EXIT:-0}
+
+      - name: Clean up test module (post-test)
+        if: always()
+        run: |
+          rm -rf src/uiTest/testProject/repository
+          git checkout -- src/uiTest/testProject/settings.gradle.kts
+        shell: bash
+
+      - name: Upload IDE output log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ide-output-${{ matrix.os }}
+          path: ide-output.log
+          if-no-files-found: ignore
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-results-${{ matrix.os }}
+          path: build/reports/tests/uiTest/
+          if-no-files-found: ignore
+
+      # Upload IDE logs to help diagnose failures
+      - name: Upload IDE logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ide-logs-${{ matrix.os }}
+          path: build/idea-sandbox/system/log/
+          if-no-files-found: ignore

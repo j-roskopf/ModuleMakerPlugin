@@ -6,6 +6,7 @@
     <vendor email="joseph.thomas.roskopf@gmail.com.com" url="https://joetr.com/">https://joetr.com</vendor>
 
     <depends>com.intellij.modules.lang</depends>
+    <depends>com.intellij.modules.compose</depends>
 
     <description>Enables the creation of modules with sensible defaults.</description>
 

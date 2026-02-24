@@ -19,39 +19,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.material.Icon
-import androidx.compose.material.LocalContentColor
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Launch
-import androidx.compose.material.icons.automirrored.filled.TextSnippet
-import androidx.compose.material.icons.filled.BrokenImage
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Launch
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.intellij.icons.AllIcons
+import org.jetbrains.jewel.bridge.icon.fromPlatformIcon
+import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.ui.component.Icon
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.icon.IntelliJIconKey
 
 @Composable
-fun FileTreeView(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit, modifier: Modifier) = Surface(
+fun FileTreeView(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit, modifier: Modifier) = Box(
     modifier = modifier.height(height)
 ) {
     with(LocalDensity.current) {
@@ -123,7 +111,7 @@ private fun FileTreeItemView(
         FileItemIcon(Modifier.align(Alignment.CenterVertically), model)
         Text(
             text = model.name,
-            color = if (active) LocalContentColor.current.copy(alpha = 0.60f) else LocalContentColor.current,
+            color = if (active) JewelTheme.contentColor.copy(alpha = 0.60f) else JewelTheme.contentColor,
             modifier = Modifier
                 .align(Alignment.CenterVertically)
                 .clipToBounds()
@@ -141,40 +129,64 @@ private fun FileItemIcon(modifier: Modifier, model: FileTree.Item) = Box(modifie
         is FileTree.ItemType.Folder -> when {
             !type.canExpand -> Unit
             type.isExpanded -> Icon(
-                Icons.Default.KeyboardArrowDown,
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.ArrowDown),
                 contentDescription = null,
-                tint = LocalContentColor.current
+                iconClass = AllIcons::class.java
             )
 
             else -> Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.ArrowRight),
                 contentDescription = null,
-                tint = LocalContentColor.current
+                iconClass = AllIcons::class.java
             )
         }
 
         is FileTree.ItemType.File -> when (type.ext) {
             in sourceCodeFileExtensions -> Icon(
-                Icons.Default.Code,
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Java),
                 contentDescription = null,
-                tint = Color(0xFF3E86A0)
+                iconClass = AllIcons::class.java
             )
-            "txt" -> Icon(Icons.Default.Description, contentDescription = null, tint = Color(0xFF87939A))
-            "md" -> Icon(Icons.Default.Description, contentDescription = null, tint = Color(0xFF87939A))
+            "txt" -> Icon(
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Text),
+                contentDescription = null,
+                iconClass = AllIcons::class.java
+            )
+            "md" -> Icon(
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Text),
+                contentDescription = null,
+                iconClass = AllIcons::class.java
+            )
             "gitignore" -> Icon(
-                Icons.Default.BrokenImage,
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.Vcs.Ignore_file),
                 contentDescription = null,
-                tint = Color(0xFF87939A)
+                iconClass = AllIcons::class.java
             )
-            "gradle" -> Icon(Icons.Default.Build, contentDescription = null, tint = Color(0xFF87939A))
-            "kts" -> Icon(Icons.Default.Build, contentDescription = null, tint = Color(0xFF3E86A0))
+            "gradle" -> Icon(
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Config),
+                contentDescription = null,
+                iconClass = AllIcons::class.java
+            )
+            "kts" -> Icon(
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Java),
+                contentDescription = null,
+                iconClass = AllIcons::class.java
+            )
             "properties" -> Icon(
-                Icons.Default.Settings,
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Properties),
                 contentDescription = null,
-                tint = Color(0xFF62B543)
+                iconClass = AllIcons::class.java
             )
-            "bat" -> Icon(Icons.AutoMirrored.Filled.Launch, contentDescription = null, tint = Color(0xFF87939A))
-            else -> Icon(Icons.AutoMirrored.Filled.TextSnippet, contentDescription = null, tint = Color(0xFF87939A))
+            "bat" -> Icon(
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Custom),
+                contentDescription = null,
+                iconClass = AllIcons::class.java
+            )
+            else -> Icon(
+                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Unknown),
+                contentDescription = null,
+                iconClass = AllIcons::class.java
+            )
         }
     }
 }

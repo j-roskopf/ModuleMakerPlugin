@@ -1,6 +1,8 @@
 package com.joetr.modulemaker
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,13 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Surface
-import androidx.compose.material.Tab
-import androidx.compose.material.TabRow
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.awt.ComposePanel
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
@@ -48,6 +42,17 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.annotations.Nullable
+import org.jetbrains.jewel.foundation.ExperimentalJewelApi
+import org.jetbrains.jewel.foundation.theme.JewelTheme
+import org.jetbrains.jewel.ui.component.DefaultButton
+import org.jetbrains.jewel.ui.component.SimpleTabContent
+import org.jetbrains.jewel.ui.component.TabData
+import org.jetbrains.jewel.ui.component.TabState
+import org.jetbrains.jewel.ui.component.TabStrip
+import org.jetbrains.jewel.ui.component.Text
+import org.jetbrains.jewel.ui.component.TextArea
+import org.jetbrains.jewel.ui.component.TextField
+import org.jetbrains.jewel.ui.theme.defaultTabStyle
 import java.awt.event.ActionEvent
 import java.io.FileWriter
 import java.nio.file.Files
@@ -72,6 +77,7 @@ const val DEFAULT_API_MODULE_NAME = "api"
 const val DEFAULT_GLUE_MODULE_NAME = "glue"
 const val DEFAULT_IMPL_MODULE_NAME = "impl"
 
+@OptIn(ExperimentalJewelApi::class)
 class SettingsDialogWrapper(
     private val project: Project,
     private val onSave: () -> Unit,
@@ -140,24 +146,32 @@ class SettingsDialogWrapper(
         )
 
         WidgetTheme {
-            Surface {
-                Column(modifier = Modifier.width(WINDOW_WIDTH.dp).height(WINDOW_HEIGHT.dp)) {
-                    TabRow(selectedTabIndex = tabIndex, backgroundColor = Color.Transparent) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                text = { Text(title) },
-                                selected = tabIndex == index,
-                                onClick = { tabIndex = index }
+            Column(modifier = Modifier.width(WINDOW_WIDTH.dp).height(WINDOW_HEIGHT.dp)) {
+                val tabData = tabs.mapIndexed { index, title ->
+                    TabData.Default(
+                        selected = tabIndex == index,
+                        content = { _ ->
+                            SimpleTabContent(
+                                label = title,
+                                state = TabState.of(tabIndex == index)
                             )
-                        }
-                    }
-                    when (tabIndex) {
-                        0 -> TemplateDefaultComponent()
-                        1 -> EnhancedTemplateDefaultComponent()
-                        2 -> MultiplatformDefaultComponent()
-                        3 -> GitIgnoreTemplateDefaultPanel()
-                        4 -> GeneralPanel()
-                    }
+                        },
+                        closable = false,
+                        onClose = {},
+                        onClick = { tabIndex = index }
+                    )
+                }
+                TabStrip(
+                    tabs = tabData,
+                    style = JewelTheme.defaultTabStyle,
+                    interactionSource = MutableInteractionSource()
+                )
+                when (tabIndex) {
+                    0 -> TemplateDefaultComponent()
+                    1 -> EnhancedTemplateDefaultComponent()
+                    2 -> MultiplatformDefaultComponent()
+                    3 -> GitIgnoreTemplateDefaultPanel()
+                    4 -> GeneralPanel()
                 }
             }
         }
@@ -179,12 +193,14 @@ class SettingsDialogWrapper(
             )
             val multiplatformModuleTemplateState = remember { multiplatformTemplateTextArea }
 
-            OutlinedTextField(
-                modifier = Modifier.fillMaxSize().padding(8.dp),
+            Spacer(Modifier.height(16.dp))
+
+            TextArea(
                 value = multiplatformModuleTemplateState.value,
                 onValueChange = {
                     multiplatformModuleTemplateState.value = it
-                }
+                },
+                modifier = Modifier.fillMaxSize().padding(8.dp)
             )
         }
     }
@@ -201,9 +217,11 @@ class SettingsDialogWrapper(
                 """.trimIndent()
             )
 
+            Spacer(Modifier.height(16.dp))
+
             val gitIgnoreTemplateState = remember { gitignoreTemplateTextArea }
 
-            OutlinedTextField(
+            TextArea(
                 modifier = Modifier.fillMaxSize().padding(8.dp),
                 value = gitIgnoreTemplateState.value,
                 onValueChange = {
@@ -220,27 +238,31 @@ class SettingsDialogWrapper(
         ) {
             var basePackageName by remember { packageNameTextField }
 
+            Text("Base Package Name:")
             TextField(
                 value = basePackageName,
                 onValueChange = { newValue ->
                     basePackageName = newValue
                 },
                 modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
-                label = { Text("Base Package Name:") }
+                textStyle = TextStyle(fontFamily = FontFamily.SansSerif)
             )
+
+            Spacer(Modifier.height(8.dp))
 
             var includeKeyword by remember { includeProjectKeywordTextField }
 
+            Text("Include keyword for settings.gradle(.kts):")
             TextField(
                 value = includeKeyword,
                 onValueChange = { newValue ->
                     includeKeyword = newValue
                 },
                 modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
-                label = { Text("Include keyword for settings.gradle(.kts):") }
+                textStyle = TextStyle(fontFamily = FontFamily.SansSerif)
             )
+
+            Spacer(Modifier.height(8.dp))
 
             val refreshAfterModuleCreationState = remember { refreshOnModuleAdd }
             LabelledCheckbox(
@@ -251,6 +273,8 @@ class SettingsDialogWrapper(
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             val threeModuleState = remember { threeModuleCreation }
             LabelledCheckbox(
                 label = "3 module creation checked by default",
@@ -259,6 +283,8 @@ class SettingsDialogWrapper(
                     threeModuleState.value = it
                 }
             )
+
+            Spacer(Modifier.height(8.dp))
 
             val useKtsState = remember { ktsFileExtension }
             LabelledCheckbox(
@@ -269,6 +295,8 @@ class SettingsDialogWrapper(
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             val gradleFileNameState = remember { gradleFileNamedAfterModule }
             LabelledCheckbox(
                 label = "Gradle file named after module by default",
@@ -277,6 +305,8 @@ class SettingsDialogWrapper(
                     gradleFileNameState.value = it
                 }
             )
+
+            Spacer(Modifier.height(8.dp))
 
             val readmeState = remember { addReadme }
             LabelledCheckbox(
@@ -287,6 +317,8 @@ class SettingsDialogWrapper(
                 }
             )
 
+            Spacer(Modifier.height(8.dp))
+
             val gitIgnoreState = remember { addGitignore }
             LabelledCheckbox(
                 label = "Add .gitignore by default",
@@ -296,7 +328,9 @@ class SettingsDialogWrapper(
                 }
             )
 
-            Button(
+            Spacer(Modifier.height(16.dp))
+
+            DefaultButton(
                 onClick = {
                     importSettings()
                 }
@@ -304,7 +338,9 @@ class SettingsDialogWrapper(
                 Text("Import Settings")
             }
 
-            Button(
+            Spacer(Modifier.height(16.dp))
+
+            DefaultButton(
                 onClick = {
                     exportSettings()
                 }
@@ -312,7 +348,9 @@ class SettingsDialogWrapper(
                 Text("Export Settings")
             }
 
-            Button(
+            Spacer(Modifier.height(16.dp))
+
+            DefaultButton(
                 onClick = {
                     clearData()
                 }
@@ -348,9 +386,11 @@ class SettingsDialogWrapper(
 
             Text(settingExplanationText)
 
+            Spacer(Modifier.height(16.dp))
+
             val kotlinTemplateState = remember { kotlinTemplateTextArea }
-            OutlinedTextField(
-                label = { Text("Kotlin Template") },
+            Text("Kotlin Template")
+            TextArea(
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
                     .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = kotlinTemplateState.value,
@@ -360,8 +400,8 @@ class SettingsDialogWrapper(
             )
 
             val androidTemplateState = remember { androidTemplateTextArea }
-            OutlinedTextField(
-                label = { Text("Android Template") },
+            Text("Android Template")
+            TextArea(
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
                     .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = androidTemplateState.value,
@@ -380,8 +420,8 @@ class SettingsDialogWrapper(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
         ) {
             val apiTemplateState = remember { apiTemplateTextArea }
-            OutlinedTextField(
-                label = { Text("Api Template") },
+            Text("Api Template")
+            TextArea(
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
                     .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = apiTemplateState.value,
@@ -391,8 +431,8 @@ class SettingsDialogWrapper(
             )
 
             val glueTemplateState = remember { glueTemplateTextArea }
-            OutlinedTextField(
-                label = { Text("Glue Template") },
+            Text("Glue Template")
+            TextArea(
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
                     .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = glueTemplateState.value,
@@ -402,8 +442,8 @@ class SettingsDialogWrapper(
             )
 
             val implTemplateState = remember { implTemplateTextArea }
-            OutlinedTextField(
-                label = { Text("Impl Template") },
+            Text("Impl Template")
+            TextArea(
                 modifier = Modifier.fillMaxWidth().padding(8.dp)
                     .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = implTemplateState.value,
@@ -414,8 +454,8 @@ class SettingsDialogWrapper(
 
             val apiModuleNameState = remember { apiModuleNameTextArea }
 
-            OutlinedTextField(
-                label = { Text("Api Module Name") },
+            Text("Api Module Name")
+            TextField(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 value = apiModuleNameState.value,
                 onValueChange = {
@@ -425,8 +465,8 @@ class SettingsDialogWrapper(
 
             val glueModuleNameState = remember { glueModuleNameTextArea }
 
-            OutlinedTextField(
-                label = { Text("Glue Module Name") },
+            Text("Glue Module Name")
+            TextField(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 value = glueModuleNameState.value,
                 onValueChange = {
@@ -436,8 +476,8 @@ class SettingsDialogWrapper(
 
             val implModuleNameState = remember { implModuleNameTextArea }
 
-            OutlinedTextField(
-                label = { Text("Impl Module Name") },
+            Text("Impl Module Name")
+            TextField(
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 value = implModuleNameState.value,
                 onValueChange = {
