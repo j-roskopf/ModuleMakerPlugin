@@ -37,41 +37,54 @@ jobs:
           Xvfb :99 -screen 0 1920x1080x24 &
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
 
-      # Start the IDE in the background. The task blocks until the IDE exits, so we
-      # deliberately background it and let GitHub Actions clean it up at job end.
-      - name: Start IDE with robot server
-        run: ./gradlew runIdeForUiTests &
-        shell: bash
-        env:
-          DISPLAY: ${{ env.DISPLAY }}
-
-      # Poll the robot server TCP port until it accepts connections, or fail after 5 minutes.
-      # The robot server has no GET health endpoint; nc is the reliable way to probe the port.
-      - name: Wait for robot server to be ready
-        run: |
-          echo "Waiting for robot server on port 8082..."
-          MAX_WAIT=60
-          ATTEMPT=0
-          until nc -z localhost 8082 2>/dev/null; do
-            ATTEMPT=$((ATTEMPT + 1))
-            if [ "$ATTEMPT" -ge "$MAX_WAIT" ]; then
-              echo "ERROR: robot server did not start after $((MAX_WAIT * 5)) seconds"
-              exit 1
-            fi
-            echo "Attempt $ATTEMPT/$MAX_WAIT — not ready yet, retrying in 5s..."
-            sleep 5
-          done
-          echo "Robot server is ready!"
-        shell: bash
-
       - name: Clean up test module (pre-test)
         run: rm -rf src/uiTest/testProject/repository
         shell: bash
 
-      - name: Run UI tests
-        run: ./gradlew uiTest
+      # Run IDE + tests in a single step so the backgrounded IDE process stays alive.
+      - name: Start IDE, wait for robot server, and run UI tests
+        shell: bash
         env:
           DISPLAY: ${{ env.DISPLAY }}
+        run: |
+          echo "Starting IDE with robot server..."
+          nohup ./gradlew runIdeForUiTests > ide-output.log 2>&1 &
+          IDE_PID=$!
+          echo "IDE PID: $IDE_PID"
+
+          # Poll until the robot server is accepting HTTP requests (works on all platforms).
+          echo "Waiting for robot server on port 8082..."
+          MAX_WAIT=90
+          ATTEMPT=0
+          until curl -sf http://127.0.0.1:8082 > /dev/null 2>&1; do
+            ATTEMPT=$((ATTEMPT + 1))
+            if [ "$ATTEMPT" -ge "$MAX_WAIT" ]; then
+              echo "ERROR: robot server did not start after $((MAX_WAIT * 5)) seconds"
+              echo "=== IDE output (last 100 lines) ==="
+              tail -100 ide-output.log || true
+              kill "$IDE_PID" 2>/dev/null || true
+              exit 1
+            fi
+            # Check if IDE process is still running
+            if ! kill -0 "$IDE_PID" 2>/dev/null; then
+              echo "ERROR: IDE process exited prematurely"
+              echo "=== IDE output ==="
+              cat ide-output.log || true
+              exit 1
+            fi
+            echo "  attempt $ATTEMPT/$MAX_WAIT — not ready yet, retrying in 5s..."
+            sleep 5
+          done
+          echo "Robot server is ready!"
+
+          # Run the UI tests
+          ./gradlew uiTest
+          TEST_EXIT=$?
+
+          # Stop the IDE
+          kill "$IDE_PID" 2>/dev/null || true
+
+          exit $TEST_EXIT
 
       - name: Clean up test module (post-test)
         if: always()
@@ -79,6 +92,14 @@ jobs:
           rm -rf src/uiTest/testProject/repository
           git checkout -- src/uiTest/testProject/settings.gradle.kts
         shell: bash
+
+      - name: Upload IDE output log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ide-output-${{ matrix.os }}
+          path: ide-output.log
+          if-no-files-found: ignore
 
       - name: Upload test report
         if: always()

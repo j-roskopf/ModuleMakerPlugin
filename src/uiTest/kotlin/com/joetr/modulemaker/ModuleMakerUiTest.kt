@@ -169,7 +169,8 @@ class ModuleMakerUiTest {
 
     /** Dispatch a mouse click at (x, y) relative to the compose panel. */
     private fun dispatchClick(dialog: CommonContainerFixture, x: Int, y: Int) {
-        findComposePanel(dialog).callJs<Boolean>("""
+        findComposePanel(dialog).callJs<Boolean>(
+            """
             var target = component.getComponent(1);
             target.requestFocusInWindow();
             var now = java.lang.System.currentTimeMillis();
@@ -183,7 +184,8 @@ class ModuleMakerUiTest {
                 target, java.awt.event.MouseEvent.MOUSE_CLICKED, now + 50, 0,
                 $x, $y, 1, false, java.awt.event.MouseEvent.BUTTON1));
             true
-        """)
+        """
+        )
     }
 
     /** Dispatch a key press+release to the Skia layer. */
@@ -200,7 +202,8 @@ class ModuleMakerUiTest {
         if (shift) modifiers.add("java.awt.event.InputEvent.SHIFT_DOWN_MASK")
         val modExpr = if (modifiers.isEmpty()) "0" else modifiers.joinToString(" | ")
 
-        findComposePanel(dialog).callJs<Boolean>("""
+        findComposePanel(dialog).callJs<Boolean>(
+            """
             var target = component.getComponent(1);
             var now = java.lang.System.currentTimeMillis();
             target.dispatchEvent(new java.awt.event.KeyEvent(
@@ -210,7 +213,8 @@ class ModuleMakerUiTest {
                 target, java.awt.event.KeyEvent.KEY_RELEASED, now + 30,
                 $modExpr, $keyCode, java.awt.event.KeyEvent.CHAR_UNDEFINED));
             true
-        """)
+        """
+        )
     }
 
     /** Dispatch KEY_TYPED events for each character in [text]. */
@@ -237,7 +241,8 @@ class ModuleMakerUiTest {
 
         val modExpr = if (shift) "java.awt.event.InputEvent.SHIFT_DOWN_MASK" else "0"
 
-        findComposePanel(dialog).callJs<Boolean>("""
+        findComposePanel(dialog).callJs<Boolean>(
+            """
             var target = component.getComponent(1);
             var now = java.lang.System.currentTimeMillis();
             target.dispatchEvent(new java.awt.event.KeyEvent(
@@ -250,7 +255,8 @@ class ModuleMakerUiTest {
                 target, java.awt.event.KeyEvent.KEY_RELEASED, now + 30,
                 $modExpr, $keyCode, '$ch'));
             true
-        """)
+        """
+        )
     }
 
     // ── Utilities ──────────────────────────────────────────────────────────────
