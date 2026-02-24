@@ -6,7 +6,6 @@ package com.joetr.modulemaker
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,11 +57,9 @@ class PreviewDialogWrapper(val filesToBeCreated: List<File>, val root: String) :
             setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
             setContent {
                 WidgetTheme {
-                    Surface {
-                        FileTreeJPanel(
-                            modifier = Modifier.height(WINDOW_HEIGHT.dp).width(WINDOW_WIDTH.dp)
-                        )
-                    }
+                    FileTreeJPanel(
+                        modifier = Modifier.height(WINDOW_HEIGHT.dp).width(WINDOW_WIDTH.dp)
+                    )
                 }
             }
         }

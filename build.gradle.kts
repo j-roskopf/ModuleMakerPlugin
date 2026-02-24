@@ -7,12 +7,11 @@ fun environment(key: String) = providers.environmentVariable(key)
 plugins {
     id("java") // Java support
     alias(libs.plugins.kotlin) // Kotlin support
-    alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
+    alias(libs.plugins.gradleIntelliJPlugin) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
-    kotlin("plugin.serialization") version libs.versions.kotlin.get()
-    id("org.jetbrains.compose")
+    alias(libs.plugins.compose) // Gradle Compose Compiler Plugin
     alias(libs.plugins.spotless)
-    alias(libs.plugins.compose)
+    kotlin("plugin.serialization") version libs.versions.kotlin.get()
 }
 
 group = properties("pluginGroup").get()
@@ -47,27 +46,12 @@ apply(
 dependencies {
     implementation(libs.freemarker)
     implementation(libs.serialization)
-    implementation(compose.desktop.currentOs)
-    implementation(compose.materialIconsExtended)
     implementation(libs.segment)
-
-    // I usually do
-    // ./gradlew dependencies | grep "skiko"
-    // to get the skiko version that compose depends on
-    val version = "0.9.37.4"
-    val macTarget = "macos-arm64"
-    val windowsTarget = "windows-x64"
-    val linuxTarget = "linux-x64"
-
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-$macTarget:$version")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-$windowsTarget:$version")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-$linuxTarget:$version")
 
     testImplementation(libs.junit)
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
-        javaCompiler("243.26053.29") // https://github.com/JetBrains/intellij-platform-gradle-plugin/issues/1894
         create(properties("platformType").get(), properties("platformVersion").get())
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
@@ -75,6 +59,10 @@ dependencies {
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(properties("platformPlugins").map { it.split(',') })
+
+        // Compose support dependencies
+        @Suppress("UnstableApiUsage")
+        composeUI()
 
         // instrumentationTools()
         pluginVerifier()
