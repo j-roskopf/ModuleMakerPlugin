@@ -19,6 +19,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.awt.ComposePanel
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
@@ -115,7 +118,7 @@ class ModuleMakerDialogWrapper(
     @OptIn(ExperimentalJewelApi::class)
     @Nullable
     override fun createCenterPanel(): JComponent {
-        return JewelComposeNoThemePanel(focusOnClickInside = false) {
+        return JewelComposeNoThemePanel(focusOnClickInside = true) {
             WidgetTheme {
                 Row {
                     val startingHeight = remember { mutableStateOf(WINDOW_HEIGHT) }
@@ -407,7 +410,7 @@ class ModuleMakerDialogWrapper(
             val packageNameState = remember { packageName }
             Text("Package Name")
             TextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Package Name" },
                 value = packageNameState.value,
                 onValueChange = {
                     packageNameState.value = it
@@ -419,7 +422,7 @@ class ModuleMakerDialogWrapper(
             val moduleNameState = remember { moduleName }
             Text("Module Name")
             TextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Module Name" },
                 placeholder = {
                     Text(DEFAULT_MODULE_NAME)
                 },
