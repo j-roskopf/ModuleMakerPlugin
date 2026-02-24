@@ -34,12 +34,39 @@ class ModuleMakerUiTest {
     @Test
     fun `opens via Find Action and creates repository module`() {
         with(remoteRobot) {
-            step("Wait for IDE frame to load") {
+            step("Wait for IDE to be ready and dismiss blocking dialogs") {
                 waitFor(duration = Duration.ofMinutes(3), interval = Duration.ofSeconds(2)) {
                     dismissBlockingDialogs()
-                    findAll<ComponentFixture>(
+
+                    // Check if the project frame is open
+                    val ideFrame = findAll<ComponentFixture>(
                         byXpath("//div[@class='IdeFrameImpl']")
-                    ).isNotEmpty()
+                    )
+                    if (ideFrame.isNotEmpty()) {
+                        println("Found IdeFrameImpl")
+                        true
+                    } else {
+                        // Dump what top-level components exist so we can diagnose CI failures
+                        val allComponents = findAll<ComponentFixture>(byXpath("//div"))
+                        val classNames = allComponents.mapNotNull { fixture ->
+                            try {
+                                fixture.callJs<String>("component.getClass().getName()")
+                            } catch (_: Exception) {
+                                null
+                            }
+                        }.distinct()
+                        println("Waiting for IdeFrameImpl... Found components: ${classNames.take(30)}")
+
+                        // If stuck on Welcome screen, the project didn't auto-open
+                        val welcomeFrame = findAll<ComponentFixture>(
+                            byXpath("//div[@class='FlatWelcomeFrame']")
+                        )
+                        if (welcomeFrame.isNotEmpty()) {
+                            println("Detected Welcome screen - project did not auto-open")
+                        }
+
+                        false
+                    }
                 }
             }
 
