@@ -1,5 +1,8 @@
 # Module Maker Changelog
 
+## [1.2.1]
+- Update min version to 252
+
 ## [1.2.0]
 - Fix startup issue on Windows
 - Change to standard IntelliJ theming
