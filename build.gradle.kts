@@ -5,8 +5,8 @@ fun properties(key: String) = providers.gradleProperty(key)
 fun environment(key: String) = providers.environmentVariable(key)
 
 plugins {
-    id("java") // Java support
-    alias(libs.plugins.kotlin) // Kotlin support
+    kotlin("jvm") version libs.versions.kotlin.get()
+    id("org.jetbrains.compose") version "1.10.0" // must align with jewel https://github.com/JetBrains/intellij-community/blob/master/platform/jewel/gradle/libs.versions.toml
     alias(libs.plugins.gradleIntelliJPlugin) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.compose) // Gradle Compose Compiler Plugin
@@ -78,6 +78,14 @@ dependencies {
         // Compose support dependencies
         @Suppress("UnstableApiUsage")
         composeUI()
+
+        bundledModule("intellij.platform.jewel.foundation")
+        bundledModule("intellij.platform.jewel.ui")
+        bundledModule("intellij.platform.jewel.ideLafBridge")
+        bundledModule("intellij.platform.jewel.markdown.core")
+        bundledModule("intellij.platform.jewel.markdown.ideLafBridgeStyling")
+        bundledModule("intellij.libraries.compose.foundation.desktop")
+        bundledModule("intellij.libraries.skiko")
 
         // instrumentationTools()
         pluginVerifier()
