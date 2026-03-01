@@ -1,7 +1,7 @@
 # Module Maker Changelog
 
-## [1.2.2]
-- Update min version to 252
+## [1.2.3]
+- Update min version to 253
 
 ## [1.2.0]
 - Fix startup issue on Windows
