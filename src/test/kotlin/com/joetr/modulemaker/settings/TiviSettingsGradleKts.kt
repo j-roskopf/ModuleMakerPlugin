@@ -1,7 +1,8 @@
 package com.joetr.modulemaker.settings
 
 object TiviSettingsGradleKts {
-    val data = """
+    val data =
+        """
         // Copyright 2023, Christopher Banes and the Tivi project contributors
         // SPDX-License-Identifier: Apache-2.0
 
@@ -103,9 +104,10 @@ object TiviSettingsGradleKts {
             ":thirdparty:swipe",
             ":thirdparty:compose-material-dialogs:datetime",
         )
-    """.trimIndent()
+        """.trimIndent()
 
-    val dataWithCustomIncludeProject = """
+    val dataWithCustomIncludeProject =
+        """
         // Copyright 2023, Christopher Banes and the Tivi project contributors
         // SPDX-License-Identifier: Apache-2.0
 
@@ -207,5 +209,5 @@ object TiviSettingsGradleKts {
             ":thirdparty:swipe",
             ":thirdparty:compose-material-dialogs:datetime",
         )
-    """.trimIndent()
+        """.trimIndent()
 }

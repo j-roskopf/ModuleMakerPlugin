@@ -2,31 +2,32 @@ apply plugin: "com.diffplug.spotless"
 
 spotless {
     java {
-        target '**/*.java'
+        target 'src/**/*.java'
         googleJavaFormat().aosp()
         removeUnusedImports()
         trimTrailingWhitespace()
-        indentWithSpaces()
+        leadingTabsToSpaces()
         endWithNewline()
     }
 
     kotlinGradle {
-        ktlint("0.46.0")
+        target '*.gradle.kts', 'settings.gradle.kts'
+        ktlint()
         trimTrailingWhitespace()
         endWithNewline()
     }
 
     kotlin {
-        target '**/*.kt'
-        ktlint("0.46.0")
+        target 'src/**/*.kt'
+        ktlint()
         trimTrailingWhitespace()
-        indentWithSpaces()
+        leadingTabsToSpaces()
         endWithNewline()
     }
 
     format 'misc', {
-        target '**/*.gradle', '**/*.md', '**/.gitignore'
-        indentWithSpaces()
+        target '*.gradle', '*.md', '.gitignore', 'gradle/**/*.gradle'
+        leadingTabsToSpaces()
         trimTrailingWhitespace()
         endWithNewline()
     }

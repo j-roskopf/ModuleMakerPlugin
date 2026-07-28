@@ -13,24 +13,25 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class KotlinModuleMakerTest {
-
     @JvmField
     @Rule
     var folder = TemporaryFolder()
 
     var testState = PreferenceServiceImpl.Companion.State()
 
-    private val fakePreferenceService = object : PreferenceService {
-        override var preferenceState: PreferenceServiceImpl.Companion.State
-            get() = testState
-            set(value) {
-                testState = value
-            }
-    }
+    private val fakePreferenceService =
+        object : PreferenceService {
+            override var preferenceState: PreferenceServiceImpl.Companion.State
+                get() = testState
+                set(value) {
+                    testState = value
+                }
+        }
 
-    private val fileWriter = FileWriter(
-        preferenceService = fakePreferenceService
-    )
+    private val fileWriter =
+        FileWriter(
+            preferenceService = fakePreferenceService,
+        )
 
     private lateinit var settingsGradleFile: File
 
@@ -62,32 +63,31 @@ class KotlinModuleMakerTest {
             addReadme = true,
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert it was added to settings.gradle
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assert(
-            settingsGradleFileContents.contains("include(\":repository\")")
+            settingsGradleFileContents.contains("include(\":repository\")"),
         )
 
         // assert readme was generated
         assert(
             // root/repository/README.md
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + readmeFile).exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + readmeFile).exists(),
         )
 
         // assert build.gradle is generated
         assert(
             // root/repository/build.gradle
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + buildGradleFileName).exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + buildGradleFileName).exists(),
         )
 
         // assert the correct package structure is generated
         assert(
             // root/repository/build.gradle
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/main/kotlin/com/joetr/test").exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/main/kotlin/com/joetr/test").exists(),
         )
     }
 
@@ -116,8 +116,7 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert build.gradle is generated
@@ -125,15 +124,15 @@ class KotlinModuleMakerTest {
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + buildGradleFileName)
         assert(
             // root/repository/build.gradle
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
 
         // assert package name is included in build.gradle
         val buildGradleFileContents = readFromFile(buildGradleFile)
         assert(
             buildGradleFileContents.contains(
-                template
-            )
+                template,
+            ),
         )
     }
 
@@ -160,8 +159,7 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert build.gradle.kts is generated
@@ -169,7 +167,7 @@ class KotlinModuleMakerTest {
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "database.gradle.kts")
         assert(
             // root/repository/database/build.gradle
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
     }
 
@@ -196,8 +194,7 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert build.gradle.kts is generated
@@ -205,7 +202,7 @@ class KotlinModuleMakerTest {
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "database.gradle")
         assert(
             // root/repository/database/build.gradle
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
     }
 
@@ -232,15 +229,14 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert readme is NOT generated
         val buildGradleFile =
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "README.md")
         assert(
-            buildGradleFile.exists().not()
+            buildGradleFile.exists().not(),
         )
     }
 
@@ -267,15 +263,14 @@ class KotlinModuleMakerTest {
             addReadme = true,
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert readme is generated
         val buildGradleFile =
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "README.md")
         assert(
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
     }
 
@@ -302,14 +297,14 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = false,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert gitignore was not generated
         assert(
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + File.separator + ".gitignore").exists()
-                .not()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + File.separator + ".gitignore")
+                .exists()
+                .not(),
         )
     }
 
@@ -336,8 +331,7 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert gitignore was generated and has the expected contents
@@ -346,7 +340,7 @@ class KotlinModuleMakerTest {
         val gitignoreFileContents = readFromFile(file = gitignoreFile)
         assertEquals(
             GitIgnoreTemplate.data,
-            gitignoreFileContents.joinToString("\n")
+            gitignoreFileContents.joinToString("\n"),
         )
     }
 
@@ -355,9 +349,10 @@ class KotlinModuleMakerTest {
         val modulePath = ":repository"
         val modulePathAsFile = "repository"
 
-        val template = """
+        val template =
+            """
             this is a custom template
-        """.trimIndent()
+            """.trimIndent()
 
         fakePreferenceService.preferenceState.gitignoreTemplate = template
 
@@ -379,8 +374,7 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         // assert gitignore was generated and has the expected contents
@@ -389,7 +383,7 @@ class KotlinModuleMakerTest {
         val gitignoreFileContents = readFromFile(file = gitignoreFile)
         assertEquals(
             template,
-            gitignoreFileContents.joinToString("\n")
+            gitignoreFileContents.joinToString("\n"),
         )
     }
 
@@ -419,14 +413,13 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "include(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
-            settingsGradleFileContents[56]
+            settingsGradleFileContents[56],
         )
     }
 
@@ -456,14 +449,13 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "includeBuild(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
-            settingsGradleFileContents[56]
+            settingsGradleFileContents[56],
         )
     }
 
@@ -491,14 +483,13 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "include(\"$modulePath\")",
-            settingsGradleFileContents[45]
+            settingsGradleFileContents[45],
         )
     }
 
@@ -528,14 +519,13 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "testIncludeProject(\"$modulePath\")",
-            settingsGradleFileContents[45]
+            settingsGradleFileContents[45],
         )
     }
 
@@ -563,14 +553,13 @@ class KotlinModuleMakerTest {
             addReadme = false,
             addGitIgnore = true,
             rootPathString = folder.root.toString(),
-            previewMode = false
-
+            previewMode = false,
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "include(\"$modulePath\")",
-            settingsGradleFileContents[16]
+            settingsGradleFileContents[16],
         )
     }
 
@@ -584,43 +573,43 @@ class KotlinModuleMakerTest {
 
         val settingsGradleFileContentsBefore = readFromFile(file = settingsGradleFile)
 
-        val filesToReturn = fileWriter.createModule(
-            settingsGradleFile = settingsGradleFile,
-            workingDirectory = folder.root,
-            modulePathAsString = modulePath,
-            moduleType = KOTLIN,
-            showErrorDialog = {
-                Assert.fail("No errors should be thrown")
-            },
-            showSuccessDialog = {
-                assert(true)
-            },
-            enhancedModuleCreationStrategy = false,
-            useKtsBuildFile = false,
-            gradleFileFollowModule = false,
-            packageName = testPackageName,
-            addReadme = false,
-            addGitIgnore = true,
-            rootPathString = folder.root.toString(),
-            previewMode = true
-
-        )
+        val filesToReturn =
+            fileWriter.createModule(
+                settingsGradleFile = settingsGradleFile,
+                workingDirectory = folder.root,
+                modulePathAsString = modulePath,
+                moduleType = KOTLIN,
+                showErrorDialog = {
+                    Assert.fail("No errors should be thrown")
+                },
+                showSuccessDialog = {
+                    assert(true)
+                },
+                enhancedModuleCreationStrategy = false,
+                useKtsBuildFile = false,
+                gradleFileFollowModule = false,
+                packageName = testPackageName,
+                addReadme = false,
+                addGitIgnore = true,
+                rootPathString = folder.root.toString(),
+                previewMode = true,
+            )
 
         val settingsGradleFileContentsAfter = readFromFile(file = settingsGradleFile)
 
         assertEquals(
             settingsGradleFileContentsBefore,
-            settingsGradleFileContentsAfter
+            settingsGradleFileContentsAfter,
         )
 
         assertEquals(
             filesToReturn.size,
-            3
+            3,
         )
 
         assertEquals(
             rootFiles!!.size,
-            folder.root.listFiles()!!.size
+            folder.root.listFiles()!!.size,
         )
     }
 }

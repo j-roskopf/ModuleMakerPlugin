@@ -1,11 +1,12 @@
 package com.joetr.modulemaker.template
 
 object KotlinModuleTemplate {
-    val data = """
+    val data =
+        """
         apply plugin: "kotlin"
 
         dependencies {
 
         }
-    """.trimIndent()
+        """.trimIndent()
 }

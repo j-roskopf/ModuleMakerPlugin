@@ -27,7 +27,6 @@ import java.time.Duration
  * ComposePanel forwards dispatched Swing events to the compose layer.
  */
 class ModuleMakerUiTest {
-
     private val robotPort = System.getProperty("robot-server.port", "8082")
     private val remoteRobot = RemoteRobot("http://127.0.0.1:$robotPort")
 
@@ -39,28 +38,32 @@ class ModuleMakerUiTest {
                     dismissBlockingDialogs()
 
                     // Check if the project frame is open
-                    val ideFrame = findAll<ComponentFixture>(
-                        byXpath("//div[@class='IdeFrameImpl']")
-                    )
+                    val ideFrame =
+                        findAll<ComponentFixture>(
+                            byXpath("//div[@class='IdeFrameImpl']"),
+                        )
                     if (ideFrame.isNotEmpty()) {
                         println("Found IdeFrameImpl")
                         true
                     } else {
                         // Dump what top-level components exist so we can diagnose CI failures
                         val allComponents = findAll<ComponentFixture>(byXpath("//div"))
-                        val classNames = allComponents.mapNotNull { fixture ->
-                            try {
-                                fixture.callJs<String>("component.getClass().getName()")
-                            } catch (_: Exception) {
-                                null
-                            }
-                        }.distinct()
+                        val classNames =
+                            allComponents
+                                .mapNotNull { fixture ->
+                                    try {
+                                        fixture.callJs<String>("component.getClass().getName()")
+                                    } catch (_: Exception) {
+                                        null
+                                    }
+                                }.distinct()
                         println("Waiting for IdeFrameImpl... Found components: ${classNames.take(30)}")
 
                         // If stuck on Welcome screen, the project didn't auto-open
-                        val welcomeFrame = findAll<ComponentFixture>(
-                            byXpath("//div[@class='FlatWelcomeFrame']")
-                        )
+                        val welcomeFrame =
+                            findAll<ComponentFixture>(
+                                byXpath("//div[@class='FlatWelcomeFrame']"),
+                            )
                         if (welcomeFrame.isNotEmpty()) {
                             println("Detected Welcome screen - project did not auto-open")
                         }
@@ -88,7 +91,7 @@ class ModuleMakerUiTest {
                     // Click the IDE frame to ensure it has focus
                     find<ComponentFixture>(
                         byXpath("//div[@class='IdeFrameImpl']"),
-                        Duration.ofSeconds(10)
+                        Duration.ofSeconds(10),
                     ).click()
                     Thread.sleep(500)
 
@@ -102,9 +105,10 @@ class ModuleMakerUiTest {
                     Thread.sleep(2_000)
 
                     // Check if Find Action popup appeared
-                    val searchField = findAll<ComponentFixture>(
-                        byXpath("//div[@class='SearchEverywhereUI']")
-                    )
+                    val searchField =
+                        findAll<ComponentFixture>(
+                            byXpath("//div[@class='SearchEverywhereUI']"),
+                        )
                     if (searchField.isEmpty()) {
                         println("Find Action popup not found, retrying...")
                         // Press Escape to clean up any partial state
@@ -124,15 +128,16 @@ class ModuleMakerUiTest {
             step("Verify Module Maker dialog opened") {
                 waitFor(duration = Duration.ofSeconds(30)) {
                     findAll<ComponentFixture>(
-                        byXpath("//div[@title='Module Maker']")
+                        byXpath("//div[@title='Module Maker']"),
                     ).isNotEmpty()
                 }
             }
 
-            val dialog = find<CommonContainerFixture>(
-                byXpath("//div[@title='Module Maker']"),
-                Duration.ofSeconds(10)
-            )
+            val dialog =
+                find<CommonContainerFixture>(
+                    byXpath("//div[@title='Module Maker']"),
+                    Duration.ofSeconds(10),
+                )
 
             val isMac = System.getProperty("os.name").contains("Mac", ignoreCase = true)
 
@@ -143,10 +148,11 @@ class ModuleMakerUiTest {
 
             step("Focus Module Name via Shift+Tab from Create button") {
                 // Focus (don't click!) the Create button as a stable tab-order anchor
-                dialog.find<ComponentFixture>(
-                    byXpath("//div[@text='Create']"),
-                    Duration.ofSeconds(10)
-                ).callJs<Boolean>("component.requestFocusInWindow(); true")
+                dialog
+                    .find<ComponentFixture>(
+                        byXpath("//div[@text='Create']"),
+                        Duration.ofSeconds(10),
+                    ).callJs<Boolean>("component.requestFocusInWindow(); true")
                 Thread.sleep(500)
 
                 // Shift+Tab from Create → lands on Module Name field
@@ -178,27 +184,29 @@ class ModuleMakerUiTest {
             }
 
             step("Click Create button") {
-                dialog.find<JButtonFixture>(
-                    byXpath("//div[@text='Create']"),
-                    Duration.ofSeconds(10)
-                ).click()
+                dialog
+                    .find<JButtonFixture>(
+                        byXpath("//div[@text='Create']"),
+                        Duration.ofSeconds(10),
+                    ).click()
             }
 
             step("Dismiss any post-creation dialog") {
                 Thread.sleep(3_000)
                 // Try to dismiss success or error dialog
                 findAll<ComponentFixture>(
-                    byXpath("//div[@text='Okay']")
+                    byXpath("//div[@text='Okay']"),
                 ).firstOrNull()?.click()
                 findAll<JButtonFixture>(
-                    byXpath("//div[@class='JButton' and @text='OK']")
+                    byXpath("//div[@class='JButton' and @text='OK']"),
                 ).firstOrNull()?.click()
                 Thread.sleep(500)
             }
 
             step("Verify module was created on disk") {
-                val testProjectDir = File(System.getProperty("user.dir"))
-                    .resolve("src/uiTest/testProject")
+                val testProjectDir =
+                    File(System.getProperty("user.dir"))
+                        .resolve("src/uiTest/testProject")
                 val repositoryDir = testProjectDir.resolve("repository")
                 assert(repositoryDir.exists() && repositoryDir.isDirectory) {
                     "Expected repository directory at ${repositoryDir.absolutePath}"
@@ -226,7 +234,11 @@ class ModuleMakerUiTest {
         dialog.find(byXpath("//div[@class='ComposePanel']"), Duration.ofSeconds(10))
 
     /** Dispatch a mouse click at (x, y) relative to the compose panel. */
-    private fun dispatchClick(dialog: CommonContainerFixture, x: Int, y: Int) {
+    private fun dispatchClick(
+        dialog: CommonContainerFixture,
+        x: Int,
+        y: Int,
+    ) {
         findComposePanel(dialog).callJs<Boolean>(
             """
             var target = component.getComponent(1);
@@ -242,7 +254,7 @@ class ModuleMakerUiTest {
                 target, java.awt.event.MouseEvent.MOUSE_CLICKED, now + 50, 0,
                 $x, $y, 1, false, java.awt.event.MouseEvent.BUTTON1));
             true
-        """
+        """,
         )
     }
 
@@ -252,7 +264,7 @@ class ModuleMakerUiTest {
         keyCode: Int,
         ctrl: Boolean = false,
         meta: Boolean = false,
-        shift: Boolean = false
+        shift: Boolean = false,
     ) {
         val modifiers = mutableListOf<String>()
         if (ctrl) modifiers.add("java.awt.event.InputEvent.CTRL_DOWN_MASK")
@@ -271,31 +283,38 @@ class ModuleMakerUiTest {
                 target, java.awt.event.KeyEvent.KEY_RELEASED, now + 30,
                 $modExpr, $keyCode, java.awt.event.KeyEvent.CHAR_UNDEFINED));
             true
-        """
+        """,
         )
     }
 
     /** Dispatch KEY_TYPED events for each character in [text]. */
-    private fun dispatchText(dialog: CommonContainerFixture, text: String) {
+    private fun dispatchText(
+        dialog: CommonContainerFixture,
+        text: String,
+    ) {
         for (ch in text) {
             dispatchChar(dialog, ch)
             Thread.sleep(50)
         }
     }
 
-    private fun dispatchChar(dialog: CommonContainerFixture, ch: Char) {
+    private fun dispatchChar(
+        dialog: CommonContainerFixture,
+        ch: Char,
+    ) {
         // For typed characters, we need KEY_TYPED with the char value.
         // Some characters also need KEY_PRESSED/KEY_RELEASED for the compose layer.
-        val (keyCode, shift) = when {
-            ch in 'a'..'z' -> (KeyEvent.VK_A + (ch - 'a')) to false
-            ch in 'A'..'Z' -> (KeyEvent.VK_A + (ch - 'A')) to true
-            ch in '0'..'9' -> (KeyEvent.VK_0 + (ch - '0')) to false
-            ch == '.' -> KeyEvent.VK_PERIOD to false
-            ch == ':' -> KeyEvent.VK_SEMICOLON to true
-            ch == '-' -> KeyEvent.VK_MINUS to false
-            ch == '_' -> KeyEvent.VK_MINUS to true
-            else -> throw IllegalArgumentException("Unsupported character: '$ch'")
-        }
+        val (keyCode, shift) =
+            when {
+                ch in 'a'..'z' -> (KeyEvent.VK_A + (ch - 'a')) to false
+                ch in 'A'..'Z' -> (KeyEvent.VK_A + (ch - 'A')) to true
+                ch in '0'..'9' -> (KeyEvent.VK_0 + (ch - '0')) to false
+                ch == '.' -> KeyEvent.VK_PERIOD to false
+                ch == ':' -> KeyEvent.VK_SEMICOLON to true
+                ch == '-' -> KeyEvent.VK_MINUS to false
+                ch == '_' -> KeyEvent.VK_MINUS to true
+                else -> throw IllegalArgumentException("Unsupported character: '$ch'")
+            }
 
         val modExpr = if (shift) "java.awt.event.InputEvent.SHIFT_DOWN_MASK" else "0"
 
@@ -313,7 +332,7 @@ class ModuleMakerUiTest {
                 target, java.awt.event.KeyEvent.KEY_RELEASED, now + 30,
                 $modExpr, $keyCode, '$ch'));
             true
-        """
+        """,
         )
     }
 
@@ -344,15 +363,17 @@ class ModuleMakerUiTest {
 
         // Catch-all: if a DialogWrapper dialog is blocking, find buttons and click
         // a safe one. Skip "Cancel"/"No"/"Exit" to avoid killing legitimate operations.
-        val dialogButtons = findAll<JButtonFixture>(
-            byXpath("//div[@class='MyDialog']//div[@class='JButton']")
-        )
+        val dialogButtons =
+            findAll<JButtonFixture>(
+                byXpath("//div[@class='MyDialog']//div[@class='JButton']"),
+            )
         for (btn in dialogButtons) {
-            val btnText = try {
-                btn.callJs<String>("component.getText()")?.trim() ?: ""
-            } catch (_: Exception) {
-                ""
-            }
+            val btnText =
+                try {
+                    btn.callJs<String>("component.getText()")?.trim() ?: ""
+                } catch (_: Exception) {
+                    ""
+                }
             val lower = btnText.lowercase()
             if (lower in listOf("cancel", "no", "exit", "abort", "stop")) {
                 println("Skipping dangerous dialog button: '$btnText'")

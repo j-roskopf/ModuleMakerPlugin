@@ -12,8 +12,9 @@ import javax.swing.JTextArea
 private const val WINDOW_WIDTH = 100
 private const val WINDOW_HEIGHT = 100
 
-class MessageDialogWrapper(private val message: String) : DialogWrapper(true) {
-
+class MessageDialogWrapper(
+    private val message: String,
+) : DialogWrapper(true) {
     init {
         init()
     }
@@ -30,12 +31,11 @@ class MessageDialogWrapper(private val message: String) : DialogWrapper(true) {
         return dialogPanel
     }
 
-    override fun createActions(): Array<Action> {
-        return arrayOf(
+    override fun createActions(): Array<Action> =
+        arrayOf(
             DialogWrapperExitAction(
                 "Okay",
-                2
-            )
+                2,
+            ),
         )
-    }
 }

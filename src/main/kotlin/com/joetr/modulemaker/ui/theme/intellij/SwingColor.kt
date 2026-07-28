@@ -20,14 +20,15 @@ interface SwingColor {
 fun SwingColor(): SwingColor {
     val swingColor = remember { SwingColorImpl() }
 
-    val messageBus = remember {
-        ApplicationManager.getApplication().messageBus.connect()
-    }
+    val messageBus =
+        remember {
+            ApplicationManager.getApplication().messageBus.connect()
+        }
 
     remember(messageBus) {
         messageBus.subscribe(
             LafManagerListener.TOPIC,
-            ThemeChangeListener(swingColor::updateCurrentColors)
+            ThemeChangeListener(swingColor::updateCurrentColors),
         )
     }
 
@@ -56,6 +57,7 @@ private class SwingColorImpl : SwingColor {
     }
 
     private val AWTColor.asComposeColor: Color get() = Color(red, green, blue, alpha)
+
     private fun getColor(key: String): Color = UIManager.getColor(key).asComposeColor
 
     companion object {

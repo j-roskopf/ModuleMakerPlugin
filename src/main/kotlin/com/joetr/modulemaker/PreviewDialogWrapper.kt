@@ -25,8 +25,10 @@ import javax.swing.JComponent
 private const val WINDOW_WIDTH = 400
 private const val WINDOW_HEIGHT = 600
 
-class PreviewDialogWrapper(val filesToBeCreated: List<File>, val root: String) : DialogWrapper(true) {
-
+class PreviewDialogWrapper(
+    val filesToBeCreated: List<File>,
+    val root: String,
+) : DialogWrapper(true) {
     private var tempRoot: File
 
     init {
@@ -43,7 +45,7 @@ class PreviewDialogWrapper(val filesToBeCreated: List<File>, val root: String) :
 
                 // splice together the files to have a root of our temp folder
                 File(pathToRoot, split.drop(1).joinToString(separator = ""))
-            }
+            },
         )
     }
 
@@ -52,40 +54,39 @@ class PreviewDialogWrapper(val filesToBeCreated: List<File>, val root: String) :
         tempRoot.parentFile.deleteRecursively()
     }
 
-    override fun createCenterPanel(): JComponent {
-        return ComposePanel().apply {
+    override fun createCenterPanel(): JComponent =
+        ComposePanel().apply {
             setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
             setContent {
                 WidgetTheme {
                     FileTreeJPanel(
-                        modifier = Modifier.height(WINDOW_HEIGHT.dp).width(WINDOW_WIDTH.dp)
+                        modifier = Modifier.height(WINDOW_HEIGHT.dp).width(WINDOW_WIDTH.dp),
                     )
                 }
             }
         }
-    }
 
     @Composable
-    private fun FileTreeJPanel(
-        modifier: Modifier = Modifier
-    ) {
+    private fun FileTreeJPanel(modifier: Modifier = Modifier) {
         val height = remember { mutableStateOf(WINDOW_HEIGHT) }
 
         FileTreeView(
             modifier = modifier,
             model = FileTree(root = tempRoot.toProjectFile()),
             height = height.value.dp,
-            onClick = { }
+            onClick = { },
         )
     }
 
-    private fun List<File>.root(): File {
-        return this.minBy { file ->
+    private fun List<File>.root(): File =
+        this.minBy { file ->
             file.absolutePath.count { it.toString() == File.separator }
         }
-    }
 
-    private fun createFileStructure(root: File, structure: List<File>) {
+    private fun createFileStructure(
+        root: File,
+        structure: List<File>,
+    ) {
         root.mkdirs()
         structure.forEach {
             it.mkdirs()
@@ -95,12 +96,11 @@ class PreviewDialogWrapper(val filesToBeCreated: List<File>, val root: String) :
         }
     }
 
-    override fun createActions(): Array<Action> {
-        return arrayOf(
+    override fun createActions(): Array<Action> =
+        arrayOf(
             DialogWrapperExitAction(
                 "Okay",
-                2
-            )
+                2,
+            ),
         )
-    }
 }

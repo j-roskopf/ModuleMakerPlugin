@@ -9,5 +9,5 @@ data class ModuleCreationAnalytics(
     val addGitIgnore: Boolean,
     val addReadme: Boolean,
     val gradleNameToFollow: Boolean,
-    val useKts: Boolean
+    val useKts: Boolean,
 )

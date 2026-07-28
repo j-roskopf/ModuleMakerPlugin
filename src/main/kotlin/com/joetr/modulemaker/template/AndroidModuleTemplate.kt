@@ -1,7 +1,8 @@
 package com.joetr.modulemaker.template
 
 object AndroidModuleTemplate {
-    val data = """
+    val data =
+        """
         apply plugin: "com.android.library"
         apply plugin: "kotlin-android"
 
@@ -12,5 +13,5 @@ object AndroidModuleTemplate {
         dependencies {
 
         }
-    """.trimIndent()
+        """.trimIndent()
 }

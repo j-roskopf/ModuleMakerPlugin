@@ -13,24 +13,25 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class MultiplatformModuleMakerTest {
-
     @JvmField
     @Rule
     var folder = TemporaryFolder()
 
     var testState = PreferenceServiceImpl.Companion.State()
 
-    private val fakePreferenceService = object : PreferenceService {
-        override var preferenceState: PreferenceServiceImpl.Companion.State
-            get() = testState
-            set(value) {
-                testState = value
-            }
-    }
+    private val fakePreferenceService =
+        object : PreferenceService {
+            override var preferenceState: PreferenceServiceImpl.Companion.State
+                get() = testState
+                set(value) {
+                    testState = value
+                }
+        }
 
-    private val fileWriter = FileWriter(
-        preferenceService = fakePreferenceService
-    )
+    private val fileWriter =
+        FileWriter(
+            preferenceService = fakePreferenceService,
+        )
 
     private lateinit var settingsGradleFile: File
 
@@ -64,37 +65,36 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
-
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert it was added to settings.gradle
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assert(
-            settingsGradleFileContents.contains("include(\":multiplatform-module\")")
+            settingsGradleFileContents.contains("include(\":multiplatform-module\")"),
         )
 
         // assert readme was generated
         assert(
             // root/repository/README.md
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + readmeFile).exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + readmeFile).exists(),
         )
 
         // assert build.gradle is generated
         assert(
             // root/repository/build.gradle
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + buildGradleFileName).exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + buildGradleFileName).exists(),
         )
 
         // assert the correct package structure is generated
         assert(
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/androidMain/kotlin/com/joetr/test").exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/androidMain/kotlin/com/joetr/test").exists(),
         )
         assert(
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/iosMain/kotlin/com/joetr/test").exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/iosMain/kotlin/com/joetr/test").exists(),
         )
         assert(
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/jvmMain/kotlin/com/joetr/test").exists()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + "src/jvmMain/kotlin/com/joetr/test").exists(),
         )
     }
 
@@ -125,7 +125,7 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert build.gradle is generated
@@ -133,15 +133,15 @@ class MultiplatformModuleMakerTest {
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + buildGradleFileName)
         assert(
             // root/repository/build.gradle
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
 
         // assert package name is included in build.gradle
         val buildGradleFileContents = readFromFile(buildGradleFile)
         assert(
             buildGradleFileContents.contains(
-                template
-            )
+                template,
+            ),
         )
     }
 
@@ -170,7 +170,7 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert build.gradle.kts is generated
@@ -178,7 +178,7 @@ class MultiplatformModuleMakerTest {
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "database.gradle.kts")
         assert(
             // root/repository/database/build.gradle
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
     }
 
@@ -207,7 +207,7 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert build.gradle.kts is generated
@@ -215,7 +215,7 @@ class MultiplatformModuleMakerTest {
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "database.gradle")
         assert(
             // root/repository/database/build.gradle
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
     }
 
@@ -244,14 +244,14 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert readme is NOT generated
         val buildGradleFile =
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "README.md")
         assert(
-            buildGradleFile.exists().not()
+            buildGradleFile.exists().not(),
         )
     }
 
@@ -280,14 +280,14 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert readme is generated
         val buildGradleFile =
             File(folder.root.path + File.separator + modulePathAsFile + File.separator + "README.md")
         assert(
-            buildGradleFile.exists()
+            buildGradleFile.exists(),
         )
     }
 
@@ -316,13 +316,14 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert gitignore was not generated
         assert(
-            File(folder.root.path + File.separator + modulePathAsFile + File.separator + File.separator + ".gitignore").exists()
-                .not()
+            File(folder.root.path + File.separator + modulePathAsFile + File.separator + File.separator + ".gitignore")
+                .exists()
+                .not(),
         )
     }
 
@@ -351,7 +352,7 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert gitignore was generated and has the expected contents
@@ -360,7 +361,7 @@ class MultiplatformModuleMakerTest {
         val gitignoreFileContents = readFromFile(file = gitignoreFile)
         assertEquals(
             GitIgnoreTemplate.data,
-            gitignoreFileContents.joinToString("\n")
+            gitignoreFileContents.joinToString("\n"),
         )
     }
 
@@ -369,9 +370,10 @@ class MultiplatformModuleMakerTest {
         val modulePath = ":repository"
         val modulePathAsFile = "repository"
 
-        val template = """
+        val template =
+            """
             this is a custom template
-        """.trimIndent()
+            """.trimIndent()
 
         fakePreferenceService.preferenceState.gitignoreTemplate = template
 
@@ -395,7 +397,7 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         // assert gitignore was generated and has the expected contents
@@ -404,7 +406,7 @@ class MultiplatformModuleMakerTest {
         val gitignoreFileContents = readFromFile(file = gitignoreFile)
         assertEquals(
             template,
-            gitignoreFileContents.joinToString("\n")
+            gitignoreFileContents.joinToString("\n"),
         )
     }
 
@@ -436,13 +438,13 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "include(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
-            settingsGradleFileContents[56]
+            settingsGradleFileContents[56],
         )
     }
 
@@ -474,13 +476,13 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "includeBuild(\"$modulePath\", \"$rootPathString/$modulePathAsFile\")",
-            settingsGradleFileContents[56]
+            settingsGradleFileContents[56],
         )
     }
 
@@ -510,13 +512,13 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "include(\"$modulePath\")",
-            settingsGradleFileContents[45]
+            settingsGradleFileContents[45],
         )
     }
 
@@ -548,13 +550,13 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "testIncludeProject(\"$modulePath\")",
-            settingsGradleFileContents[45]
+            settingsGradleFileContents[45],
         )
     }
 
@@ -584,13 +586,13 @@ class MultiplatformModuleMakerTest {
             rootPathString = folder.root.toString(),
             previewMode = false,
             platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
+            sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
         )
 
         val settingsGradleFileContents = readFromFile(file = settingsGradleFile)
         assertEquals(
             "include(\"$modulePath\")",
-            settingsGradleFileContents[16]
+            settingsGradleFileContents[16],
         )
     }
 
@@ -604,44 +606,45 @@ class MultiplatformModuleMakerTest {
 
         val settingsGradleFileContentsBefore = readFromFile(file = settingsGradleFile)
 
-        val filesToReturn = fileWriter.createModule(
-            settingsGradleFile = settingsGradleFile,
-            workingDirectory = folder.root,
-            modulePathAsString = modulePath,
-            moduleType = KOTLIN,
-            showErrorDialog = {
-                Assert.fail("No errors should be thrown")
-            },
-            showSuccessDialog = {
-                assert(true)
-            },
-            enhancedModuleCreationStrategy = false,
-            useKtsBuildFile = false,
-            gradleFileFollowModule = false,
-            packageName = testPackageName,
-            addReadme = false,
-            addGitIgnore = true,
-            rootPathString = folder.root.toString(),
-            previewMode = true,
-            platformType = MULTIPLATFORM,
-            sourceSets = listOf("jvmMain", "iosMain", "androidMain")
-        )
+        val filesToReturn =
+            fileWriter.createModule(
+                settingsGradleFile = settingsGradleFile,
+                workingDirectory = folder.root,
+                modulePathAsString = modulePath,
+                moduleType = KOTLIN,
+                showErrorDialog = {
+                    Assert.fail("No errors should be thrown")
+                },
+                showSuccessDialog = {
+                    assert(true)
+                },
+                enhancedModuleCreationStrategy = false,
+                useKtsBuildFile = false,
+                gradleFileFollowModule = false,
+                packageName = testPackageName,
+                addReadme = false,
+                addGitIgnore = true,
+                rootPathString = folder.root.toString(),
+                previewMode = true,
+                platformType = MULTIPLATFORM,
+                sourceSets = listOf("jvmMain", "iosMain", "androidMain"),
+            )
 
         val settingsGradleFileContentsAfter = readFromFile(file = settingsGradleFile)
 
         assertEquals(
             settingsGradleFileContentsBefore,
-            settingsGradleFileContentsAfter
+            settingsGradleFileContentsAfter,
         )
 
         assertEquals(
             filesToReturn.size,
-            5
+            5,
         )
 
         assertEquals(
             rootFiles!!.size,
-            folder.root.listFiles()!!.size
+            folder.root.listFiles()!!.size,
         )
     }
 }

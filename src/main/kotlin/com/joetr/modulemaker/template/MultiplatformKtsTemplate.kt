@@ -1,7 +1,8 @@
 package com.joetr.modulemaker.template
 
 object MultiplatformKtsTemplate {
-    val data = """
+    val data =
+        """
         plugins {
             kotlin("multiplatform")
             kotlin("plugin.compose")
@@ -75,5 +76,5 @@ object MultiplatformKtsTemplate {
                 }
             }
         }
-    """.trimIndent()
+        """.trimIndent()
 }
