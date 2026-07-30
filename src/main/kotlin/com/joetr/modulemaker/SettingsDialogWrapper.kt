@@ -82,9 +82,8 @@ class SettingsDialogWrapper(
     private val project: Project,
     private val onSave: () -> Unit,
     private val isKtsCurrentlyChecked: Boolean,
-    private val isAndroidChecked: Boolean
+    private val isAndroidChecked: Boolean,
 ) : DialogWrapper(true) {
-
     private val preferenceService = PreferenceServiceImpl.instance
 
     private val refreshOnModuleAdd = mutableStateOf(preferenceService.preferenceState.refreshOnModuleAdd)
@@ -118,53 +117,55 @@ class SettingsDialogWrapper(
 
     private val multiplatformTemplateTextArea =
         mutableStateOf(TextFieldValue(preferenceService.preferenceState.multiplatformTemplate))
+
     init {
         title = "Settings"
         init()
     }
 
     @Nullable
-    override fun createCenterPanel(): JComponent {
-        return ComposePanel().apply {
+    override fun createCenterPanel(): JComponent =
+        ComposePanel().apply {
             setBounds(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT)
             setContent {
                 SettingsTab()
             }
         }
-    }
 
     @Composable
     fun SettingsTab() {
         var tabIndex by remember { mutableStateOf(0) }
 
-        val tabs = listOf(
-            "Module Template Defaults",
-            "Enhanced Template Defaults",
-            "Multiplatform Template Defaults",
-            ".gitignore Template Defaults",
-            "General"
-        )
+        val tabs =
+            listOf(
+                "Module Template Defaults",
+                "Enhanced Template Defaults",
+                "Multiplatform Template Defaults",
+                ".gitignore Template Defaults",
+                "General",
+            )
 
         WidgetTheme {
             Column(modifier = Modifier.width(WINDOW_WIDTH.dp).height(WINDOW_HEIGHT.dp)) {
-                val tabData = tabs.mapIndexed { index, title ->
-                    TabData.Default(
-                        selected = tabIndex == index,
-                        content = { _ ->
-                            SimpleTabContent(
-                                label = title,
-                                state = TabState.of(tabIndex == index)
-                            )
-                        },
-                        closable = false,
-                        onClose = {},
-                        onClick = { tabIndex = index }
-                    )
-                }
+                val tabData =
+                    tabs.mapIndexed { index, title ->
+                        TabData.Default(
+                            selected = tabIndex == index,
+                            content = { _ ->
+                                SimpleTabContent(
+                                    label = title,
+                                    state = TabState.of(tabIndex == index),
+                                )
+                            },
+                            closable = false,
+                            onClose = {},
+                            onClick = { tabIndex = index },
+                        )
+                    }
                 TabStrip(
                     tabs = tabData,
                     style = JewelTheme.defaultTabStyle,
-                    interactionSource = MutableInteractionSource()
+                    interactionSource = MutableInteractionSource(),
                 )
                 when (tabIndex) {
                     0 -> TemplateDefaultComponent()
@@ -182,14 +183,14 @@ class SettingsDialogWrapper(
         Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
             val settingExplanationText =
                 """
-                    You can override the multiplatform gradle templates created with your own project specific defaults.
+                You can override the multiplatform gradle templates created with your own project specific defaults.
 
-                    If nothing is specified here, a sensible default will be generated for you.
+                If nothing is specified here, a sensible default will be generated for you.
                 """.trimIndent()
 
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = settingExplanationText
+                text = settingExplanationText,
             )
             val multiplatformModuleTemplateState = remember { multiplatformTemplateTextArea }
 
@@ -200,7 +201,7 @@ class SettingsDialogWrapper(
                 onValueChange = {
                     multiplatformModuleTemplateState.value = it
                 },
-                modifier = Modifier.fillMaxSize().padding(8.dp)
+                modifier = Modifier.fillMaxSize().padding(8.dp),
             )
         }
     }
@@ -210,11 +211,12 @@ class SettingsDialogWrapper(
         Column(modifier = Modifier.fillMaxSize().padding(8.dp)) {
             Text(
                 modifier = Modifier.padding(8.dp),
-                text = """
+                text =
+                    """
                     You can override the .gitignore templates created with your own project specific default.
 
                     If nothing is specified here, a sensible default will be generated for you.
-                """.trimIndent()
+                    """.trimIndent(),
             )
 
             Spacer(Modifier.height(16.dp))
@@ -226,7 +228,7 @@ class SettingsDialogWrapper(
                 value = gitIgnoreTemplateState.value,
                 onValueChange = {
                     gitIgnoreTemplateState.value = it
-                }
+                },
             )
         }
     }
@@ -234,7 +236,7 @@ class SettingsDialogWrapper(
     @Composable
     private fun GeneralPanel() {
         Column(
-            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState()),
         ) {
             var basePackageName by remember { packageNameTextField }
 
@@ -245,7 +247,7 @@ class SettingsDialogWrapper(
                     basePackageName = newValue
                 },
                 modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                textStyle = TextStyle(fontFamily = FontFamily.SansSerif)
+                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
             )
 
             Spacer(Modifier.height(8.dp))
@@ -259,7 +261,7 @@ class SettingsDialogWrapper(
                     includeKeyword = newValue
                 },
                 modifier = Modifier.padding(8.dp).fillMaxWidth(),
-                textStyle = TextStyle(fontFamily = FontFamily.SansSerif)
+                textStyle = TextStyle(fontFamily = FontFamily.SansSerif),
             )
 
             Spacer(Modifier.height(8.dp))
@@ -270,7 +272,7 @@ class SettingsDialogWrapper(
                 checked = refreshAfterModuleCreationState.value,
                 onCheckedChange = {
                     refreshAfterModuleCreationState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -281,7 +283,7 @@ class SettingsDialogWrapper(
                 checked = threeModuleState.value,
                 onCheckedChange = {
                     threeModuleState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -292,7 +294,7 @@ class SettingsDialogWrapper(
                 checked = useKtsState.value,
                 onCheckedChange = {
                     useKtsState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -303,7 +305,7 @@ class SettingsDialogWrapper(
                 checked = gradleFileNameState.value,
                 onCheckedChange = {
                     gradleFileNameState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -314,7 +316,7 @@ class SettingsDialogWrapper(
                 checked = readmeState.value,
                 onCheckedChange = {
                     readmeState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -325,7 +327,7 @@ class SettingsDialogWrapper(
                 checked = addGitignore.value,
                 onCheckedChange = {
                     gitIgnoreState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(16.dp))
@@ -333,7 +335,7 @@ class SettingsDialogWrapper(
             DefaultButton(
                 onClick = {
                     importSettings()
-                }
+                },
             ) {
                 Text("Import Settings")
             }
@@ -343,7 +345,7 @@ class SettingsDialogWrapper(
             DefaultButton(
                 onClick = {
                     exportSettings()
-                }
+                },
             ) {
                 Text("Export Settings")
             }
@@ -353,7 +355,7 @@ class SettingsDialogWrapper(
             DefaultButton(
                 onClick = {
                     clearData()
-                }
+                },
             ) {
                 Text("Clear All Settings")
             }
@@ -363,25 +365,26 @@ class SettingsDialogWrapper(
     @Composable
     private fun TemplateDefaultComponent() {
         Column(
-            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().padding(8.dp).verticalScroll(rememberScrollState()),
         ) {
             val settingExplanationText =
                 """
-                    You can override the gradle templates created with your own project specific defaults.
+                You can override the gradle templates created with your own project specific defaults.
 
-                     If nothing is specified here, a sensible default will be generated for you.
+                 If nothing is specified here, a sensible default will be generated for you.
                 """.trimIndent()
 
-            val supportedVariablesString = TemplateVariable.values().joinToString("\n") {
-                it.templateVariable
-            }
+            val supportedVariablesString =
+                TemplateVariable.values().joinToString("\n") {
+                    it.templateVariable
+                }
             val supportedVariablesLabel =
                 """
-                    If you do have a custom template, there are some variable names that will be automatically replaced for you.
+                If you do have a custom template, there are some variable names that will be automatically replaced for you.
 
-                     Supported variables are:
+                 Supported variables are:
 
-                     $supportedVariablesString
+                 $supportedVariablesString
                 """.trimIndent()
 
             Text(settingExplanationText)
@@ -391,23 +394,29 @@ class SettingsDialogWrapper(
             val kotlinTemplateState = remember { kotlinTemplateTextArea }
             Text("Kotlin Template")
             TextArea(
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = kotlinTemplateState.value,
                 onValueChange = {
                     kotlinTemplateState.value = it
-                }
+                },
             )
 
             val androidTemplateState = remember { androidTemplateTextArea }
             Text("Android Template")
             TextArea(
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = androidTemplateState.value,
                 onValueChange = {
                     androidTemplateState.value = it
-                }
+                },
             )
 
             Text(supportedVariablesLabel)
@@ -417,39 +426,48 @@ class SettingsDialogWrapper(
     @Composable
     private fun EnhancedTemplateDefaultComponent() {
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
         ) {
             val apiTemplateState = remember { apiTemplateTextArea }
             Text("Api Template")
             TextArea(
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = apiTemplateState.value,
                 onValueChange = {
                     apiTemplateState.value = it
-                }
+                },
             )
 
             val glueTemplateState = remember { glueTemplateTextArea }
             Text("Glue Template")
             TextArea(
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = glueTemplateState.value,
                 onValueChange = {
                     glueTemplateState.value = it
-                }
+                },
             )
 
             val implTemplateState = remember { implTemplateTextArea }
             Text("Impl Template")
             TextArea(
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
-                    .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .defaultMinSize(minHeight = (WINDOW_HEIGHT / 3).dp),
                 value = implTemplateState.value,
                 onValueChange = {
                     implTemplateState.value = it
-                }
+                },
             )
 
             val apiModuleNameState = remember { apiModuleNameTextArea }
@@ -460,7 +478,7 @@ class SettingsDialogWrapper(
                 value = apiModuleNameState.value,
                 onValueChange = {
                     apiModuleNameState.value = it
-                }
+                },
             )
 
             val glueModuleNameState = remember { glueModuleNameTextArea }
@@ -471,7 +489,7 @@ class SettingsDialogWrapper(
                 value = glueModuleNameState.value,
                 onValueChange = {
                     glueModuleNameState.value = it
-                }
+                },
             )
 
             val implModuleNameState = remember { implModuleNameTextArea }
@@ -482,7 +500,7 @@ class SettingsDialogWrapper(
                 value = implModuleNameState.value,
                 onValueChange = {
                     implModuleNameState.value = it
-                }
+                },
             )
         }
     }
@@ -495,10 +513,10 @@ class SettingsDialogWrapper(
                 false,
                 false,
                 false,
-                false
+                false,
             ),
             project,
-            null
+            null,
         ) {
             val path: Path = Paths.get(it.path)
 
@@ -525,14 +543,15 @@ class SettingsDialogWrapper(
     }
 
     private fun exportSettings() {
-        val test = FileChooserFactory.getInstance().createSaveFileDialog(
-            FileSaverDescriptor(
-                "Select Location",
-                "",
-                ".json"
-            ),
-            project
-        )
+        val test =
+            FileChooserFactory.getInstance().createSaveFileDialog(
+                FileSaverDescriptor(
+                    "Select Location",
+                    "",
+                    ".json",
+                ),
+                project,
+            )
         val wrapper = test.save("module_maker_settings.json")
         if (wrapper != null) {
             try {
@@ -564,32 +583,33 @@ class SettingsDialogWrapper(
         val gitignoreTemplate = gitignoreTemplateTextArea.value.text
 
         // if more parameters get added, add support to import / export
-        val newState = PreferenceServiceImpl.Companion.State(
-            androidTemplate = androidTemplate,
-            kotlinTemplate = kotlinTemplate,
-            multiplatformTemplate = multiplatformTemplate,
-            apiTemplate = apiTemplate,
-            glueTemplate = glueTemplate,
-            implTemplate = implTemplate,
-            packageName = packageName,
-            includeProjectKeyword = includeProject,
-            refreshOnModuleAdd = shouldRefresh,
-            threeModuleCreationDefault = threeModuleCreationDefault,
-            useKtsFileExtension = useKtsFileExtension,
-            gradleFileNamedAfterModule = gradleFileNamedAfterModule,
-            addReadme = addReadme,
-            addGitIgnore = addGitignore,
-            gitignoreTemplate = gitignoreTemplate
-        )
+        val newState =
+            PreferenceServiceImpl.Companion.State(
+                androidTemplate = androidTemplate,
+                kotlinTemplate = kotlinTemplate,
+                multiplatformTemplate = multiplatformTemplate,
+                apiTemplate = apiTemplate,
+                glueTemplate = glueTemplate,
+                implTemplate = implTemplate,
+                packageName = packageName,
+                includeProjectKeyword = includeProject,
+                refreshOnModuleAdd = shouldRefresh,
+                threeModuleCreationDefault = threeModuleCreationDefault,
+                useKtsFileExtension = useKtsFileExtension,
+                gradleFileNamedAfterModule = gradleFileNamedAfterModule,
+                addReadme = addReadme,
+                addGitIgnore = addGitignore,
+                gitignoreTemplate = gitignoreTemplate,
+            )
 
         return Json.encodeToString(newState)
     }
 
-    override fun createActions(): Array<Action> {
-        return arrayOf(
+    override fun createActions(): Array<Action> =
+        arrayOf(
             DialogWrapperExitAction(
                 "Cancel",
-                DEFAULT_EXIT_CODE
+                DEFAULT_EXIT_CODE,
             ),
             object : AbstractAction("Save") {
                 override fun actionPerformed(e: ActionEvent?) {
@@ -597,31 +617,31 @@ class SettingsDialogWrapper(
                     onSave()
                     close(DEFAULT_EXIT_CODE)
                 }
-            }
+            },
         )
-    }
 
     private fun saveDate() {
-        preferenceService.preferenceState = preferenceService.preferenceState.copy(
-            androidTemplate = androidTemplateTextArea.value.text,
-            kotlinTemplate = kotlinTemplateTextArea.value.text,
-            multiplatformTemplate = multiplatformTemplateTextArea.value.text,
-            apiTemplate = apiTemplateTextArea.value.text,
-            implTemplate = implTemplateTextArea.value.text,
-            glueTemplate = glueTemplateTextArea.value.text,
-            packageName = packageNameTextField.value.text,
-            includeProjectKeyword = includeProjectKeywordTextField.value.text,
-            refreshOnModuleAdd = refreshOnModuleAdd.value,
-            threeModuleCreationDefault = threeModuleCreation.value,
-            useKtsFileExtension = ktsFileExtension.value,
-            gradleFileNamedAfterModule = gradleFileNamedAfterModule.value,
-            addReadme = addReadme.value,
-            addGitIgnore = addGitignore.value,
-            gitignoreTemplate = gitignoreTemplateTextArea.value.text,
-            apiModuleName = apiModuleNameTextArea.value.text,
-            glueModuleName = glueModuleNameTextArea.value.text,
-            implModuleName = implModuleNameTextArea.value.text
-        )
+        preferenceService.preferenceState =
+            preferenceService.preferenceState.copy(
+                androidTemplate = androidTemplateTextArea.value.text,
+                kotlinTemplate = kotlinTemplateTextArea.value.text,
+                multiplatformTemplate = multiplatformTemplateTextArea.value.text,
+                apiTemplate = apiTemplateTextArea.value.text,
+                implTemplate = implTemplateTextArea.value.text,
+                glueTemplate = glueTemplateTextArea.value.text,
+                packageName = packageNameTextField.value.text,
+                includeProjectKeyword = includeProjectKeywordTextField.value.text,
+                refreshOnModuleAdd = refreshOnModuleAdd.value,
+                threeModuleCreationDefault = threeModuleCreation.value,
+                useKtsFileExtension = ktsFileExtension.value,
+                gradleFileNamedAfterModule = gradleFileNamedAfterModule.value,
+                addReadme = addReadme.value,
+                addGitIgnore = addGitignore.value,
+                gitignoreTemplate = gitignoreTemplateTextArea.value.text,
+                apiModuleName = apiModuleNameTextArea.value.text,
+                glueModuleName = glueModuleNameTextArea.value.text,
+                implModuleName = implModuleNameTextArea.value.text,
+            )
     }
 
     private fun clearData() {
@@ -646,7 +666,10 @@ class SettingsDialogWrapper(
         apiModuleNameTextArea.value = TextFieldValue(DEFAULT_API_MODULE_NAME)
     }
 
-    private fun getDefaultTemplate(isKotlin: Boolean = false, isMultiplatform: Boolean = false): String {
+    private fun getDefaultTemplate(
+        isKotlin: Boolean = false,
+        isMultiplatform: Boolean = false,
+    ): String {
         if (isMultiplatform) {
             return MultiplatformKtsTemplate.data
         }

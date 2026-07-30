@@ -6,7 +6,7 @@ import org.jetbrains.jewel.bridge.theme.SwingBridgeTheme
 @Composable
 fun WidgetTheme(
     darkTheme: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     SwingBridgeTheme {
         content()

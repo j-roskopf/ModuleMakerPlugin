@@ -16,21 +16,23 @@ fun LabelledCheckbox(
     modifier: Modifier = Modifier,
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
-        modifier = modifier.clickable {
-            onCheckedChange(checked.not())
-        }.padding(end = 8.dp),
+        modifier =
+            modifier
+                .clickable {
+                    onCheckedChange(checked.not())
+                }.padding(end = 8.dp),
         horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(
             checked = checked,
             onCheckedChange = {
                 onCheckedChange(it)
             },
-            enabled = true
+            enabled = true,
         )
         Text(text = label)
     }

@@ -1,5 +1,9 @@
 # Module Maker Changelog
 
+## [1.3.0]
+- Update platform version to 2025.3.4.7
+- Update Kotlin, Compose, and Gradle dependencies
+
 ## [1.2.3]
 - Update min version to 253
 

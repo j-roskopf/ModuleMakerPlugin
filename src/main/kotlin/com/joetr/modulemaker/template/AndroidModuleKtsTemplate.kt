@@ -1,7 +1,8 @@
 package com.joetr.modulemaker.template
 
 object AndroidModuleKtsTemplate {
-    val data = """
+    val data =
+        """
         plugins {
             id("com.android.library")
         }
@@ -13,5 +14,5 @@ object AndroidModuleKtsTemplate {
         dependencies {
 
         }
-    """.trimIndent()
+        """.trimIndent()
 }

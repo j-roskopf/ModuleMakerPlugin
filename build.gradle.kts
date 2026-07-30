@@ -2,11 +2,14 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 
 fun properties(key: String) = providers.gradleProperty(key)
+
 fun environment(key: String) = providers.environmentVariable(key)
 
 plugins {
     kotlin("jvm") version libs.versions.kotlin.get()
-    id("org.jetbrains.compose") version "1.10.0" // must align with jewel https://github.com/JetBrains/intellij-community/blob/master/platform/jewel/gradle/libs.versions.toml
+    // must align with jewel:
+    // https://github.com/JetBrains/intellij-community/blob/master/platform/jewel/gradle/libs.versions.toml
+    id("org.jetbrains.compose") version libs.versions.compose.get()
     alias(libs.plugins.gradleIntelliJPlugin) // IntelliJ Platform Gradle Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.compose) // Gradle Compose Compiler Plugin
@@ -41,7 +44,7 @@ repositories {
 }
 
 apply(
-    from = "gradle/spotless.gradle"
+    from = "gradle/spotless.gradle",
 )
 
 sourceSets {
@@ -63,7 +66,7 @@ dependencies {
     "uiTestImplementation"(libs.junit)
     "uiTestImplementation"("com.squareup.okhttp3:okhttp:4.12.0")
     // The Compose compiler plugin applies to all source sets; uiTest needs the runtime on its classpath
-    "uiTestImplementation"("org.jetbrains.compose.runtime:runtime-desktop:1.7.3")
+    "uiTestImplementation"("org.jetbrains.compose.runtime:runtime-desktop:${libs.versions.compose.get()}")
 
     // IntelliJ Platform Gradle Plugin Dependencies Extension - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-dependencies-extension.html
     intellijPlatform {
@@ -94,7 +97,11 @@ dependencies {
 }
 
 kotlin {
-    jvmToolchain(libs.versions.jdk.get().toInt())
+    jvmToolchain(
+        libs.versions.jdk
+            .get()
+            .toInt(),
+    )
 }
 
 // Configure Gradle Changelog Plugin - read more: https://github.com/JetBrains/gradle-changelog-plugin
@@ -114,30 +121,32 @@ tasks {
         // untilBuild = properties("pluginUntilBuild").get()
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        pluginDescription = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
-            val start = "<!-- Plugin description -->"
-            val end = "<!-- Plugin description end -->"
+        pluginDescription =
+            providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
+                val start = "<!-- Plugin description -->"
+                val end = "<!-- Plugin description end -->"
 
-            with(it.lines()) {
-                if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                with(it.lines()) {
+                    if (!containsAll(listOf(start, end))) {
+                        throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                    }
+                    subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
                 }
-                subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
-        }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
-        changeNotes = properties("pluginVersion").map { pluginVersion ->
-            with(changelog) {
-                renderItem(
-                    (getOrNull(pluginVersion) ?: getUnreleased())
-                        .withHeader(false)
-                        .withEmptySections(false),
-                    Changelog.OutputType.HTML
-                )
+        changeNotes =
+            properties("pluginVersion").map { pluginVersion ->
+                with(changelog) {
+                    renderItem(
+                        (getOrNull(pluginVersion) ?: getUnreleased())
+                            .withHeader(false)
+                            .withEmptySections(false),
+                        Changelog.OutputType.HTML,
+                    )
+                }
             }
-        }
     }
 
     signPlugin {
@@ -169,29 +178,34 @@ intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
             task {
-                jvmArgumentProviders += CommandLineArgumentProvider {
-                    listOf(
-                        "-Drobot-server.port=8082",
-                        "-Dide.mac.message.dialogs.as.sheets=false",
-                        "-Djb.privacy.policy.text=<!--999.999-->",
-                        "-Djb.consents.confirmation.enabled=false",
-                        // Skip the "Trust Project?" dialog that blocks the IDE frame from appearing
-                        "-Didea.trust.all.projects=true",
-                        "-Didea.initially.ask.config=never",
-                        // Suppress Tip of the Day, What's New, and other first-run dialogs
-                        "-Dide.show.tips.on.startup.default.value=false",
-                        "-Didea.is.internal=false",
-                        "-Dide.no.platform.update=true",
-                        // Skip import settings dialog
-                        "-Didea.config.imported.in.current.session=true",
-                        // Force the Swing menu bar so remote-robot can find menu items.
-                        // Without this, macOS uses the native system menu bar which is
-                        // invisible to the Swing component hierarchy that remote-robot inspects.
-                        "-Dapple.laf.useScreenMenuBar=false"
-                    )
-                }
+                jvmArgumentProviders +=
+                    CommandLineArgumentProvider {
+                        listOf(
+                            "-Drobot-server.port=8082",
+                            "-Dide.mac.message.dialogs.as.sheets=false",
+                            "-Djb.privacy.policy.text=<!--999.999-->",
+                            "-Djb.consents.confirmation.enabled=false",
+                            // Skip the "Trust Project?" dialog that blocks the IDE frame from appearing
+                            "-Didea.trust.all.projects=true",
+                            "-Didea.initially.ask.config=never",
+                            // Suppress Tip of the Day, What's New, and other first-run dialogs
+                            "-Dide.show.tips.on.startup.default.value=false",
+                            "-Didea.is.internal=false",
+                            "-Dide.no.platform.update=true",
+                            // Skip import settings dialog
+                            "-Didea.config.imported.in.current.session=true",
+                            // Force the Swing menu bar so remote-robot can find menu items.
+                            // Without this, macOS uses the native system menu bar which is
+                            // invisible to the Swing component hierarchy that remote-robot inspects.
+                            "-Dapple.laf.useScreenMenuBar=false",
+                        )
+                    }
                 // Open the test project so settings.gradle.kts is available for module creation
-                args(layout.projectDirectory.dir("src/uiTest/testProject").asFile.absolutePath)
+                args(
+                    layout.projectDirectory
+                        .dir("src/uiTest/testProject")
+                        .asFile.absolutePath,
+                )
             }
 
             plugins {
@@ -207,30 +221,32 @@ intellijPlatform {
         version = properties("pluginVersion").get()
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
-        description = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
-            val start = "<!-- Plugin description -->"
-            val end = "<!-- Plugin description end -->"
+        description =
+            providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
+                val start = "<!-- Plugin description -->"
+                val end = "<!-- Plugin description end -->"
 
-            with(it.lines()) {
-                if (!containsAll(listOf(start, end))) {
-                    throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                with(it.lines()) {
+                    if (!containsAll(listOf(start, end))) {
+                        throw GradleException("Plugin description section not found in README.md:\n$start ... $end")
+                    }
+                    subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
                 }
-                subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
             }
-        }
 
         val changelog = project.changelog // local variable for configuration cache compatibility
         // Get the latest available change notes from the changelog file
-        changeNotes = properties("pluginVersion").map { pluginVersion ->
-            with(changelog) {
-                renderItem(
-                    (getOrNull(pluginVersion) ?: getUnreleased())
-                        .withHeader(false)
-                        .withEmptySections(false),
-                    Changelog.OutputType.HTML
-                )
+        changeNotes =
+            properties("pluginVersion").map { pluginVersion ->
+                with(changelog) {
+                    renderItem(
+                        (getOrNull(pluginVersion) ?: getUnreleased())
+                            .withHeader(false)
+                            .withEmptySections(false),
+                        Changelog.OutputType.HTML,
+                    )
+                }
             }
-        }
 
         ideaVersion {
             sinceBuild = properties("pluginSinceBuild").get()
@@ -249,8 +265,9 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = properties("pluginVersion")
-            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels =
+            properties("pluginVersion")
+                .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {

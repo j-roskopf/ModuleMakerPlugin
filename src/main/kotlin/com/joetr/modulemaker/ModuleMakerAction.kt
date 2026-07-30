@@ -17,7 +17,7 @@ class ModuleMakerAction : AnAction() {
 
         ModuleMakerDialogWrapper(
             project = project,
-            startingLocation = if (shouldUseStartingLocation) startingLocation else null
+            startingLocation = if (shouldUseStartingLocation) startingLocation else null,
         ).show()
     }
 }

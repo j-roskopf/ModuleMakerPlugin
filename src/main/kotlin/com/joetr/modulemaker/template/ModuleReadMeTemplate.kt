@@ -1,9 +1,10 @@
 package com.joetr.modulemaker.template
 
 object ModuleReadMeTemplate {
-    val data = """
+    val data =
+        """
         # ${'$'}{moduleName}
 
         TODO
-    """.trimIndent()
+        """.trimIndent()
 }

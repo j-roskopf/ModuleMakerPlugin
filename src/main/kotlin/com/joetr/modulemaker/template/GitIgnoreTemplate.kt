@@ -1,7 +1,8 @@
 package com.joetr.modulemaker.template
 
 object GitIgnoreTemplate {
-    val data = """
+    val data =
+        """
         # Gradle files
         .gradle/
         build/
@@ -35,5 +36,5 @@ object GitIgnoreTemplate {
 
         # Android Profiling
         *.hprof
-    """.trimIndent()
+        """.trimIndent()
 }

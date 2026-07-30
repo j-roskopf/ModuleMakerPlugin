@@ -20,8 +20,9 @@ import kotlinx.serialization.Serializable
 import org.jetbrains.annotations.Nullable
 
 @State(name = "PreferenceService", storages = [(Storage("module_maker_preferences.xml"))])
-class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Companion.State>, PreferenceService {
-
+class PreferenceServiceImpl :
+    PersistentStateComponent<PreferenceServiceImpl.Companion.State>,
+    PreferenceService {
     private var state = State()
 
     override var preferenceState: State
@@ -31,16 +32,13 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
         }
 
     @Nullable
-    override fun getState(): State {
-        return this.preferenceState
-    }
+    override fun getState(): State = this.preferenceState
 
     override fun loadState(from: State) {
         copyBean(from, this.preferenceState)
     }
 
     companion object {
-
         @Serializable
         data class State(
             var androidTemplate: String = "",
@@ -60,7 +58,7 @@ class PreferenceServiceImpl : PersistentStateComponent<PreferenceServiceImpl.Com
             var useKtsFileExtension: Boolean = DEFAULT_USE_KTS_FILE_EXTENSION,
             var gradleFileNamedAfterModule: Boolean = DEFAULT_GRADLE_FILE_NAMED_AFTER_MODULE,
             var addReadme: Boolean = DEFAULT_ADD_README,
-            var addGitIgnore: Boolean = DEFAULT_ADD_GIT_IGNORE
+            var addGitIgnore: Boolean = DEFAULT_ADD_GIT_IGNORE,
         )
 
         @JvmStatic

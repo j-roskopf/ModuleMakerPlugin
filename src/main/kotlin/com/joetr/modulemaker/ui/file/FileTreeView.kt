@@ -39,8 +39,13 @@ import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.icon.IntelliJIconKey
 
 @Composable
-fun FileTreeView(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit, modifier: Modifier) = Box(
-    modifier = modifier.height(height)
+fun FileTreeView(
+    model: FileTree,
+    height: Dp,
+    onClick: (ExpandableFile) -> Unit,
+    modifier: Modifier,
+) = Box(
+    modifier = modifier.height(height),
 ) {
     with(LocalDensity.current) {
         Box {
@@ -49,7 +54,7 @@ fun FileTreeView(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit,
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize().horizontalScroll(scrollState),
-                state = lazyListState
+                state = lazyListState,
             ) {
                 items(model.items.size) {
                     FileTreeItemView(
@@ -60,19 +65,19 @@ fun FileTreeView(model: FileTree, height: Dp, onClick: (ExpandableFile) -> Unit,
                         // if it's the last one and the scrollbar is showing
                         showBottomPadding = it == model.items.size - 1 && (lazyListState.canScrollForward || lazyListState.canScrollBackward),
                         // if the scrollbar is showing
-                        showEndPadding = scrollState.canScrollForward || scrollState.canScrollBackward
+                        showEndPadding = scrollState.canScrollForward || scrollState.canScrollBackward,
                     )
                 }
             }
 
             VerticalScrollbar(
                 rememberScrollbarAdapter(lazyListState),
-                Modifier.align(Alignment.CenterEnd)
+                Modifier.align(Alignment.CenterEnd),
             )
 
             HorizontalScrollbar(
                 rememberScrollbarAdapter(scrollState),
-                Modifier.align(Alignment.BottomStart)
+                Modifier.align(Alignment.BottomStart),
             )
         }
     }
@@ -85,10 +90,10 @@ private fun FileTreeItemView(
     model: FileTree.Item,
     onClick: (ExpandableFile) -> Unit,
     showBottomPadding: Boolean,
-    showEndPadding: Boolean
-) =
-    Row(
-        modifier = Modifier
+    showEndPadding: Boolean,
+) = Row(
+    modifier =
+        Modifier
             .wrapContentHeight()
             .clickable {
                 model.open()
@@ -100,117 +105,158 @@ private fun FileTreeItemView(
             .padding(
                 start = 24.dp * model.level,
                 end = if (showEndPadding) 8.dp else 0.dp,
-                bottom = if (showBottomPadding) 8.dp else 0.dp
-            )
-            .height(height)
-            .fillMaxWidth()
-    ) {
-        val interactionSource = remember { MutableInteractionSource() }
-        val active by interactionSource.collectIsHoveredAsState()
+                bottom = if (showBottomPadding) 8.dp else 0.dp,
+            ).height(height)
+            .fillMaxWidth(),
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val active by interactionSource.collectIsHoveredAsState()
 
-        FileItemIcon(Modifier.align(Alignment.CenterVertically), model)
-        Text(
-            text = model.name,
-            color = if (active) JewelTheme.contentColor.copy(alpha = 0.60f) else JewelTheme.contentColor,
-            modifier = Modifier
+    FileItemIcon(Modifier.align(Alignment.CenterVertically), model)
+    Text(
+        text = model.name,
+        color = if (active) JewelTheme.contentColor.copy(alpha = 0.60f) else JewelTheme.contentColor,
+        modifier =
+            Modifier
                 .align(Alignment.CenterVertically)
                 .clipToBounds()
                 .hoverable(interactionSource),
-            softWrap = true,
-            fontSize = fontSize,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1
-        )
-    }
+        softWrap = true,
+        fontSize = fontSize,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+    )
+}
 
 @Composable
-private fun FileItemIcon(modifier: Modifier, model: FileTree.Item) = Box(modifier.size(24.dp).padding(4.dp)) {
+private fun FileItemIcon(
+    modifier: Modifier,
+    model: FileTree.Item,
+) = Box(modifier.size(24.dp).padding(4.dp)) {
     when (val type = model.type) {
-        is FileTree.ItemType.Folder -> when {
-            !type.canExpand -> Unit
-            type.isExpanded -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.ArrowDown),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
+        is FileTree.ItemType.Folder -> {
+            when {
+                !type.canExpand -> {
+                    // Non-expandable folders have no disclosure icon.
+                }
 
-            else -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.ArrowRight),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
+                type.isExpanded -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.ArrowDown),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                else -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.ArrowRight),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+            }
         }
 
-        is FileTree.ItemType.File -> when (type.ext) {
-            in sourceCodeFileExtensions -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Java),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            "txt" -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Text),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            "md" -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Text),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            "gitignore" -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.Vcs.Ignore_file),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            "gradle" -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Config),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            "kts" -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Java),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            "properties" -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Properties),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            "bat" -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Custom),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
-            else -> Icon(
-                key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Unknown),
-                contentDescription = null,
-                iconClass = AllIcons::class.java
-            )
+        is FileTree.ItemType.File -> {
+            when (type.ext) {
+                in sourceCodeFileExtensions -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Java),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                "txt" -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Text),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                "md" -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Text),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                "gitignore" -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.Vcs.Ignore_file),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                "gradle" -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Config),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                "kts" -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Java),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                "properties" -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Properties),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                "bat" -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Custom),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+
+                else -> {
+                    Icon(
+                        key = IntelliJIconKey.fromPlatformIcon(AllIcons.FileTypes.Unknown),
+                        contentDescription = null,
+                        iconClass = AllIcons::class.java,
+                    )
+                }
+            }
         }
     }
 }
 
-private val sourceCodeFileExtensions = listOf(
-    "java",
-    "kt",
-    "cpp",
-    "c",
-    "h",
-    "py",
-    "js",
-    "html",
-    "css",
-    "php",
-    "rb",
-    "swift",
-    "go",
-    "scala",
-    "rust",
-    "dart",
-    "lua",
-    "xml",
-    "pl",
-    "sh",
-    "sql"
-)
+private val sourceCodeFileExtensions =
+    listOf(
+        "java",
+        "kt",
+        "cpp",
+        "c",
+        "h",
+        "py",
+        "js",
+        "html",
+        "css",
+        "php",
+        "rb",
+        "swift",
+        "go",
+        "scala",
+        "rust",
+        "dart",
+        "lua",
+        "xml",
+        "pl",
+        "sh",
+        "sql",
+    )

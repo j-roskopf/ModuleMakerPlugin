@@ -20,12 +20,12 @@ import java.io.Writer
 import java.nio.file.Paths
 
 class TemplateWriter(
-    private val preferenceService: PreferenceService
+    private val preferenceService: PreferenceService,
 ) {
-
-    private val cfg = Configuration(FREEMARKER_VERSION).apply {
-        setClassLoaderForTemplateLoading(TemplateWriter::class.java.classLoader, "")
-    }
+    private val cfg =
+        Configuration(FREEMARKER_VERSION).apply {
+            setClassLoaderForTemplateLoading(TemplateWriter::class.java.classLoader, "")
+        }
 
     /**
      * Creates gradle file for the module from base gradle template file
@@ -39,7 +39,7 @@ class TemplateWriter(
         gradleFileFollowModule: Boolean,
         packageName: String,
         previewMode: Boolean,
-        platformType: String
+        platformType: String,
     ): List<File> {
         try {
             // Build the data-model
@@ -47,70 +47,99 @@ class TemplateWriter(
             data["packageName"] = packageName
 
             // load gradle file from template folder
-            val gradleTemplate: Template = when (moduleType) {
-                KOTLIN -> {
-                    val customPreferences = getPreferenceFromKey(defaultKey, if (platformType == MULTIPLATFORM) MULTIPLATFORM else KOTLIN_KEY)
-                    if (customPreferences.isNotEmpty()) {
-                        Template(
-                            null,
-                            customPreferences,
-                            cfg
-                        )
-                    } else {
-                        val template = if (useKtsBuildFile) {
-                            KotlinModuleKtsTemplate.data
+            val gradleTemplate: Template =
+                when (moduleType) {
+                    KOTLIN -> {
+                        val customPreferences =
+                            getPreferenceFromKey(
+                                defaultKey,
+                                if (platformType ==
+                                    MULTIPLATFORM
+                                ) {
+                                    MULTIPLATFORM
+                                } else {
+                                    KOTLIN_KEY
+                                },
+                            )
+                        if (customPreferences.isNotEmpty()) {
+                            Template(
+                                null,
+                                customPreferences,
+                                cfg,
+                            )
                         } else {
-                            KotlinModuleTemplate.data
+                            val template =
+                                if (useKtsBuildFile) {
+                                    KotlinModuleKtsTemplate.data
+                                } else {
+                                    KotlinModuleTemplate.data
+                                }
+                            Template(
+                                null,
+                                template,
+                                cfg,
+                            )
                         }
-                        Template(
-                            null,
-                            template,
-                            cfg
-                        )
                     }
-                }
-                ANDROID -> {
-                    val customPreferences = getPreferenceFromKey(defaultKey, if (platformType == MULTIPLATFORM) MULTIPLATFORM else ANDROID_KEY)
 
-                    if (customPreferences.isNotEmpty()) {
-                        Template(
-                            null,
-                            customPreferences,
-                            cfg
-                        )
-                    } else {
-                        val template = if (platformType == ANDROID) {
-                            if (useKtsBuildFile) {
-                                AndroidModuleKtsTemplate.data
-                            } else {
-                                AndroidModuleTemplate.data
-                            }
-                        } else if (platformType == MULTIPLATFORM) {
-                            MultiplatformKtsTemplate.data
+                    ANDROID -> {
+                        val customPreferences =
+                            getPreferenceFromKey(
+                                defaultKey,
+                                if (platformType ==
+                                    MULTIPLATFORM
+                                ) {
+                                    MULTIPLATFORM
+                                } else {
+                                    ANDROID_KEY
+                                },
+                            )
+
+                        if (customPreferences.isNotEmpty()) {
+                            Template(
+                                null,
+                                customPreferences,
+                                cfg,
+                            )
                         } else {
-                            throw IllegalArgumentException("Unknown platform type $platformType")
+                            val template =
+                                if (platformType == ANDROID) {
+                                    if (useKtsBuildFile) {
+                                        AndroidModuleKtsTemplate.data
+                                    } else {
+                                        AndroidModuleTemplate.data
+                                    }
+                                } else if (platformType == MULTIPLATFORM) {
+                                    MultiplatformKtsTemplate.data
+                                } else {
+                                    throw IllegalArgumentException("Unknown platform type $platformType")
+                                }
+                            Template(
+                                null,
+                                template,
+                                cfg,
+                            )
                         }
-                        Template(
-                            null,
-                            template,
-                            cfg
-                        )
+                    }
+
+                    else -> {
+                        throw IllegalArgumentException("Unknown module type")
                     }
                 }
-                else -> throw IllegalArgumentException("Unknown module type")
-            }
 
             // File output
-            val extension = if (useKtsBuildFile) {
-                ".gradle.kts"
-            } else {
-                ".gradle"
-            }
-            val fileName = if (gradleFileFollowModule) {
-                moduleName.plus(extension)
-            } else {
-                "build".plus(extension)
-            }
+            val extension =
+                if (useKtsBuildFile) {
+                    ".gradle.kts"
+                } else {
+                    ".gradle"
+                }
+            val fileName =
+                if (gradleFileFollowModule) {
+                    moduleName.plus(extension)
+                } else {
+                    "build".plus(extension)
+                }
 
             val filePath = Paths.get(moduleFile.absolutePath, fileName).toFile()
 
@@ -131,13 +160,18 @@ class TemplateWriter(
         return emptyList()
     }
 
-    fun createReadmeFile(moduleFile: File, moduleName: String, previewMode: Boolean): List<File> {
+    fun createReadmeFile(
+        moduleFile: File,
+        moduleName: String,
+        previewMode: Boolean,
+    ): List<File> {
         try {
-            val manifestTemplate = Template(
-                null,
-                ModuleReadMeTemplate.data,
-                cfg
-            )
+            val manifestTemplate =
+                Template(
+                    null,
+                    ModuleReadMeTemplate.data,
+                    cfg,
+                )
 
             val data: MutableMap<String, Any> = HashMap()
 
@@ -168,8 +202,11 @@ class TemplateWriter(
         return emptyList()
     }
 
-    private fun getPreferenceFromKey(key: String?, fallback: String): String {
-        return when (key ?: fallback) {
+    private fun getPreferenceFromKey(
+        key: String?,
+        fallback: String,
+    ): String =
+        when (key ?: fallback) {
             IMPL_KEY -> preferenceService.preferenceState.implTemplate
             API_KEY -> preferenceService.preferenceState.apiTemplate
             GLUE_KEY -> preferenceService.preferenceState.glueTemplate
@@ -178,5 +215,4 @@ class TemplateWriter(
             KOTLIN_KEY -> preferenceService.preferenceState.kotlinTemplate
             else -> ""
         }
-    }
 }

@@ -1,7 +1,8 @@
 package com.joetr.modulemaker.settings
 
 object NowInAndroidSettingsGradleKts {
-    val data = """
+    val data =
+        """
         /*
          * Copyright 2021 The Android Open Source Project
          *
@@ -62,9 +63,10 @@ object NowInAndroidSettingsGradleKts {
         include(":sync:work")
         include(":sync:sync-test")
         include(":ui-test-hilt-manifest")
-    """.trimIndent()
+        """.trimIndent()
 
-    val filePathData = """
+    val filePathData =
+        """
         /*
          * Copyright 2021 The Android Open Source Project
          *
@@ -125,9 +127,10 @@ object NowInAndroidSettingsGradleKts {
         include(":sync:work", "path/to")
         include(":sync:sync-test", "path/to")
         include(":ui-test-hilt-manifest", "path/to")
-    """.trimIndent()
+        """.trimIndent()
 
-    val filePathDataWithCustomIncludeBuildData = """
+    val filePathDataWithCustomIncludeBuildData =
+        """
         /*
          * Copyright 2021 The Android Open Source Project
          *
@@ -188,5 +191,5 @@ object NowInAndroidSettingsGradleKts {
         includeBuild(":sync:work", "path/to")
         includeBuild(":sync:sync-test", "path/to")
         includeBuild(":ui-test-hilt-manifest", "path/to")
-    """.trimIndent()
+        """.trimIndent()
 }

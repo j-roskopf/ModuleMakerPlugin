@@ -71,14 +71,14 @@ private const val DEFAULT_SRC_VALUE = "EMPTY"
 
 class ModuleMakerDialogWrapper(
     private val project: Project,
-    private val startingLocation: VirtualFile?
+    private val startingLocation: VirtualFile?,
 ) : DialogWrapper(true) {
-
     private val preferenceService = PreferenceServiceImpl.instance
 
-    private val fileWriter = FileWriter(
-        preferenceService = preferenceService
-    )
+    private val fileWriter =
+        FileWriter(
+            preferenceService = preferenceService,
+        )
 
     private var selectedSrcValue = mutableStateOf(DEFAULT_SRC_VALUE)
     private val threeModuleCreation = mutableStateOf(preferenceService.preferenceState.threeModuleCreationDefault)
@@ -94,61 +94,69 @@ class ModuleMakerDialogWrapper(
     private val sourceSets = mutableStateListOf<String>()
 
     // Segment's write key isn't really a secret
-    private var analytics: Analytics = Analytics("CNghGjhOHipwGB9YdWMBwkMTJbRFtizc") {
-        application = "ModuleMaker"
-        flushAt = 1
-    }
+    private var analytics: Analytics =
+        Analytics("CNghGjhOHipwGB9YdWMBwkMTJbRFtizc") {
+            application = "ModuleMaker"
+            flushAt = 1
+        }
 
     init {
         title = "Module Maker"
         init()
 
-        selectedSrcValue.value = if (startingLocation != null) {
-            // give default of starting location
-            File(startingLocation.path).absolutePath.removePrefix(rootDirectoryStringDropLast())
-                .removePrefix(File.separator)
-        } else {
-            // give default value of the root project
-            File(rootDirectoryString()).absolutePath.removePrefix(rootDirectoryStringDropLast())
-                .removePrefix(File.separator)
-        }
+        selectedSrcValue.value =
+            if (startingLocation != null) {
+                // give default of starting location
+                File(startingLocation.path)
+                    .absolutePath
+                    .removePrefix(rootDirectoryStringDropLast())
+                    .removePrefix(File.separator)
+            } else {
+                // give default value of the root project
+                File(rootDirectoryString())
+                    .absolutePath
+                    .removePrefix(rootDirectoryStringDropLast())
+                    .removePrefix(File.separator)
+            }
     }
 
     @OptIn(ExperimentalJewelApi::class)
     @Nullable
-    override fun createCenterPanel(): JComponent {
-        return JewelComposeNoThemePanel(focusOnClickInside = true) {
+    override fun createCenterPanel(): JComponent =
+        JewelComposeNoThemePanel(focusOnClickInside = true) {
             WidgetTheme {
                 Row {
                     val startingHeight = remember { mutableStateOf(WINDOW_HEIGHT) }
                     val fileTreeWidth = remember { mutableStateOf(FILE_TREE_WIDTH) }
                     val configurationPanelWidth = remember { mutableStateOf(CONFIGURATION_PANEL_WIDTH) }
                     FileTreeJPanel(
-                        modifier = Modifier.height(startingHeight.value.dp).width(fileTreeWidth.value.dp)
+                        modifier = Modifier.height(startingHeight.value.dp).width(fileTreeWidth.value.dp),
                     )
                     ConfigurationPanel(
-                        modifier = Modifier.height(startingHeight.value.dp)
-                            .width(configurationPanelWidth.value.dp)
+                        modifier =
+                            Modifier
+                                .height(startingHeight.value.dp)
+                                .width(configurationPanelWidth.value.dp),
                     )
                 }
             }
         }
-    }
 
-    override fun createLeftSideActions(): Array<Action> {
-        return arrayOf(object : AbstractAction("Settings") {
-            override fun actionPerformed(e: ActionEvent?) {
-                SettingsDialogWrapper(
-                    project = project,
-                    onSave = {
-                        onSettingsSaved()
-                    },
-                    isKtsCurrentlyChecked = useKtsExtension.value,
-                    isAndroidChecked = moduleTypeSelection.value == ANDROID
-                ).show()
-            }
-        })
-    }
+    override fun createLeftSideActions(): Array<Action> =
+        arrayOf(
+            object : AbstractAction("Settings") {
+                override fun actionPerformed(e: ActionEvent?) {
+                    SettingsDialogWrapper(
+                        project = project,
+                        onSave = {
+                            onSettingsSaved()
+                        },
+                        isKtsCurrentlyChecked = useKtsExtension.value,
+                        isAndroidChecked = moduleTypeSelection.value == ANDROID,
+                    ).show()
+                }
+            },
+        )
 
     private fun onSettingsSaved() {
         packageName.value = TextFieldValue(preferenceService.preferenceState.packageName)
@@ -159,11 +167,11 @@ class ModuleMakerDialogWrapper(
         addGitIgnore.value = preferenceService.preferenceState.addGitIgnore
     }
 
-    override fun createActions(): Array<Action> {
-        return arrayOf(
+    override fun createActions(): Array<Action> =
+        arrayOf(
             DialogWrapperExitAction(
                 "Cancel",
-                2
+                2,
             ),
             object : AbstractAction("Preview") {
                 override fun actionPerformed(e: ActionEvent?) {
@@ -182,26 +190,22 @@ class ModuleMakerDialogWrapper(
                         MessageDialogWrapper("Please fill out required values").show()
                     }
                 }
-            }
+            },
         )
-    }
 
     private fun displayPreviewDialog() {
         val filesToBeCreated = create(previewMode = true)
         PreviewDialogWrapper(filesToBeCreated = filesToBeCreated, root = rootFromPath(rootDirectoryString())).show()
     }
 
-    private fun validateInput(): Boolean {
-        return packageName.value.text.isNotEmpty() &&
+    private fun validateInput(): Boolean =
+        packageName.value.text.isNotEmpty() &&
             selectedSrcValue.value != DEFAULT_SRC_VALUE &&
             moduleName.value.text.isNotEmpty() &&
             moduleName.value.text != DEFAULT_MODULE_NAME
-    }
 
     @Composable
-    private fun FileTreeJPanel(
-        modifier: Modifier = Modifier
-    ) {
+    private fun FileTreeJPanel(modifier: Modifier = Modifier) {
         val height = remember { mutableStateOf(WINDOW_HEIGHT) }
         val fileTree = remember { FileTree(root = File(rootDirectoryString()).toProjectFile()) }
         FileTreeView(
@@ -227,15 +231,13 @@ class ModuleMakerDialogWrapper(
                 if (fileTreeNode.file.isDirectory) {
                     selectedSrcValue.value = relativePath
                 }
-            }
+            },
         )
     }
 
     @OptIn(ExperimentalLayoutApi::class, ExperimentalJewelApi::class)
     @Composable
-    private fun ConfigurationPanel(
-        modifier: Modifier = Modifier
-    ) {
+    private fun ConfigurationPanel(modifier: Modifier = Modifier) {
         Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(8.dp)) {
             val selectedRootState = remember { selectedSrcValue }
             Text("Selected root: ${selectedRootState.value}")
@@ -249,22 +251,22 @@ class ModuleMakerDialogWrapper(
                     checked = threeModuleCreationState.value,
                     onCheckedChange = {
                         threeModuleCreationState.value = it
-                    }
+                    },
                 )
                 IconButton(onClick = {
                     MessageDialogWrapper(
                         """
-                                            The 3 module creation adds an api, glue, and impl module.
+                        The 3 module creation adds an api, glue, and impl module.
 
-                                            More info can be found here https://www.droidcon.com/2019/11/15/android-at-scale-square/
-                        """.trimIndent()
+                        More info can be found here https://www.droidcon.com/2019/11/15/android-at-scale-square/
+                        """.trimIndent(),
                     ).show()
                 }) { _ ->
                     Icon(
                         key = IntelliJIconKey.fromPlatformIcon(AllIcons.General.Information),
                         contentDescription = "info",
                         iconClass = AllIcons::class.java,
-                        modifier = Modifier.padding(end = 4.dp)
+                        modifier = Modifier.padding(end = 4.dp),
                     )
                 }
             }
@@ -277,7 +279,7 @@ class ModuleMakerDialogWrapper(
                 checked = useKtsExtensionState.value,
                 onCheckedChange = {
                     useKtsExtensionState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -288,7 +290,7 @@ class ModuleMakerDialogWrapper(
                 checked = gradleFileNamedAfterModuleState.value,
                 onCheckedChange = {
                     gradleFileNamedAfterModuleState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -299,7 +301,7 @@ class ModuleMakerDialogWrapper(
                 checked = addReadmeState.value,
                 onCheckedChange = {
                     addReadmeState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -310,7 +312,7 @@ class ModuleMakerDialogWrapper(
                 checked = addGitIgnoreState.value,
                 onCheckedChange = {
                     addGitIgnoreState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -325,7 +327,7 @@ class ModuleMakerDialogWrapper(
                         text = text,
                         selected = (text == moduleTypeSelectionState.value),
                         onClick = { moduleTypeSelectionState.value = text },
-                        modifier = Modifier.padding(end = 16.dp)
+                        modifier = Modifier.padding(end = 16.dp),
                     )
                     Spacer(Modifier.height(8.dp))
                 }
@@ -345,18 +347,19 @@ class ModuleMakerDialogWrapper(
                         text = text,
                         selected = (text == platformTypeRadioOptionsState.value),
                         onClick = { platformTypeRadioOptionsState.value = text },
-                        modifier = Modifier.padding(end = 16.dp)
+                        modifier = Modifier.padding(end = 16.dp),
                     )
 
                     Spacer(Modifier.height(8.dp))
                 }
 
-                val selectedSourceSets = remember {
-                    sourceSets
-                }
+                val selectedSourceSets =
+                    remember {
+                        sourceSets
+                    }
 
                 AnimatedVisibility(
-                    platformTypeSelection.value == MULTIPLATFORM
+                    platformTypeSelection.value == MULTIPLATFORM,
                 ) {
                     Spacer(Modifier.height(8.dp))
 
@@ -374,7 +377,7 @@ class ModuleMakerDialogWrapper(
                                         } else {
                                             selectedSourceSets.remove(sourceSet)
                                         }
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -396,7 +399,7 @@ class ModuleMakerDialogWrapper(
                                         } else {
                                             selectedSourceSets.remove(sourceSet)
                                         }
-                                    }
+                                    },
                                 )
                             }
                         }
@@ -413,7 +416,7 @@ class ModuleMakerDialogWrapper(
                 value = packageNameState.value,
                 onValueChange = {
                     packageNameState.value = it
-                }
+                },
             )
 
             Spacer(Modifier.height(8.dp))
@@ -428,7 +431,7 @@ class ModuleMakerDialogWrapper(
                 value = moduleNameState.value,
                 onValueChange = {
                     moduleNameState.value = it
-                }
+                },
             )
         }
     }
@@ -450,7 +453,7 @@ class ModuleMakerDialogWrapper(
             settingsGradleKtsCurrentlySelectedRoot,
             settingsGradleCurrentlySelectedRoot,
             settingsGradleKtsPath,
-            settingsGradlePath
+            settingsGradlePath,
         ).firstOrNull {
             it.exists()
         } ?: run {
@@ -472,42 +475,43 @@ class ModuleMakerDialogWrapper(
                     addGitIgnore = addGitIgnore.value,
                     addReadme = addReadme.value,
                     gradleNameToFollow = gradleFileNamedAfterModule.value,
-                    useKts = useKtsExtension.value
+                    useKts = useKtsExtension.value,
+                ),
+            )
+            val filesCreated =
+                fileWriter.createModule(
+                    // at this point, selectedSrcValue has a value of something like /root/module/module2/
+                    // - we want to remove the root of the project to use as the file path in settings.gradle
+                    rootPathString = removeRootFromPath(selectedSrcValue.value),
+                    settingsGradleFile = settingsGradleFile,
+                    modulePathAsString = moduleName.value.text,
+                    moduleType = moduleType,
+                    showErrorDialog = {
+                        analytics.track("module_creation_error", ModuleCreationErrorAnalytics(message = it))
+                        MessageDialogWrapper(it).show()
+                    },
+                    showSuccessDialog = {
+                        analytics.track("module_creation_success")
+                        MessageDialogWrapper("Success").show()
+                        refreshFileSystem(
+                            settingsGradleFile = settingsGradleFile,
+                            currentlySelectedFile = currentlySelectedFile,
+                        )
+                        if (preferenceService.preferenceState.refreshOnModuleAdd) {
+                            syncProject()
+                        }
+                    },
+                    workingDirectory = currentlySelectedFile,
+                    enhancedModuleCreationStrategy = threeModuleCreation.value,
+                    useKtsBuildFile = useKtsExtension.value,
+                    gradleFileFollowModule = gradleFileNamedAfterModule.value,
+                    packageName = packageName.value.text,
+                    addReadme = addReadme.value,
+                    addGitIgnore = addGitIgnore.value,
+                    previewMode = previewMode,
+                    platformType = platformTypeSelection.value,
+                    sourceSets = sourceSets.toList(),
                 )
-            )
-            val filesCreated = fileWriter.createModule(
-                // at this point, selectedSrcValue has a value of something like /root/module/module2/
-                // - we want to remove the root of the project to use as the file path in settings.gradle
-                rootPathString = removeRootFromPath(selectedSrcValue.value),
-                settingsGradleFile = settingsGradleFile,
-                modulePathAsString = moduleName.value.text,
-                moduleType = moduleType,
-                showErrorDialog = {
-                    analytics.track("module_creation_error", ModuleCreationErrorAnalytics(message = it))
-                    MessageDialogWrapper(it).show()
-                },
-                showSuccessDialog = {
-                    analytics.track("module_creation_success")
-                    MessageDialogWrapper("Success").show()
-                    refreshFileSystem(
-                        settingsGradleFile = settingsGradleFile,
-                        currentlySelectedFile = currentlySelectedFile
-                    )
-                    if (preferenceService.preferenceState.refreshOnModuleAdd) {
-                        syncProject()
-                    }
-                },
-                workingDirectory = currentlySelectedFile,
-                enhancedModuleCreationStrategy = threeModuleCreation.value,
-                useKtsBuildFile = useKtsExtension.value,
-                gradleFileFollowModule = gradleFileNamedAfterModule.value,
-                packageName = packageName.value.text,
-                addReadme = addReadme.value,
-                addGitIgnore = addGitIgnore.value,
-                previewMode = previewMode,
-                platformType = platformTypeSelection.value,
-                sourceSets = sourceSets.toList()
-            )
 
             return filesCreated
         } else {
@@ -522,43 +526,41 @@ class ModuleMakerDialogWrapper(
             ProjectSystemId("GRADLE"),
             rootDirectoryString(),
             false,
-            ProgressExecutionMode.START_IN_FOREGROUND_ASYNC
+            ProgressExecutionMode.START_IN_FOREGROUND_ASYNC,
         )
     }
 
     /**
      * Refresh the settings gradle file and the root file
      */
-    private fun refreshFileSystem(settingsGradleFile: File, currentlySelectedFile: File) {
+    private fun refreshFileSystem(
+        settingsGradleFile: File,
+        currentlySelectedFile: File,
+    ) {
         VfsUtil.markDirtyAndRefresh(
             false,
             true,
             true,
             settingsGradleFile,
-            currentlySelectedFile
+            currentlySelectedFile,
         )
     }
 
-    private fun getCurrentlySelectedFile(): File {
-        return File(rootDirectoryStringDropLast() + File.separator + selectedSrcValue.value)
-    }
+    private fun getCurrentlySelectedFile(): File = File(rootDirectoryStringDropLast() + File.separator + selectedSrcValue.value)
 
     private fun rootDirectoryStringDropLast(): String {
         // rootDirectoryString() gives us back something like /Users/user/path/to/project
         // the first path element in the tree node starts with 'project' (last folder above)
         // so we remove it and join the nodes of the tree by our file separator
-        return project.basePath!!.split(File.separator).dropLast(1).joinToString(File.separator)
-    }
-
-    private fun rootDirectoryString(): String {
         return project.basePath!!
+            .split(File.separator)
+            .dropLast(1)
+            .joinToString(File.separator)
     }
 
-    private fun removeRootFromPath(path: String): String {
-        return path.split(File.separator).drop(1).joinToString(File.separator)
-    }
+    private fun rootDirectoryString(): String = project.basePath!!
 
-    private fun rootFromPath(path: String): String {
-        return path.split(File.separator).last()
-    }
+    private fun removeRootFromPath(path: String): String = path.split(File.separator).drop(1).joinToString(File.separator)
+
+    private fun rootFromPath(path: String): String = path.split(File.separator).last()
 }

@@ -1,7 +1,8 @@
 package com.joetr.modulemaker.settings
 
 object DefaultTemplateSettingsGradle {
-    val data = """
+    val data =
+        """
         pluginManagement {
             repositories {
                 google()
@@ -18,5 +19,5 @@ object DefaultTemplateSettingsGradle {
         }
         rootProject.name = "ModuleMakerTest"
         include ':app'
-    """.trimIndent()
+        """.trimIndent()
 }
