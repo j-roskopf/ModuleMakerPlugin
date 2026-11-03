@@ -1,5 +1,7 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.extensions.excludeCoroutines
+import org.jetbrains.intellij.platform.gradle.extensions.excludeKotlinStdlib
 
 fun properties(key: String) = providers.gradleProperty(key)
 
@@ -55,8 +57,15 @@ sourceSets {
 
 dependencies {
     implementation(libs.freemarker)
-    implementation(libs.serialization)
-    implementation(libs.segment)
+    // Kotlin stdlib and coroutines are provided by the IntelliJ Platform; never bundle them
+    implementation(libs.serialization) {
+        excludeKotlinStdlib()
+    }
+    implementation(libs.segment) {
+        excludeKotlinStdlib()
+        excludeCoroutines()
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-common")
+    }
 
     testImplementation(libs.junit)
 
@@ -272,7 +281,7 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+            current()
         }
     }
 }
