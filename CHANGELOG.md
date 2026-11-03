@@ -1,5 +1,10 @@
 # Module Maker Changelog
 
+## [1.3.1]
+- Support Android Studio 2026.1 (build 261) and newer
+- Update platform version to 2026.1.1.10
+- Align Kotlin and Compose versions with the IntelliJ Platform
+
 ## [1.3.0]
 - Update platform version to 2025.3.4.7
 - Update Kotlin, Compose, and Gradle dependencies
